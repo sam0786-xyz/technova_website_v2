@@ -14,6 +14,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.technovashardauniversity.in"),
   title: "Technova Technical Society",
   description: "Official platform for Technova Technical Society",
   icons: {
