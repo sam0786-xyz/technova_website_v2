@@ -45,7 +45,7 @@ export default async function AdminEventsPage() {
                                         </span>
                                     </td>
                                     <td className="p-4">{event.capacity}</td>
-                                    <td className="p-4 text-sm text-blue-600"><Link href={`/admin/events/${event.id}`}>Edit</Link></td>
+                                    <td className="p-4 text-sm text-blue-600"><Link href={`/admin/events/${event.id}`}>Manage</Link></td>
                                 </tr>
                             ))
                         )}

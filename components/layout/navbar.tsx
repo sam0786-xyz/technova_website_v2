@@ -11,6 +11,7 @@ interface NavbarProps {
         name?: string | null
         email?: string | null
         image?: string | null
+        role?: 'student' | 'admin' | 'super_admin'
     }
 }
 
@@ -26,10 +27,15 @@ export function Navbar({ user }: NavbarProps) {
 
     const authLinks = [
         { href: "/dashboard", label: "Dashboard" },
+    ]
+
+    const adminLinks = [
         { href: "/admin/dashboard", label: "Admin" },
-        { href: "/admin/events", label: "Events" },
+        { href: "/admin/events", label: "Manage" },
         { href: "/scan", label: "Scanner" },
     ]
+
+    const isPrivileged = user?.role === 'admin' || user?.role === 'super_admin'
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
@@ -54,15 +60,30 @@ export function Navbar({ user }: NavbarProps) {
 
                         <div className="w-px h-6 bg-gray-700 mx-2" />
 
-                        {authLinks.map(link => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className="text-gray-400 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg transition-all text-sm"
-                            >
-                                {link.label}
-                            </Link>
-                        ))}
+                        {/* Authenticated User Links */}
+                        {user && (
+                            <>
+                                {authLinks.map(link => (
+                                    <Link
+                                        key={link.href}
+                                        href={link.href}
+                                        className="text-gray-400 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg transition-all text-sm"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                ))}
+
+                                {isPrivileged && adminLinks.map(link => (
+                                    <Link
+                                        key={link.href}
+                                        href={link.href}
+                                        className="text-amber-400 hover:text-amber-200 hover:bg-white/10 px-3 py-2 rounded-lg transition-all text-sm font-medium"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                ))}
+                            </>
+                        )}
 
                         {user ? (
                             <div className="ml-2">
@@ -103,11 +124,22 @@ export function Navbar({ user }: NavbarProps) {
 
                         <div className="border-t border-white/10 my-2 pt-2">
                             <p className="text-xs text-gray-500 px-4 mb-2">Member Area</p>
-                            {authLinks.map(link => (
+                            {user && authLinks.map(link => (
                                 <Link
                                     key={link.href}
                                     href={link.href}
                                     className="block text-gray-400 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    {link.label}
+                                </Link>
+                            ))}
+
+                            {user && isPrivileged && adminLinks.map(link => (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    className="block text-amber-400 hover:text-amber-200 hover:bg-white/10 py-3 px-4 rounded-lg"
                                     onClick={() => setIsOpen(false)}
                                 >
                                     {link.label}
