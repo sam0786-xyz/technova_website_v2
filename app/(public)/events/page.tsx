@@ -1,9 +1,9 @@
-import { getEvents } from "@/lib/actions/events"
+import { getPublicEvents } from "@/lib/actions/events"
 import Link from "next/link"
 import { Calendar, MapPin } from "lucide-react"
 
 export default async function PublicEventsPage() {
-    const events = await getEvents()
+    const events = await getPublicEvents()
 
     return (
         <div className="min-h-screen bg-black text-white">

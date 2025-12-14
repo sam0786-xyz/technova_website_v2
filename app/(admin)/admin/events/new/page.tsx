@@ -44,8 +44,18 @@ export default function CreateEventPage() {
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Status</label>
+                            <select name="status" className="w-full p-2 border rounded-md" defaultValue="draft">
+                                <option value="draft">Draft</option>
+                                <option value="live">Live (Public)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div className="pt-4 flex gap-4">
-                        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Create Draft</button>
+                        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Create Event</button>
                     </div>
                 </form>
             </div>

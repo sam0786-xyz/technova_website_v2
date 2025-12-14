@@ -3,6 +3,7 @@
 import { createClient as createServerClient } from "@supabase/supabase-js"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
 
 // Helper to get authenticated client or admin client
 async function getSupabase() {
@@ -29,6 +30,7 @@ export async function createEvent(formData: FormData) {
     const venue = formData.get("venue") as string
     const capacity = parseInt(formData.get("capacity") as string)
     const price = parseFloat(formData.get("price") as string)
+    const status = formData.get("status") as string || 'draft'
 
     // 1. Get Club ID for the user (Mocking or fetching from admin_roles)
     // For now, we'll create a default 'Technova' club if it doesn't exist or pick the first one
@@ -56,7 +58,7 @@ export async function createEvent(formData: FormData) {
         venue,
         capacity,
         price,
-        status: 'draft' // Default to draft
+        status
     })
 
     if (error) {
@@ -64,7 +66,18 @@ export async function createEvent(formData: FormData) {
         throw new Error("Failed to create event")
     }
 
+    revalidatePath("/events")
+    revalidatePath("/admin/events")
     redirect("/admin/events")
+}
+
+export async function getPublicEvents() {
+    const supabase = await getSupabase()
+    const { data } = await supabase.from('events')
+        .select('*')
+        .eq('status', 'live')
+        .order('created_at', { ascending: false })
+    return data || []
 }
 
 export async function getEvents() {

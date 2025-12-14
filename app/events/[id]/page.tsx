@@ -1,9 +1,11 @@
 import { auth } from "@/lib/auth"
-import { Calendar, MapPin, Clock } from "lucide-react"
+import { Calendar, MapPin, Clock, Users, Globe } from "lucide-react"
 import { getEventById } from "@/lib/actions/events"
 import { checkRegistration } from "@/lib/actions/registrations"
 import { EventRegistrationCard } from "@/components/events/registration-card"
 import { notFound } from "next/navigation"
+import { generateQRToken } from "@/lib/qr/generate"
+import { createClient } from "@supabase/supabase-js"
 
 export default async function EventPage({ params }: { params: { id: string } }) {
     const event = await getEventById(params.id)
@@ -14,6 +16,35 @@ export default async function EventPage({ params }: { params: { id: string } }) 
     }
 
     const existingRegistration = await checkRegistration(params.id)
+
+    const user = session?.user || null
+    let qrCode = null
+
+    if (existingRegistration && session?.user?.id) {
+        // Generate QR Code for display
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+        const { data: userProfile } = await supabase.schema('next_auth').from('users').select('*').eq('id', session.user.id).single()
+
+        const userData = {
+            name: userProfile?.name || session.user.name || '',
+            system_id: userProfile?.system_id || '',
+            year: userProfile?.year?.toString() || '',
+            course: userProfile?.course || '',
+            section: userProfile?.section || '',
+            email: session.user.email || ''
+        }
+
+        const { qrDataUrl } = await generateQRToken(
+            session.user.id,
+            params.id,
+            userData,
+            existingRegistration.qr_token_id
+        )
+        qrCode = qrDataUrl
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 pb-24">
@@ -32,7 +63,7 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                         <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                             <div className="flex-1">
                                 <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
-                                    {event.price === 0 ? "Free Event" : `₹${event.price}`}
+                                    {event.price === 0 ? "Free Event" : `₹${event.price} `}
                                 </span>
                                 <h1 className="text-4xl font-bold mb-4">{event.title}</h1>
                                 <div className="flex flex-wrap gap-6 text-gray-600">
@@ -51,7 +82,12 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                                 </div>
                             </div>
 
-                            <EventRegistrationCard event={event} user={session?.user ?? null} existingRegistration={existingRegistration} />
+                            <EventRegistrationCard
+                                event={event}
+                                user={user}
+                                existingRegistration={existingRegistration}
+                                qrCode={qrCode}
+                            />
                         </div>
 
                         <hr className="my-8" />

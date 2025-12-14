@@ -5,6 +5,10 @@ import { auth } from "@/lib/auth"
 import { createOrder } from "@/lib/payments/razorpay"
 import { revalidatePath } from "next/cache"
 import { generateQRToken } from "@/lib/qr/generate"
+import { Resend } from "resend"
+import { TicketEmail } from "@/emails/ticket-email"
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 async function getSupabase() {
     return createServerClient(
@@ -60,7 +64,19 @@ export async function registerForEvent(eventId: string) {
         return { status: 'payment_required', order }
     } else {
         // Free Event - Generate QR and Register
-        const { token, qrDataUrl } = await generateQRToken(session.user.id!, eventId)
+        // Fetch full user details for QR
+        const { data: userProfile } = await supabase.schema('next_auth').from('users').select('*').eq('id', session.user.id).single()
+
+        const userData = {
+            name: userProfile?.name || session.user.name || '',
+            system_id: userProfile?.system_id || '',
+            year: userProfile?.year?.toString() || '',
+            course: userProfile?.course || '',
+            section: userProfile?.section || '',
+            email: session.user.email || ''
+        }
+
+        const { token, qrDataUrl } = await generateQRToken(session.user.id!, eventId, userData)
 
         const { error } = await supabase.from('registrations').insert({
             user_id: session.user.id,
@@ -70,6 +86,26 @@ export async function registerForEvent(eventId: string) {
         })
 
         if (error) throw new Error(error.message)
+
+        // Send Email
+        try {
+            await resend.emails.send({
+                from: 'Technova <onboarding@resend.dev>',
+                to: session.user.email!,
+                subject: `Ticket: ${event.title}`,
+                react: TicketEmail({
+                    eventName: event.title,
+                    userName: session.user.name || 'Student',
+                    eventDate: new Date(event.start_time).toLocaleString(),
+                    venue: event.venue,
+                    qrDataUrl: qrDataUrl,
+                    ticketId: token
+                })
+            })
+        } catch (emailError) {
+            console.error("Failed to send email:", emailError)
+            // Don't block registration on email failure
+        }
 
         revalidatePath(`/events/${eventId}`)
         return { status: 'success', qrDataUrl }

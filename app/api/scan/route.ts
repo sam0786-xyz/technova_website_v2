@@ -9,7 +9,11 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
-        const { token, userId, eventId } = body
+
+        // Handle both legacy (long keys) and new (short keys) formats
+        const token = body.token || body.t
+        const userId = body.userId || body.u
+        const eventId = body.eventId || body.e
 
         if (!token || !userId || !eventId) {
             return NextResponse.json({ success: false, message: 'Invalid QR data' }, { status: 400 })

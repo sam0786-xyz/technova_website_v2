@@ -13,7 +13,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         url: supabaseUrl,
         secret: supabaseServiceRoleKey,
     }),
-    session: { strategy: "database" },
+    session: { strategy: "jwt" },
     debug: false, // Enable Auth.js debug mode
     ...authConfig,
 })

@@ -75,14 +75,26 @@ export const config = {
       }
       return true
     },
-    async session({ session, user }) {
+    async jwt({ token, user, trigger, session }) {
+      if (user) {
+        token.id = user.id
+        token.role = getRoleFromEmail(user.email || "")
+        // @ts-ignore
+        token.system_id = user.system_id
+      }
+
+      // If updating the session (e.g. after onboarding)
+      if (trigger === "update" && session) {
+        token = { ...token, ...session }
+      }
+
+      return token
+    },
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = user.id
-        // Force role recalculation based on email policy to ensure admins have access
-        // even if the database record is stale/incorrect
-        const assignedRole = getRoleFromEmail(user.email)
-        session.user.role = assignedRole !== 'student' ? assignedRole : (user.role as 'student' | 'admin' | 'super_admin')
-        session.user.system_id = user.system_id
+        session.user.id = token.id as string
+        session.user.role = token.role as 'student' | 'admin' | 'super_admin'
+        session.user.system_id = token.system_id as string | undefined
       }
       return session
     },

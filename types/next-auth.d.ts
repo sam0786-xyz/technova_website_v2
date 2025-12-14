@@ -16,7 +16,8 @@ declare module "next-auth" {
         role?: 'student' | 'admin' | 'super_admin'
         system_id?: string | null
         year?: number | null
-        branch?: string | null
+        course?: string | null
+        section?: string | null
         xp_points?: number | null
     }
 }

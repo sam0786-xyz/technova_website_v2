@@ -15,9 +15,9 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { system_id, year, branch } = body
+    const { system_id, year, course, section } = body
 
-    if (!system_id || !year || !branch) {
+    if (!system_id || !year || !course || !section) {
         return new Response("Missing fields", { status: 400 })
     }
 
@@ -38,7 +38,8 @@ export async function POST(req: Request) {
         .update({
             system_id,
             year,
-            branch,
+            course,
+            section
         })
         .eq("id", session.user.id)
 

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { registerForEvent } from "@/lib/actions/registrations"
 import { useRouter } from "next/navigation"
+import { Download } from "lucide-react"
 
 declare global {
     interface Window {
@@ -43,11 +44,13 @@ interface RegistrationData {
 export function EventRegistrationCard({
     event,
     user,
-    existingRegistration
+    existingRegistration,
+    qrCode
 }: {
     event: EventData
     user: UserData | null
     existingRegistration: RegistrationData | null
+    qrCode?: string | null
 }) {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
@@ -97,6 +100,16 @@ export function EventRegistrationCard({
         }
     }
 
+    const downloadQR = () => {
+        if (!qrCode) return
+        const link = document.createElement('a')
+        link.href = qrCode
+        link.download = `technova-ticket-${event.title.replace(/\s+/g, '-').toLowerCase()}.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    }
+
     if (existingRegistration) {
         return (
             <div className="w-full md:w-80 bg-green-50 p-6 rounded-xl border border-green-200">
@@ -104,6 +117,19 @@ export function EventRegistrationCard({
                     <p className="text-green-700 font-bold text-lg">You are registered!</p>
                     <p className="text-green-600 text-sm">See you at the event.</p>
                 </div>
+                {qrCode && (
+                    <div className="flex flex-col items-center justify-center p-4 bg-white rounded-lg border border-green-100">
+                        <img src={qrCode} alt="Event Ticket QR" className="w-48 h-48" />
+                        <p className="text-xs text-gray-400 mt-2">Scan at entrance</p>
+                        <button
+                            onClick={downloadQR}
+                            className="mt-3 flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+                        >
+                            <Download className="w-4 h-4" />
+                            Download QR
+                        </button>
+                    </div>
+                )}
             </div>
         )
     }

@@ -2,11 +2,13 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 
 export function OnboardingForm({ userId }: { userId: string }) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const router = useRouter()
+    const { update } = useSession()
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -17,7 +19,8 @@ export function OnboardingForm({ userId }: { userId: string }) {
         const data = {
             system_id: formData.get("system_id"),
             year: parseInt(formData.get("year") as string),
-            branch: formData.get("branch"),
+            course: formData.get("course"),
+            section: formData.get("section"),
             userId
         }
 
@@ -32,6 +35,11 @@ export function OnboardingForm({ userId }: { userId: string }) {
                 const msg = await res.text()
                 throw new Error(msg || "Failed to update profile")
             }
+
+            // Update session with new data
+            await update({
+                system_id: data.system_id
+            })
 
             router.refresh()
             router.push("/dashboard")
@@ -67,8 +75,8 @@ export function OnboardingForm({ userId }: { userId: string }) {
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium mb-1">Branch</label>
-                    <select name="branch" required className="w-full p-2 border rounded-md">
+                    <label className="block text-sm font-medium mb-1">Course</label>
+                    <select name="course" required className="w-full p-2 border rounded-md">
                         <option value="CSE">CSE</option>
                         <option value="IT">IT</option>
                         <option value="ECE">ECE</option>
@@ -78,6 +86,15 @@ export function OnboardingForm({ userId }: { userId: string }) {
                         <option value="Other">Other</option>
                     </select>
                 </div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium mb-1">Section</label>
+                <select name="section" required className="w-full p-2 border rounded-md">
+                    {Array.from({ length: 19 }, (_, i) => String.fromCharCode(65 + i)).map(char => (
+                        <option key={char} value={char}>{char}</option>
+                    ))}
+                </select>
             </div>
 
             {error && <p className="text-red-600 text-sm">{error}</p>}
