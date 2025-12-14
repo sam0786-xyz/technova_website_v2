@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth"
+import Link from "next/link"
 import { redirect } from "next/navigation"
 import { UserNav } from "@/components/auth/user-nav"
 
@@ -21,7 +22,7 @@ export default async function DashboardLayout({
     return (
         <div className="flex min-h-screen flex-col">
             <header className="border-b bg-white p-4 flex justify-between items-center">
-                <div className="font-bold text-xl">Technova</div>
+                <Link href="/" className="font-bold text-xl">Technova</Link>
                 <div className="flex items-center gap-4">
                     <UserNav user={session.user} />
                 </div>
