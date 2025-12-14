@@ -16,6 +16,11 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Technova Technical Society",
   description: "Official platform for Technova Technical Society",
+  icons: {
+    icon: "/assets/logo/technova.png?v=2",
+    shortcut: "/assets/logo/technova.png?v=2",
+    apple: "/assets/logo/technova.png?v=2",
+  },
 };
 
 export default function RootLayout({

@@ -41,9 +41,9 @@ export function Navbar({ user }: NavbarProps) {
         <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
-                    <Link href="/" className="text-xl font-bold text-white flex items-center gap-2">
-                        <span className="bg-blue-600 px-2 py-1 rounded text-sm">T</span>
-                        Technova
+                    <Link href="/" className="text-xl font-bold text-white flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/assets/logo/technova.png" alt="Technova" className="h-10 w-auto" />
                     </Link>
 
                     {/* Desktop Links */}

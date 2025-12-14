@@ -1,71 +1,227 @@
 'use client'
 
-import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowRight, Calendar, Users, Award } from "lucide-react"
-import { Navbar } from "@/components/layout/navbar"
+import { ArrowRight, Terminal, Database, Rocket, Gamepad2, Code2, Globe, Camera, Lightbulb, Users, Target, Zap, ChevronRight, Mail, MapPin, Instagram, Linkedin } from "lucide-react"
+import { ClubsCarousel } from "@/components/ui/clubs-carousel"
 
-export default function Home() {
+export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white selection:bg-blue-500 selection:text-white">
 
-      {/* Hero Section */}
-      <section className="relative h-screen flex flex-col items-center justify-center overflow-hidden px-4 text-center pt-16">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black z-0 pointer-events-none" />
+      {/* HER0 SECTION */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="z-10 max-w-4xl"
-        >
-          <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-sm font-medium backdrop-blur-sm">
-            Technova Technical Society
+        <div className="container mx-auto px-4 relative z-10 text-center">
+          <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 backdrop-blur-sm">
+            <span className="text-blue-400 font-medium text-sm tracking-wider uppercase">Technical Society of Sharda University</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-br from-white via-gray-200 to-gray-500">
-            Shape the Future of <br className="hidden md:block" /> Technology
+
+          <h1 className="text-6xl md:text-8xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
+            WELCOME TO <br />
+            <span className="text-blue-500">TECHNOVA</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-            The official technical ecosystem of Sharda University. Connect, Compete, and Create with the brightest minds on campus.
+
+          <p className="max-w-2xl mx-auto text-gray-400 text-lg md:text-xl mb-10 leading-relaxed">
+            Prepare to be an efficient problem solver, researcher, innovator, and entrepreneur.
+            The future of technology starts here.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/login" className="px-8 py-3.5 rounded-full bg-white text-black font-semibold hover:bg-gray-200 transition-colors flex items-center gap-2">
-              Join Society <ArrowRight className="w-4 h-4" />
+            <Link href="/events" className="group bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold transition-all flex items-center gap-2">
+              Explore Events
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/clubs" className="px-8 py-3.5 rounded-full border border-gray-700 hover:border-gray-500 hover:bg-gray-900 transition-all">
-              Explore Clubs
+            <Link href="/clubs" className="px-8 py-4 rounded-xl font-bold border border-white/10 hover:bg-white/5 transition-all">
+              View Clubs
             </Link>
           </div>
-        </motion.div>
+
+          {/* Stats or Trusted By (Optional) */}
+          <div className="mt-20 pt-10 border-t border-white/5 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-3xl font-bold text-white">8+</h3>
+              <p className="text-sm text-gray-500 uppercase tracking-widest mt-1">Specialized Clubs</p>
+            </div>
+            <div>
+              <h3 className="text-3xl font-bold text-white">50+</h3>
+              <p className="text-sm text-gray-500 uppercase tracking-widest mt-1">Events Yearly</p>
+            </div>
+            <div>
+              <h3 className="text-3xl font-bold text-white">1000+</h3>
+              <p className="text-sm text-gray-500 uppercase tracking-widest mt-1">Active Members</p>
+            </div>
+            <div>
+              <h3 className="text-3xl font-bold text-white">24/7</h3>
+              <p className="text-sm text-gray-500 uppercase tracking-widest mt-1">Innovation</p>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* Stats/Highlights */}
-      <section className="py-24 border-t border-gray-800 bg-black/50 backdrop-blur-3xl">
+      {/* VISION & MISSION */}
+      <section className="py-24 bg-zinc-900/50">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 gap-12 items-start">
+            {/* Vision Card */}
+            <div className="p-8 rounded-3xl bg-gradient-to-br from-white/5 to-transparent border border-white/10 hover:border-blue-500/50 transition-all group">
+              <div className="w-14 h-14 bg-blue-600/20 rounded-2xl flex items-center justify-center mb-6 text-blue-500 group-hover:scale-110 transition-transform">
+                <Target className="w-7 h-7" />
+              </div>
+              <h2 className="text-3xl font-bold mb-4">Our Vision</h2>
+              <p className="text-gray-400 leading-relaxed">
+                The Technical Society aims to become a front-runner in preparing graduates to be efficient problem solvers, researchers, innovators and entrepreneurs, and making them competent professionals by enabling them to take up any kind of challenges in the Information Technology industry or research organizations.
+              </p>
+            </div>
+
+            {/* Mission Card */}
+            <div className="p-8 rounded-3xl bg-gradient-to-br from-white/5 to-transparent border border-white/10 hover:border-purple-500/50 transition-all group">
+              <div className="w-14 h-14 bg-purple-600/20 rounded-2xl flex items-center justify-center mb-6 text-purple-500 group-hover:scale-110 transition-transform">
+                <Rocket className="w-7 h-7" />
+              </div>
+              <h2 className="text-3xl font-bold mb-4">Our Mission</h2>
+              <p className="text-gray-400 leading-relaxed">
+                We elevate the technical skillset of students to match industry standards by conducting interactions, sessions, and propelling students to pursue their passion. With support from our alumni network, we strive to excel in this all-time mission of empowering the student community.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* WHAT WE DO */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px]" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-3">Why Join Us?</h2>
+            <h3 className="text-4xl md:text-5xl font-bold mb-6">What We Do?</h3>
+            <p className="text-gray-400 text-lg">
+              The Technical Society provides personal growth, leadership and learning opportunities in engineering, technology, innovation, and design.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: Calendar, label: "Active Events", value: "10+", desc: "Workshops & Hackathons" },
-              { icon: Users, label: "Community", value: "500+", desc: "Student Developers" },
-              { icon: Award, label: "Achievements", value: "50+", desc: "National Awards" },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="p-6 rounded-2xl bg-gray-900/50 border border-gray-800 hover:border-blue-500/30 transition-colors"
-              >
-                <stat.icon className="w-8 h-8 text-blue-500 mb-4" />
-                <h3 className="text-3xl font-bold mb-1">{stat.value}</h3>
-                <p className="font-semibold text-white mb-2">{stat.label}</p>
-                <p className="text-gray-400 text-sm">{stat.desc}</p>
-              </motion.div>
+              { icon: Lightbulb, title: "Innovation", text: "Promoting student ability for invention, resourcefulness and ultimately innovation." },
+              { icon: Users, title: "Community", text: "Connecting students with similar interests and interacting with alumni and professionals." },
+              { icon: Zap, title: "Growth", text: "Introduction to principles and practices that are the foundation of engineering technology." },
+            ].map((feature, idx) => (
+              <div key={idx} className="bg-white/5 p-8 rounded-2xl hover:bg-white/10 transition-colors">
+                <feature.icon className="w-10 h-10 text-blue-400 mb-4" />
+                <h4 className="text-xl font-bold mb-3">{feature.title}</h4>
+                <p className="text-gray-400 leading-relaxed">{feature.text}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* CLUBS GRID */}
+      <section className="py-24 bg-zinc-900">
+        <div className="container mx-auto px-4">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4">Explore Our Clubs</h2>
+              <p className="text-gray-400">Find your tribe and master your craft.</p>
+            </div>
+            <Link href="/clubs" className="hidden md:flex items-center gap-2 text-blue-500 hover:text-blue-400 font-medium">
+              View All Clubs <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="mt-20 mb-20">
+            <ClubsCarousel />
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-black py-12 border-t border-white/10">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex flex-wrap items-center gap-6 mb-8">
+                <Link href="/" className="block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/assets/logo/technova-white.png" alt="Technova Logo" className="h-24 w-auto object-contain" />
+                </Link>
+                <div className="hidden md:block h-12 w-px bg-white/20" />
+                <Link href="https://www.sharda.ac.in/" target="_blank" className="block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/assets/logo/sharda.png" alt="Sharda University" className="h-20 w-auto object-contain bg-white rounded-lg p-2" />
+                </Link>
+                <div className="hidden md:block h-12 w-px bg-white/20" />
+                <div className="block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/assets/logo/naac.png" alt="NAAC Accredited" className="h-20 w-auto object-contain bg-white/90 rounded-lg p-1" />
+                </div>
+              </div>
+
+              <p className="text-gray-400 max-w-sm mb-6">
+                Sharda School of Engineering and Technology, Sharda University,
+                Knowledge Park III, Greater Noida, Uttar Pradesh - 201310, India
+              </p>
+              <div className="flex gap-4">
+                <Link
+                  href="https://www.instagram.com/technova_sharda/"
+                  target="_blank"
+                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-pink-600 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-600/20"
+                >
+                  <Instagram className="w-5 h-5" />
+                </Link>
+                <Link
+                  href="https://www.linkedin.com/company/technova-su/"
+                  target="_blank"
+                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-600/20"
+                >
+                  <Linkedin className="w-5 h-5" />
+                </Link>
+                <Link
+                  href="mailto:technova@sharda.ac.in"
+                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-red-500 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/20"
+                >
+                  <Mail className="w-5 h-5" />
+                </Link>
+                <Link
+                  href="/"
+                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-emerald-500 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/20"
+                >
+                  <Globe className="w-5 h-5" />
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-white mb-6">Quick Links</h4>
+              <ul className="space-y-3">
+                <li><Link href="/events" className="text-gray-400 hover:text-blue-400 transition-colors">Events</Link></li>
+                <li><Link href="/clubs" className="text-gray-400 hover:text-blue-400 transition-colors">Clubs</Link></li>
+                <li><Link href="/leadership" className="text-gray-400 hover:text-blue-400 transition-colors">Leadership</Link></li>
+                <li><Link href="/login" className="text-gray-400 hover:text-blue-400 transition-colors">Login / Register</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-white mb-6">Contact</h4>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3 text-gray-400">
+                  <MapPin className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                  <span>Knowledge Park III, Greater Noida</span>
+                </li>
+                <li className="flex items-center gap-3 text-gray-400">
+                  <Mail className="w-5 h-5 text-blue-500 shrink-0" />
+                  <span>technova@sharda.ac.in</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-white/10 mt-12 pt-8 text-center text-gray-600 text-sm">
+            &copy; {new Date().getFullYear()} Technova Technical Society.
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
