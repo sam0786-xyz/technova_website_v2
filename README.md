@@ -1,8 +1,63 @@
 # Technova Website V2
 
-This is a [Next.js](https://nextjs.org) project for the Technova college website.
+This is the repository for the **Technova 2025/2026** college website. It serves as the central hub for event information, student leadership, user registration, and administrative management.
 
-## Getting Started
+## 🚀 Features
+
+### 🌐 Public Interface
+- **Landing Page**: Modern, responsive design showcasing the event.
+- **Leadership**: Introduces the core team and executive members.
+- **Events**: Browsable list of upcoming events.
+
+### 🔐 Authentication & Onboarding
+- **Secure Login**: Powered by **NextAuth.js** and **Supabase**.
+- **Onboarding Flow**: Collects essential user details (name, college, phone) after initial sign-up.
+
+### 📊 User Dashboard
+- **Personal Stats**: Users can track their participation and achievements.
+- **Leaderboard**: Real-time ranking of students based on points/participation.
+- **Profile Management**: Easy update of personal information.
+
+### 🛠️ Admin Dashboard
+- **Event Management**: Create, update, and manage events.
+- **User Oversight**: View and manage registered users.
+- **Analytics**: Insights into registration numbers and engagement.
+
+### 📱 Scanner App
+- **QR Code Scanning**: Mobile-friendly interface for verifying event attendance.
+- **Real-time Validation**: Instantly marks attendance in the database.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [Framer Motion](https://www.framer.com/motion/)
+- **UI Components**: [Shadcn UI](https://ui.shadcn.com/)
+- **Backend & Database**: [Supabase](https://supabase.com/)
+- **Authentication**: [NextAuth.js](https://next-auth.js.org/) / [Auth.js](https://authjs.dev/)
+
+## 📂 Project Structure
+
+The project follows the standard Next.js App Router structure:
+
+```
+app/
+├── (admin)/       # Administrative routes and layouts
+├── (auth)/        # Authentication and onboarding pages
+├── (dashboard)/   # User dashboard and leaderboard
+├── (public)/      # Public-facing pages (Home, Leadership, etc.)
+├── (scanner)/     # QR Code scanner interface
+├── api/           # API routes (Auth, Events, User handling)
+└── globals.css    # Global styles
+```
+
+## ⚡ Getting Started
+
+### Prerequisites
+- Node.js (v18 or higher)
+- npm, yarn, or pnpm
+
+### Installation
 
 1.  **Clone the repository:**
     ```bash
@@ -13,23 +68,24 @@ This is a [Next.js](https://nextjs.org) project for the Technova college website
 2.  **Install dependencies:**
     ```bash
     npm install
-    # or
-    yarn install
-    # or
-    pnpm install
     ```
 
 3.  **Environment Setup:**
-    Create a `.env` file in the root directory and add the following environment variables. You will need to obtain these credentials from the project administrator or your Supabase/Google Cloud console.
+    Create a `.env` file in the root directory. You will need credentials from your Supabase project and Google Cloud Console (for OAuth).
 
     ```env
+    # Supabase
     NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
     NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-    AUTH_SECRET=your_auth_secret  # Generate one: openssl rand -base64 32
+    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+    # NextAuth
+    AUTH_SECRET=your_generated_secret
     AUTH_GOOGLE_ID=your_google_client_id
     AUTH_GOOGLE_SECRET=your_google_client_secret
-    DATABASE_URL=your_database_url
+    
+    # App-Specific
+    NEXT_PUBLIC_APP_URL=http://localhost:3000
     ```
 
 4.  **Run the development server:**
@@ -37,15 +93,12 @@ This is a [Next.js](https://nextjs.org) project for the Technova college website
     npm run dev
     ```
 
-    Open [http://localhost:3000](http://localhost:3000) with your browser.
+    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Features
-- **Next.js 14** (App Router)
-- **Supabase** for Backend/Auth
-- **Tailwind CSS** for Styling
-- **Shadcn UI** for Components
+## 🤝 Contributing
 
-## Learn More
-To learn more about Next.js, take a look at the following resources:
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1.  Fork the repository.
+2.  Create a new branch (`git checkout -b feature/AmazingFeature`).
+3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+4.  Push to the branch (`git push origin feature/AmazingFeature`).
+5.  Open a Pull Request.
