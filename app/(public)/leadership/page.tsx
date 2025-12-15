@@ -49,7 +49,10 @@ const TEAM = [
         color: "text-blue-500",
         bg: "bg-blue-500/10",
         icon: Award,
-        imagePath: "/assets/team/mohammad_sameer.png"
+        imagePath: "/assets/team/mohammad_sameer.png",
+        phone: "8603829005",
+        email: "2023258878.mohammad@ug.sharda.ac.in",
+        linkedin: "http://linkedin.com/in/connect-to-sam-xyz"
     },
     {
         name: "Masood Aslam",
@@ -58,7 +61,10 @@ const TEAM = [
         color: "text-purple-500",
         bg: "bg-purple-500/10",
         icon: TrendingUp,
-        imagePath: "/assets/team/masood_aslam.png"
+        imagePath: "/assets/team/masood_aslam.png",
+        phone: "9540379738",
+        email: "2023305225.masood@ug.sharda.ac.in",
+        linkedin: "http://linkedin.com/in/masoodaslam1"
     },
     {
         name: "Khushi Narang",
@@ -67,7 +73,10 @@ const TEAM = [
         color: "text-green-500",
         bg: "bg-green-500/10",
         icon: Target,
-        imagePath: "/assets/team/khushi_narang.png"
+        imagePath: "/assets/team/khushi_narang.png",
+        phone: "8860077500",
+        email: "2023343200.khushi@ug.sharda.ac.in",
+        linkedin: "http://linkedin.com/in/khushi-narang-b984342aa"
     },
     {
         name: "Ankit Gautam",
@@ -76,7 +85,10 @@ const TEAM = [
         color: "text-pink-500",
         bg: "bg-pink-500/10",
         icon: Users,
-        imagePath: "/assets/team/ankit_gautam.png"
+        imagePath: "/assets/team/ankit_gautam.png",
+        phone: "9599699065",
+        email: "2023423329.ankit@ug.sharda.ac.in",
+        linkedin: "http://linkedin.com/in/ankitgtm"
     },
     {
         name: "Suryansh Dixit",
@@ -85,7 +97,10 @@ const TEAM = [
         color: "text-pink-500",
         bg: "bg-pink-500/10",
         icon: Users,
-        imagePath: "/assets/team/suryansh_dixit.png"
+        imagePath: "/assets/team/suryansh_dixit.png",
+        phone: "9511169064",
+        email: "2023567067.suryansh@ug.sharda.ac.in",
+        linkedin: "http://linkedin.com/in/suryansh-dixit-b0069227b"
     },
     {
         name: "Farhan Khan",
@@ -94,7 +109,10 @@ const TEAM = [
         color: "text-amber-500",
         bg: "bg-amber-500/10",
         icon: BookOpen,
-        imagePath: "/assets/team/farhan_khan.png"
+        imagePath: "/assets/team/farhan_khan.png",
+        phone: "9311477176",
+        email: "2023540452.farhan@ug.sharda.ac.in",
+        linkedin: "http://linkedin.com/in/farhan-khan-668439300"
     }
 ]
 
@@ -263,15 +281,32 @@ export default function LeadershipPage() {
                                         )}
                                     </div>
                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-blue-400 transition-colors" title="LinkedIn">
+                                        <a
+                                            // @ts-ignore
+                                            href={member.linkedin}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-blue-400 transition-colors"
+                                            title="LinkedIn"
+                                        >
                                             <Linkedin className="w-5 h-5" />
-                                        </button>
-                                        <button className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-green-400 transition-colors" title="Call">
+                                        </a>
+                                        <a
+                                            // @ts-ignore
+                                            href={`tel:+91${member.phone}`}
+                                            className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-green-400 transition-colors"
+                                            title="Call"
+                                        >
                                             <Phone className="w-5 h-5" />
-                                        </button>
-                                        <button className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-red-400 transition-colors" title="Email">
+                                        </a>
+                                        <a
+                                            // @ts-ignore
+                                            href={`mailto:${member.email}`}
+                                            className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-red-400 transition-colors"
+                                            title="Email"
+                                        >
                                             <Mail className="w-5 h-5" />
-                                        </button>
+                                        </a>
                                     </div>
                                 </div>
 
