@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-// import { signOut } from "next-auth/react"
+import { signOut } from "next-auth/react"
 import Link from "next/link"
 import { User, LogOut, Home, LayoutDashboard } from "lucide-react"
 
@@ -60,12 +60,7 @@ export function UserNav({ user }: UserNavProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     className="cursor-pointer text-red-600 focus:text-red-600"
-                    onClick={async () => {
-                        const { createClient } = await import("@/supabase/client")
-                        const supabase = createClient()
-                        await supabase.auth.signOut()
-                        window.location.href = "/"
-                    }}
+                    onClick={() => signOut({ callbackUrl: "/" })}
                 >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign out

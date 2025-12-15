@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { Mail, Linkedin, Github, User, Award, TrendingUp, Users, Target, BookOpen, Star, Sparkles } from "lucide-react"
+import { Mail, Linkedin, Github, User, Award, TrendingUp, Users, Target, BookOpen, Star, Sparkles, Phone } from "lucide-react"
 import Image from "next/image"
 
 const MENTORS = [
@@ -39,25 +39,6 @@ const MENTORS = [
         imagePath: "/assets/leadership/coordinator.png"
     }
 ]
-
-// ... (Rest of imports and TEAM constant handled by context matching, only changing what matches target content below)
-
-// NOTE: This replacement block targets the component content area.
-// I will need to replace the entire component return down to the carousel to ensure the new state structure is picked up if needed, 
-// but actually the array is global constant, so I can just replace the definition at the top and the render part.
-// But replace_file_content requires a single block. I will use multi if I can't reach both. 
-// Wait, the file is small enough. I will target the MENTORS definition and the Carousel section render in one go if they are contiguous enough? No.
-// I will just use replace_file_content on the whole MENTORS array first (as I did above in the ReplacementContent string, but that was just the array).
-// Ah, the tool requires TargetContent. I should target the MENTORS array definition itself.
-// Then I'll do another call for the render logic. I cannot do multiple in one replace_file_content call unless I replace everything in between.
-// The MENTORS array is at the top. The render logic is further down.
-// I will use `multi_replace_file_content`.
-
-// Wait, I cannot use multi_replace. I'll use `replace_file_content` for the array first, then `replace_file_content` for the render part in sequence.
-// Actually, `default_api:replace_file_content` documentation says "Do NOT make multiple parallel calls...". I must wait.
-// I'll start with updating the MENTORS array.
-// WAIT! I can't do that. The prompt asks me to fix "messages getting cut" and "make last sentence bold".
-// I'll use MULTI_replace_file_content.
 
 
 const TEAM = [
@@ -264,7 +245,7 @@ export default function LeadershipPage() {
                         {TEAM.map((member) => (
                             <div key={member.name} className="group bg-zinc-900/50 border border-white/5 p-8 rounded-3xl hover:bg-zinc-900 hover:border-white/10 transition-all hover:-translate-y-1 overflow-hidden relative">
                                 <div className="flex justify-between items-start mb-6 relative z-10">
-                                    <div className={`w-20 h-20 ${member.bg} ${member.color} rounded-2xl flex items-center justify-center text-current group-hover:scale-110 transition-transform overflow-hidden relative border border-white/5`}>
+                                    <div className={`w-32 h-32 ${member.bg} ${member.color} rounded-2xl flex items-center justify-center text-current group-hover:scale-110 transition-transform overflow-hidden relative border border-white/5`}>
                                         {/* @ts-ignore */}
                                         {member.imagePath ? (
                                             <img
@@ -278,12 +259,18 @@ export default function LeadershipPage() {
                                                 }}
                                             />
                                         ) : (
-                                            <member.icon className="w-8 h-8" />
+                                            <member.icon className="w-12 h-12" />
                                         )}
                                     </div>
                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-blue-400 transition-colors">
-                                            <Linkedin className="w-4 h-4" />
+                                        <button className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-blue-400 transition-colors" title="LinkedIn">
+                                            <Linkedin className="w-5 h-5" />
+                                        </button>
+                                        <button className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-green-400 transition-colors" title="Call">
+                                            <Phone className="w-5 h-5" />
+                                        </button>
+                                        <button className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-red-400 transition-colors" title="Email">
+                                            <Mail className="w-5 h-5" />
                                         </button>
                                     </div>
                                 </div>

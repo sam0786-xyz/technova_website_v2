@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient as createServerClient } from "@supabase/supabase-js"
-import { getUser } from "@/lib/auth/supabase-server"
+import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 
@@ -16,8 +16,8 @@ async function getSupabase() {
 }
 
 export async function createEvent(formData: FormData) {
-    const user = await getUser()
-    if (!user || user.role === 'student') {
+    const session = await auth()
+    if (!session || session.user.role === 'student') {
         throw new Error("Unauthorized")
     }
 

@@ -36,3 +36,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 node_modules 3/
+node_modules_trash_*/

@@ -1,16 +1,16 @@
-import { getUser } from "@/lib/auth/supabase-server"
+import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { OnboardingForm } from "@/components/auth/onboarding-form"
 
 export default async function OnboardingPage() {
-    const user = await getUser()
+    const session = await auth()
 
-    if (!user) {
+    if (!session) {
         redirect("/login")
     }
 
     // If already completed, redirect to dashboard
-    if (user.system_id) {
+    if (session.user.system_id) {
         redirect("/dashboard")
     }
 
@@ -22,7 +22,7 @@ export default async function OnboardingPage() {
                     <p className="text-gray-500">We need a few more details to set up your Technova account.</p>
                 </div>
 
-                <OnboardingForm userId={user.id} />
+                <OnboardingForm userId={session.user.id} />
             </div>
         </div>
     )

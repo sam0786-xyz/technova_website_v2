@@ -1,4 +1,4 @@
-import { getUser } from "@/lib/auth/supabase-server"
+import { auth } from "@/lib/auth"
 import { createClient as createServerClient } from "@supabase/supabase-js"
 
 const supabase = createServerClient(
@@ -8,9 +8,9 @@ const supabase = createServerClient(
 )
 
 export async function POST(req: Request) {
-    const user = await getUser()
+    const session = await auth()
 
-    if (!user || !user.id) {
+    if (!session || !session.user?.id) {
         return new Response("Unauthorized", { status: 401 })
     }
 
@@ -28,24 +28,20 @@ export async function POST(req: Request) {
         .eq("system_id", system_id)
         .maybeSingle()
 
-    if (existing && existing.id !== user.id) {
+    if (existing && existing.id !== session.user.id) {
         return new Response("System ID already in use", { status: 409 })
     }
 
-    // Update user (Upsert to create if missing from next_auth.users)
+    // Update user
     const { error } = await supabase
         .from("users")
-        .upsert({
-            id: user.id,
-            email: user.email,
+        .update({
             system_id,
             year,
             course,
-            section,
-            // Ensure other fields are present or handled if strict schema? 
-            // Postgres upsert handles partial if we don't violate not-nulls.
+            section
         })
-        .eq("id", user.id)
+        .eq("id", session.user.id)
 
     if (error) {
         console.error(error)
