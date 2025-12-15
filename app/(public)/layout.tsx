@@ -1,16 +1,16 @@
 import { Navbar } from "@/components/layout/navbar"
-import { auth } from "@/lib/auth"
+import { getUser } from "@/lib/auth/supabase-server"
 
 export default async function PublicLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
-    const session = await auth()
+    const user = await getUser()
 
     return (
         <div className="flex flex-col min-h-screen">
-            <Navbar user={session?.user} />
+            <Navbar user={user || undefined} />
             <main className="flex-1">
                 {children}
             </main>

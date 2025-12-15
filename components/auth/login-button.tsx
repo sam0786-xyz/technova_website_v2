@@ -1,14 +1,26 @@
-import { signIn } from "@/lib/auth"
+"use client"
+
+import { createClient } from "@/supabase/client"
 
 export function LoginButton() {
+    const supabase = createClient()
+
+    const handleLogin = async () => {
+        await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: 'https://www.technovashardauniversity.in'
+            }
+        })
+    }
+
     return (
-        <form
-            action={async () => {
-                "use server"
-                await signIn("google")
-            }}
+        <button
+            className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+            onClick={handleLogin}
+            type="button"
         >
-            <button className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors" type="submit">Sign in with Sharda Email</button>
-        </form>
+            Sign in with Sharda Email
+        </button>
     )
 }

@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth"
+import { getUser } from "@/lib/auth/supabase-server"
 import { redirect } from "next/navigation"
 
 export default async function ScannerLayout({
@@ -6,10 +6,10 @@ export default async function ScannerLayout({
 }: {
     children: React.ReactNode
 }) {
-    const session = await auth()
+    const user = await getUser()
 
     // Only admins can access scanner
-    if (!session || session.user.role === 'student') {
+    if (!user || user.role === 'student') {
         redirect('/login')
     }
 

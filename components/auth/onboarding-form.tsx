@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
+// import { useSession } from "next-auth/react"
 
 export function OnboardingForm({ userId }: { userId: string }) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const router = useRouter()
-    const { update } = useSession()
+    // const { update } = useSession()
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -37,9 +37,9 @@ export function OnboardingForm({ userId }: { userId: string }) {
             }
 
             // Update session with new data
-            await update({
-                system_id: data.system_id
-            })
+            // await update({
+            //     system_id: data.system_id
+            // })
 
             router.refresh()
             router.push("/dashboard")

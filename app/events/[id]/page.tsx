@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth"
+import { getUser } from "@/lib/auth/supabase-server"
 import { Calendar, MapPin, Clock, Users, Globe } from "lucide-react"
 import { getEventById } from "@/lib/actions/events"
 import { checkRegistration } from "@/lib/actions/registrations"
@@ -9,7 +9,7 @@ import { createClient } from "@supabase/supabase-js"
 
 export default async function EventPage({ params }: { params: { id: string } }) {
     const event = await getEventById(params.id)
-    const session = await auth()
+    const user = await getUser()
 
     if (!event) {
         notFound()
@@ -17,28 +17,29 @@ export default async function EventPage({ params }: { params: { id: string } }) 
 
     const existingRegistration = await checkRegistration(params.id)
 
-    const user = session?.user || null
+    // const user = session?.user || null // Already have user from getUser, avoiding name collision if needed, but 'user' matches variable name on line 20
+
     let qrCode = null
 
-    if (existingRegistration && session?.user?.id) {
+    if (existingRegistration && user?.id) {
         // Generate QR Code for display
         const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
-        const { data: userProfile } = await supabase.schema('next_auth').from('users').select('*').eq('id', session.user.id).single()
+        const { data: userProfile } = await supabase.schema('next_auth').from('users').select('*').eq('id', user.id).single()
 
         const userData = {
-            name: userProfile?.name || session.user.name || '',
+            name: userProfile?.name || user.name || '',
             system_id: userProfile?.system_id || '',
             year: userProfile?.year?.toString() || '',
             course: userProfile?.course || '',
             section: userProfile?.section || '',
-            email: session.user.email || ''
+            email: user.email || ''
         }
 
         const { qrDataUrl } = await generateQRToken(
-            session.user.id,
+            user.id,
             params.id,
             userData,
             existingRegistration.qr_token_id

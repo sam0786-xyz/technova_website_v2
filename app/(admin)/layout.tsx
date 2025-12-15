@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth"
+import { getUser } from "@/lib/auth/supabase-server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Calendar, Users, BarChart, Settings, Home } from "lucide-react"
@@ -8,14 +8,14 @@ export default async function AdminLayout({
 }: {
     children: React.ReactNode
 }) {
-    const session = await auth()
+    const user = await getUser()
 
-    if (!session) {
+    if (!user) {
         redirect("/login")
     }
 
     // Basic Role Gate (Refine with DB check later if needed)
-    if (session.user.role === 'student') {
+    if (user.role === 'student') {
         return (
             <div className="flex h-screen items-center justify-center">
                 <div className="text-center">
@@ -57,8 +57,8 @@ export default async function AdminLayout({
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-200" />
                         <div>
-                            <p className="text-sm font-medium">{session.user.name}</p>
-                            <p className="text-xs text-gray-500 capitalize">{session.user.role}</p>
+                            <p className="text-sm font-medium">{user.name}</p>
+                            <p className="text-xs text-gray-500 capitalize">{user.role}</p>
                         </div>
                     </div>
                 </div>

@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient as createServerClient } from "@supabase/supabase-js"
-import { auth } from "@/lib/auth"
+import { getUser } from "@/lib/auth/supabase-server"
 import { createOrder } from "@/lib/payments/razorpay"
 import { revalidatePath } from "next/cache"
 import { generateQRToken } from "@/lib/qr/generate"
@@ -18,14 +18,14 @@ async function getSupabase() {
 }
 
 export async function checkRegistration(eventId: string) {
-    const session = await auth()
-    if (!session) return null
+    const user = await getUser()
+    if (!user) return null
 
     const supabase = await getSupabase()
     const { data } = await supabase
         .from('registrations')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .eq('event_id', eventId)
         .maybeSingle()
 
@@ -33,8 +33,8 @@ export async function checkRegistration(eventId: string) {
 }
 
 export async function registerForEvent(eventId: string) {
-    const session = await auth()
-    if (!session) throw new Error("Unauthorized")
+    const user = await getUser()
+    if (!user) throw new Error("Unauthorized")
 
     const supabase = await getSupabase()
 
@@ -56,7 +56,7 @@ export async function registerForEvent(eventId: string) {
     if (event.price > 0) {
         const order = await createOrder(event.price)
         await supabase.from('registrations').insert({
-            user_id: session.user.id,
+            user_id: user.id,
             event_id: eventId,
             payment_status: 'pending',
             qr_token_id: order.id
@@ -65,21 +65,21 @@ export async function registerForEvent(eventId: string) {
     } else {
         // Free Event - Generate QR and Register
         // Fetch full user details for QR
-        const { data: userProfile } = await supabase.schema('next_auth').from('users').select('*').eq('id', session.user.id).single()
+        const { data: userProfile } = await supabase.schema('next_auth').from('users').select('*').eq('id', user.id).single()
 
         const userData = {
-            name: userProfile?.name || session.user.name || '',
+            name: userProfile?.name || user.name || '',
             system_id: userProfile?.system_id || '',
             year: userProfile?.year?.toString() || '',
             course: userProfile?.course || '',
             section: userProfile?.section || '',
-            email: session.user.email || ''
+            email: user.email || ''
         }
 
-        const { token, qrDataUrl } = await generateQRToken(session.user.id!, eventId, userData)
+        const { token, qrDataUrl } = await generateQRToken(user.id!, eventId, userData)
 
         const { error } = await supabase.from('registrations').insert({
-            user_id: session.user.id,
+            user_id: user.id,
             event_id: eventId,
             payment_status: 'free',
             qr_token_id: token
@@ -91,11 +91,11 @@ export async function registerForEvent(eventId: string) {
         try {
             await resend.emails.send({
                 from: 'Technova <onboarding@resend.dev>',
-                to: session.user.email!,
+                to: user.email!,
                 subject: `Ticket: ${event.title}`,
                 react: TicketEmail({
                     eventName: event.title,
-                    userName: session.user.name || 'Student',
+                    userName: user.name || 'Student',
                     eventDate: new Date(event.start_time).toLocaleString(),
                     venue: event.venue,
                     qrDataUrl: qrDataUrl,
@@ -113,14 +113,14 @@ export async function registerForEvent(eventId: string) {
 }
 
 export async function getMyRegistration(eventId: string) {
-    const session = await auth()
-    if (!session) return null
+    const user = await getUser()
+    if (!user) return null
 
     const supabase = await getSupabase()
     const { data } = await supabase
         .from('registrations')
         .select('*, events(*)')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .eq('event_id', eventId)
         .maybeSingle()
 
@@ -128,8 +128,8 @@ export async function getMyRegistration(eventId: string) {
 }
 
 export async function getEventRegistrations(eventId: string) {
-    const session = await auth()
-    if (!session || !session.user || !['admin', 'super_admin'].includes(session.user.role)) {
+    const user = await getUser()
+    if (!user || !['admin', 'super_admin'].includes(user.role)) {
         throw new Error("Unauthorized")
     }
 
