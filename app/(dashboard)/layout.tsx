@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { UserNav } from "@/components/auth/user-nav"
+import { MainNav } from "@/components/dashboard/main-nav"
 
 export default async function DashboardLayout({
     children,
@@ -22,7 +23,10 @@ export default async function DashboardLayout({
     return (
         <div className="flex min-h-screen flex-col bg-black text-white">
             <header className="border-b border-white/10 bg-black/50 backdrop-blur-md p-4 flex justify-between items-center sticky top-0 z-50">
-                <Link href="/" className="font-bold text-xl text-white">Technova</Link>
+                <div className="flex items-center gap-8">
+                    <Link href="/" className="font-bold text-xl text-white">Technova</Link>
+                    <MainNav />
+                </div>
                 <div className="flex items-center gap-4">
                     <UserNav user={session.user} />
                 </div>
