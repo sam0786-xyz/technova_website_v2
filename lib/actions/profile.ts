@@ -1,146 +1,137 @@
 'use server'
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import { createClient as createServerClient } from "@supabase/supabase-js"
+import { auth } from "@/lib/auth"
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
-import { auth } from "@/lib/auth";
-
-const updateProfileSchema = z.object({
-    bio: z.string().max(500).optional(),
-    skills: z.string().optional(), // Comma separated
-    interests: z.string().optional(), // Comma separated
-    github_url: z.string().url().optional().or(z.literal("")),
-    linkedin_url: z.string().url().optional().or(z.literal("")),
-    portfolio_url: z.string().url().optional().or(z.literal("")),
-});
-
-export async function updateProfile(prevState: any, formData: FormData) {
-    const supabase = createClient();
-    const session = await auth();
-    const user = session?.user;
-
-    if (!user || !user.id) {
-        return { error: "Not authenticated" };
-    }
-
-    const result = updateProfileSchema.safeParse({
-        bio: formData.get("bio"),
-        skills: formData.get("skills"),
-        interests: formData.get("interests"),
-        github_url: formData.get("github_url"),
-        linkedin_url: formData.get("linkedin_url"),
-        portfolio_url: formData.get("portfolio_url"),
-    });
-
-    if (!result.success) {
-        return { error: result.error.issues[0].message };
-    }
-
-    const { bio, skills, interests, github_url, linkedin_url, portfolio_url } = result.data;
-
-    const skillsArray = skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
-    const interestsArray = interests ? interests.split(',').map(s => s.trim()).filter(Boolean) : [];
-
-    const supabaseAdmin = createAdminClient();
-    const { error } = await supabaseAdmin.from('profiles').upsert({
-        id: user.id,
-        bio,
-        skills: skillsArray,
-        interests: interestsArray,
-        github_url,
-        linkedin_url,
-        portfolio_url,
-        updated_at: new Date().toISOString(),
-    });
-
-    if (error) {
-        console.error("Error updating profile:", error);
-        return { error: "Failed to update profile" };
-    }
-
-    revalidatePath('/profile');
-    revalidatePath('/buddy-finder');
-    return { success: true };
+async function getSupabase() {
+    return createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 }
 
-export async function getProfile(userId?: string) {
-    const supabase = createClient();
-
-    let targetUserId = userId;
-    if (!targetUserId) {
-        const session = await auth();
-        const user = session?.user;
-        if (!user || !user.id) return null;
-        targetUserId = user.id;
+export async function updateProfile(formData: FormData) {
+    const session = await auth()
+    if (!session || !session.user || !session.user.id) {
+        throw new Error("Not authenticated")
     }
 
-    const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', targetUserId)
-        .single();
+    const supabase = await getSupabase()
+    const userId = session.user.id
 
-    // If no profile found, return minimal valid object or null, 
-    // but upsert handles creation so it might be null initially.
-    if (error && error.code !== 'PGRST116') {
-        console.error("Error fetching profile:", error);
+    const section = formData.get("section") as string
+    const system_id = formData.get("system_id") as string
+    const year = parseInt(formData.get("year") as string)
+    const mobile = formData.get("mobile") as string
+    const skills = (formData.get("skills") as string).split(',').map(s => s.trim()).filter(s => s.length > 0)
+
+    // 1. Update User Details (next_auth.users)
+    const { error: userError } = await supabase.schema('next_auth').from('users').update({
+        section,
+        system_id,
+        year,
+        mobile
+    }).eq('id', userId)
+
+    if (userError) {
+        console.error("User Update Error:", userError)
+        return { error: "Failed to update basic info" }
     }
 
-    return profile;
+    // 2. Update Profile Details (public.profiles)
+    // Check if profile exists first
+    const { data: profile } = await supabase.from('profiles').select('id').eq('id', userId).single()
+
+    if (!profile) {
+        await supabase.from('profiles').insert({
+            id: userId,
+            skills
+        })
+    } else {
+        await supabase.from('profiles').update({
+            skills
+        }).eq('id', userId)
+    }
+
+    revalidatePath("/profile/edit")
+    revalidatePath("/buddy-finder")
+    return { success: true }
+}
+
+export async function getProfileData() {
+    const session = await auth()
+    if (!session || !session.user) return null
+
+    const supabase = await getSupabase()
+    const userId = session.user.id
+
+    // Fetch User Data
+    const { data: user } = await supabase.schema('next_auth').from('users').select('*').eq('id', userId).single()
+
+    // Fetch Profile Data
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single()
+
+    return {
+        ...user,
+        skills: profile?.skills || []
+    }
 }
 
 export async function searchBuddies(query?: string, skill?: string) {
-    const supabase = createClient();
+    const supabase = await getSupabase()
 
-    let queryBuilder = supabase
+    let dbQuery = supabase
         .from('profiles')
-        .select('*');
+        .select(`
+            skills,
+            user:users!inner(
+                id,
+                name,
+                image,
+                role,
+                course,
+                year
+            )
+        `)
 
-    if (skill) {
-        // Simple array contains check
-        queryBuilder = queryBuilder.contains('skills', [skill]);
+    // Filter by skill if provided
+    if (skill && skill.trim() !== '') {
+        dbQuery = dbQuery.contains('skills', [skill])
     }
 
-    const { data: profiles, error } = await queryBuilder;
+    // Note: Filtering by name on the joined table is tricky with standard Supabase client in one go if RLS allows.
+    // simpler approach: fetch all (or limit) and filter in memory if query is complex, 
+    // BUT for 'name', we can search on the joined relation if we use !inner join and proper syntax,
+    // or we can search users first then get profiles.
+
+    // Let's stick to skill based mostly, as that's the primary use case.
+    // If query is present (name search), we might need a text search on user.name
+
+    const { data, error } = await dbQuery
 
     if (error) {
-        console.error("Error searching buddies:", error);
-        return [];
+        console.error("Search Buddies Error:", error)
+        return []
     }
 
-    if (!profiles || profiles.length === 0) return [];
+    // Flatten logic
+    let buddies = data.map((item: any) => ({
+        id: item.user.id,
+        name: item.user.name,
+        image: item.user.image,
+        role: item.user.role,
+        course: item.user.course,
+        year: item.user.year,
+        skills: item.skills
+    }))
 
-    // Manually fetch user details
-    const userIds = profiles.map((p: any) => p.id);
-    const supabaseAdmin = createAdminClient();
-    const { data: usersResponse, error: usersError } = await supabaseAdmin
-        .schema('next_auth')
-        .from('users')
-        .select('id, name, email, image')
-        .in('id', userIds);
-
-    if (usersError) {
-        console.error("Error fetching buddy users:", usersError);
-        // Continue with profiles but missing user data? Or return empty?
-        // Let's attach what we can or filter out.
+    // Manual filter for name match if query exists (simple substring match)
+    if (query && query.trim() !== '') {
+        const lowerQ = query.toLowerCase()
+        buddies = buddies.filter(b => b.name?.toLowerCase().includes(lowerQ))
     }
 
-    const userMap = new Map(usersResponse?.map((u: any) => [u.id, u]));
-
-    const buddies = profiles.map((p: any) => ({
-        ...p,
-        users: userMap.get(p.id) || { name: 'Unknown', email: null, image: null }
-    }));
-
-    if (query) {
-        const lowerQuery = query.toLowerCase();
-        return buddies.filter((p: any) =>
-            p.users.name?.toLowerCase().includes(lowerQuery) ||
-            p.users.email?.toLowerCase().includes(lowerQuery) ||
-            p.bio?.toLowerCase().includes(lowerQuery)
-        );
-    }
-
-    return buddies;
+    return buddies
 }

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Search, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LeaderboardUser } from '@/lib/actions/leaderboard'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface LeaderboardProps {
     initialUsers: LeaderboardUser[]
@@ -43,33 +44,82 @@ export function Leaderboard({ initialUsers }: LeaderboardProps) {
                 </div>
             </div>
 
-            {/* Top 3 Podium (Only show if no search or search yields top results) */}
-            {!searchTerm && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 pb-4">
-                    {topThree.map((user, index) => (
-                        <div key={user.id} className={cn("relative order-last md:order-none", index === 0 ? "md:-mt-8 order-first" : "")}>
-                            <div className={cn(
-                                "relative flex flex-col items-center p-6 rounded-2xl border backdrop-blur-md overflow-hidden",
-                                index === 0 ? "bg-gradient-to-b from-yellow-500/10 to-transparent border-yellow-500/20" :
-                                    index === 1 ? "bg-gradient-to-b from-gray-300/10 to-transparent border-gray-400/20" :
-                                        "bg-gradient-to-b from-orange-700/10 to-transparent border-orange-700/20"
-                            )}>
-                                <div className={cn(
-                                    "w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold mb-3 border-2 shadow-[0_0_15px_rgba(0,0,0,0.5)]",
-                                    index === 0 ? "bg-yellow-500/20 border-yellow-400 text-yellow-400 shadow-yellow-500/20" :
-                                        index === 1 ? "bg-gray-400/20 border-gray-300 text-gray-300 shadow-gray-400/20" :
-                                            "bg-orange-600/20 border-orange-500 text-orange-500 shadow-orange-500/20"
-                                )}>
-                                    {index + 1}
-                                </div>
-                                <h3 className="font-bold text-white text-lg truncate w-full text-center">{user.name}</h3>
-                                <p className="text-gray-400 text-xs mb-2">{user.email}</p>
-                                <div className="px-4 py-1 rounded-full bg-white/5 border border-white/10 text-sm font-mono text-cyan-300">
-                                    {user.xp_points} XP
+            {/* Top 3 Podium (2 - 1 - 3 Arrangement) */}
+            {!searchTerm && topThree.length > 0 && (
+                <div className="flex justify-center items-end gap-4 md:gap-8 pt-12 pb-8 mb-8">
+                    {/* 2nd Place (Left) */}
+                    {topThree[1] && (
+                        <div className="flex flex-col items-center z-10">
+                            <div className="relative mb-4">
+                                <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-gray-400 shadow-[0_0_20px_rgba(156,163,175,0.3)]">
+                                    <AvatarImage src={topThree[1].image || ""} alt={topThree[1].name} />
+                                    <AvatarFallback className="bg-gray-800 text-gray-400 text-2xl font-bold">
+                                        {topThree[1].name.charAt(0)}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-black font-bold text-sm border-2 border-gray-900">
+                                    2
                                 </div>
                             </div>
+                            <div className="flex flex-col items-center">
+                                <h3 className="font-bold text-gray-200 text-base md:text-lg text-center max-w-[120px] truncate">{topThree[1].name}</h3>
+                                <p className="text-cyan-400 font-mono text-sm md:text-base font-medium">{topThree[1].xp_points} XP</p>
+                            </div>
+                            {/* Podium Block */}
+                            <div className="w-24 md:w-32 h-32 md:h-40 bg-gradient-to-t from-gray-900/80 to-gray-800/50 rounded-t-lg border-t border-x border-gray-700/50 mt-4 backdrop-blur-sm" />
                         </div>
-                    ))}
+                    )}
+
+                    {/* 1st Place (Center, Highest) */}
+                    {topThree[0] && (
+                        <div className="flex flex-col items-center z-20 -mx-2 md:mx-0 order-first md:order-none">
+                            <div className="relative mb-4">
+                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-yellow-400 animate-bounce">
+                                    <Trophy className="w-8 h-8 fill-yellow-400" />
+                                </div>
+                                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.4)] ring-4 ring-yellow-500/20">
+                                    <AvatarImage src={topThree[0].image || ""} alt={topThree[0].name} />
+                                    <AvatarFallback className="bg-gray-800 text-yellow-400 text-3xl font-bold">
+                                        {topThree[0].name.charAt(0)}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold text-lg border-4 border-gray-900">
+                                    1
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <h3 className="font-bold text-white text-lg md:text-xl text-center max-w-[150px] truncate">{topThree[0].name}</h3>
+                                <p className="text-cyan-400 font-mono text-base md:text-lg font-bold">{topThree[0].xp_points} XP</p>
+                            </div>
+                            {/* Podium Block */}
+                            <div className="w-28 md:w-40 h-40 md:h-52 bg-gradient-to-t from-yellow-900/40 to-yellow-600/20 rounded-t-lg border-t border-x border-yellow-500/30 mt-4 backdrop-blur-md relative overflow-hidden">
+                                <div className="absolute inset-0 bg-yellow-400/5" />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 3rd Place (Right) */}
+                    {topThree[2] && (
+                        <div className="flex flex-col items-center z-10">
+                            <div className="relative mb-4">
+                                <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]">
+                                    <AvatarImage src={topThree[2].image || ""} alt={topThree[2].name} />
+                                    <AvatarFallback className="bg-gray-800 text-orange-500 text-2xl font-bold">
+                                        {topThree[2].name.charAt(0)}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-black font-bold text-sm border-2 border-gray-900">
+                                    3
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <h3 className="font-bold text-gray-200 text-base md:text-lg text-center max-w-[120px] truncate">{topThree[2].name}</h3>
+                                <p className="text-cyan-400 font-mono text-sm md:text-base font-medium">{topThree[2].xp_points} XP</p>
+                            </div>
+                            {/* Podium Block */}
+                            <div className="w-24 md:w-32 h-24 md:h-32 bg-gradient-to-t from-gray-900/80 to-gray-800/50 rounded-t-lg border-t border-x border-gray-700/50 mt-4 backdrop-blur-sm" />
+                        </div>
+                    )}
                 </div>
             )}
 

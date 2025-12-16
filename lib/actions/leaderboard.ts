@@ -6,8 +6,9 @@ export type LeaderboardUser = {
     id: string
     name: string
     email: string
+    image?: string | null
     xp_points: number
-    system_id?: string // Assuming this might exist based on reference, optional for now
+    system_id?: string
     role?: string
 }
 
@@ -17,7 +18,7 @@ export async function getLeaderboardData() {
     const { data: users, error } = await supabase
         .schema('next_auth')
         .from('users')
-        .select('id, name, email, xp_points, role')
+        .select('id, name, email, image, xp_points, role')
         .order('xp_points', { ascending: false })
         .limit(100)
 
