@@ -181,7 +181,7 @@ const LEGACY_EVENTS: Record<string, any[]> = {
     "ai-robotics": [
         {
             id: "legacy-ai-1",
-            title: "Robotics Exhibition 2023",
+            title: "Star Grazing",
             description: "Showcasing student-built autonomous rovers and drones. A day filled with innovation and mechanical engineering marvels.",
             start_time: "2023-09-15T10:00:00Z",
             end_time: "2023-09-15T16:00:00Z",
