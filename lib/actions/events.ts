@@ -32,26 +32,27 @@ export async function createEvent(formData: FormData) {
     const price = parseFloat(formData.get("price") as string)
     const status = formData.get("status") as string || 'draft'
     const banner = formData.get("banner") as string
+    const co_host_club_id = formData.get("co_host_club_id") as string || null
+    let club_id = formData.get("club_id") as string || null
 
-    // 1. Get Club ID for the user (Mocking or fetching from admin_roles)
-    // For now, we'll create a default 'Technova' club if it doesn't exist or pick the first one
-    let club_id = null
-    const { data: clubs } = await supabase.from('clubs').select('id').order('name', { ascending: true }).limit(1)
-
-    if (clubs && clubs.length > 0) {
-        club_id = clubs[0].id
-    } else {
-        // Create Default Club
-        const { data: newClub } = await supabase.from('clubs').insert({
-            name: "Technova Main",
-            description: "Central Society"
-        }).select().single()
-        club_id = newClub.id
+    // If no club selected, try to find one or create default
+    if (!club_id) {
+        const { data: clubs } = await supabase.from('clubs').select('id').order('name', { ascending: true }).limit(1)
+        if (clubs && clubs.length > 0) {
+            club_id = clubs[0].id
+        } else {
+            const { data: newClub } = await supabase.from('clubs').insert({
+                name: "Technova Main",
+                description: "Central Society"
+            }).select().single()
+            club_id = newClub.id
+        }
     }
 
     // 2. Create Event
     const { error } = await supabase.from('events').insert({
         club_id,
+        co_host_club_id: co_host_club_id === "none" ? null : co_host_club_id,
         title,
         description,
         start_time,
@@ -73,12 +74,82 @@ export async function createEvent(formData: FormData) {
     redirect("/admin/events")
 }
 
+export async function updateEvent(formData: FormData) {
+    const session = await auth()
+    if (!session || session.user.role === 'student') {
+        throw new Error("Unauthorized")
+    }
+
+    const supabase = await getSupabase()
+    const id = formData.get("id") as string
+
+    if (!id) throw new Error("Event ID is required")
+
+    const title = formData.get("title") as string
+    const description = formData.get("description") as string
+    const start_time = formData.get("start_time") as string
+    const end_time = formData.get("end_time") as string
+    const venue = formData.get("venue") as string
+    const capacity = parseInt(formData.get("capacity") as string)
+    const price = parseFloat(formData.get("price") as string)
+    const status = formData.get("status") as string
+    const banner = formData.get("banner") as string
+    const club_id = formData.get("club_id") as string
+    const co_host_club_id = formData.get("co_host_club_id") as string || null
+
+    const { error } = await supabase.from('events').update({
+        club_id,
+        co_host_club_id: co_host_club_id === "none" ? null : co_host_club_id,
+        title,
+        description,
+        start_time,
+        end_time,
+        venue,
+        capacity,
+        price,
+        status,
+        banner
+    }).eq('id', id)
+
+    if (error) {
+        console.error("Update Event Error:", error)
+        throw new Error("Failed to update event")
+    }
+
+    revalidatePath("/events")
+    revalidatePath("/admin/events")
+    revalidatePath(`/events/${id}`)
+    redirect("/admin/events")
+}
+
+export async function deleteEvent(id: string) {
+    const session = await auth()
+    if (!session || session.user.role === 'student') {
+        throw new Error("Unauthorized")
+    }
+
+    const supabase = await getSupabase()
+    const { error } = await supabase.from('events').delete().eq('id', id)
+
+    if (error) {
+        console.error("Delete Event Error:", error)
+        throw new Error("Failed to delete event")
+    }
+
+    revalidatePath("/events")
+    revalidatePath("/admin/events")
+}
+
 export async function getPublicEvents() {
     const supabase = await getSupabase()
-    const { data } = await supabase.from('events')
-        .select('*')
+    const { data, error } = await supabase.from('events')
+        .select(`
+            *,
+            club:clubs!events_club_id_fkey(name, logo_url)
+        `)
         .eq('status', 'live')
         .order('created_at', { ascending: false })
+
     return data || []
 }
 
@@ -90,6 +161,12 @@ export async function getEvents() {
 
 export async function getEventById(id: string) {
     const supabase = await getSupabase()
-    const { data } = await supabase.from('events').select('*').eq('id', id).single()
+    const { data } = await supabase.from('events')
+        .select(`
+            *,
+            club:clubs!events_club_id_fkey(name, logo_url)
+        `)
+        .eq('id', id)
+        .single()
     return data
 }

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Plus } from "lucide-react"
-import { getEvents } from "@/lib/actions/events"
+import { getEvents, deleteEvent } from "@/lib/actions/events"
 
 export default async function AdminEventsPage() {
     const events = await getEvents()
@@ -45,7 +45,12 @@ export default async function AdminEventsPage() {
                                         </span>
                                     </td>
                                     <td className="p-4">{event.capacity}</td>
-                                    <td className="p-4 text-sm text-blue-600"><Link href={`/admin/events/${event.id}`}>Manage</Link></td>
+                                    <td className="p-4 flex gap-3 text-sm">
+                                        <Link href={`/admin/events/${event.id}/edit`} className="text-blue-600 hover:underline">Edit</Link>
+                                        <form action={deleteEvent.bind(null, event.id)}>
+                                            <button type="submit" className="text-red-600 hover:underline">Delete</button>
+                                        </form>
+                                    </td>
                                 </tr>
                             ))
                         )}

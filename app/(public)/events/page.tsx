@@ -20,9 +20,21 @@ export default async function PublicEventsPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {events.map((event: { id: string; title: string; start_time: string; venue: string; price: number; status: string; banner?: string }) => (
+                        {events.map((event: {
+                            id: string; title: string; start_time: string; venue: string; price: number; status: string; banner?: string;
+                            club?: { name: string; logo_url: string }
+                        }) => (
                             <Link key={event.id} href={`/events/${event.id}`}>
-                                <div className="bg-gray-900/50 rounded-xl border border-gray-800 hover:border-blue-500/30 transition-colors overflow-hidden group">
+                                <div className="bg-gray-900/50 rounded-xl border border-gray-800 hover:border-blue-500/30 transition-colors overflow-hidden group relative">
+                                    <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 flex items-center gap-2 z-10">
+                                        {event.club?.logo_url && (
+                                            /* eslint-disable-next-line @next/next/no-img-element */
+                                            <img src={event.club.logo_url} alt={event.club.name} className="w-4 h-4 object-contain rounded-full" />
+                                        )}
+                                        <span className="text-xs font-medium text-white max-w-[100px] truncate">
+                                            {event.club?.name || 'Technova'}
+                                        </span>
+                                    </div>
                                     <div className="h-40 bg-gradient-to-br from-blue-600/20 to-purple-600/20 flex items-center justify-center overflow-hidden">
                                         {event.banner ? (
                                             /* eslint-disable-next-line @next/next/no-img-element */

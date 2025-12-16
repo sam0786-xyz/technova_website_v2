@@ -74,6 +74,17 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                                 <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
                                     {event.price === 0 ? "Free Event" : `₹${event.price} `}
                                 </span>
+
+                                {event.club && (
+                                    <div className="flex items-center gap-2 mb-3">
+                                        {event.club.logo_url && (
+                                            /* eslint-disable-next-line @next/next/no-img-element */
+                                            <img src={event.club.logo_url} alt={event.club.name} className="w-6 h-6 object-contain rounded-full" />
+                                        )}
+                                        <span className="text-gray-500 font-medium">Organized by <span className="text-blue-600">{event.club.name}</span></span>
+                                    </div>
+                                )}
+
                                 <h1 className="text-4xl font-bold mb-4">{event.title}</h1>
                                 <div className="flex flex-wrap gap-6 text-gray-600">
                                     <div className="flex items-center gap-2">
