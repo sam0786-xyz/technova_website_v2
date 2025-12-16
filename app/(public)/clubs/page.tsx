@@ -5,13 +5,6 @@ import { Terminal, Database, Gamepad2, Globe, Camera, ArrowRight, Github, Cpu, C
 
 const clubs = [
     {
-        name: "CyberPirates",
-        slug: "cyber-pirates",
-        logo: "/assets/logo/cyberpirates.png",
-        desc: "Guide individuals about Information security and cyber awareness to arm against modern exploits.",
-        bg: "bg-green-500/10"
-    },
-    {
         name: "AI & Robotics",
         slug: "ai-robotics",
         logo: "/assets/logo/AI_&_Robotics_logo.png",
@@ -24,6 +17,13 @@ const clubs = [
         logo: "/assets/logo/awscc.png",
         desc: "Building on the Cloud, for the World. Mastering AWS services and serverless architecture.",
         bg: "bg-orange-500/10"
+    },
+    {
+        name: "CyberPirates",
+        slug: "cyber-pirates",
+        logo: "/assets/logo/cyberpirates.png",
+        desc: "Guide individuals about Information security and cyber awareness to arm against modern exploits.",
+        bg: "bg-green-500/10"
     },
     {
         name: "Datapool",
@@ -40,20 +40,20 @@ const clubs = [
         bg: "bg-purple-500/10"
     },
     {
-        name: "GitHub Club",
-        slug: "github",
-        logo: "/assets/logo/github.png",
-        desc: "Promotes open-source contribution and technical skills. A community for developers.",
-        bg: "bg-white/10",
-        className: "invert"
-    },
-    {
         name: "GDG on Campus",
         slug: "gdg",
         logo: "/assets/logo/gdg_on_campus.jpg",
         desc: "Google Developer Group. Peer-to-peer learning to build solutions for local communities.",
         bg: "bg-red-500/10",
         className: "rounded-full"
+    },
+    {
+        name: "GitHub Club",
+        slug: "github",
+        logo: "/assets/logo/github.png",
+        desc: "Promotes open-source contribution and technical skills. A community for developers.",
+        bg: "bg-white/10",
+        className: "invert"
     },
     {
         name: "Pixelance",

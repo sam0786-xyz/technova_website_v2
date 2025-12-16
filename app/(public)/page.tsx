@@ -118,6 +118,60 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* DEVSPACE FEATURES */}
+      <section className="py-24 bg-black/50 border-t border-white/5">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-3">DevSpace</h2>
+            <h3 className="text-4xl md:text-5xl font-bold mb-6">Student Community Hub</h3>
+            <p className="text-gray-400 text-lg">
+              Everything you need to grow, collaborate, and succeed in your technical journey.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                title: "Community",
+                desc: "Discuss ideas, ask questions, and share knowledge.",
+                icon: Users,
+                href: "/community",
+                color: "text-blue-500"
+              },
+              {
+                title: "Buddy Finder",
+                desc: "Find teammates for hackathons and projects.",
+                icon: Users,
+                href: "/buddy-finder",
+                color: "text-purple-500"
+              },
+              {
+                title: "Project Showcase",
+                desc: "Show off your projects and get feedback.",
+                icon: Code2,
+                href: "/showcase",
+                color: "text-emerald-500"
+              },
+              {
+                title: "Resources",
+                desc: "Access academic resources and PYQs.",
+                icon: Database,
+                href: "/resources",
+                color: "text-amber-500"
+              },
+            ].map((item, idx) => (
+              <Link key={idx} href={item.href} className="group p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all">
+                <div className={`w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-4 ${item.color} group-hover:scale-110 transition-transform`}>
+                  <item.icon className="w-6 h-6" />
+                </div>
+                <h4 className="text-xl font-bold mb-2 group-hover:text-blue-400 transition-colors">{item.title}</h4>
+                <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CLUBS GRID */}
       <section className="py-24 bg-zinc-900">
         <div className="container mx-auto px-4">

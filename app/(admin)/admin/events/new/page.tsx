@@ -17,6 +17,11 @@ export default function CreateEventPage() {
                         <textarea name="description" required className="w-full p-2 border rounded-md h-32" placeholder="Event details..." />
                     </div>
 
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Banner URL (Optional)</label>
+                        <input name="banner" type="url" className="w-full p-2 border rounded-md" placeholder="https://..." />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium mb-1">Start Time</label>

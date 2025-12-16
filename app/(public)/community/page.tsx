@@ -3,6 +3,8 @@ import { CreatePost } from "@/components/community/CreatePost";
 import { PostList } from "@/components/community/PostList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth } from "@/lib/auth";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default async function CommunityPage() {
     const posts = await getPosts();
@@ -44,7 +46,21 @@ export default async function CommunityPage() {
 
                 <div className="md:col-span-1">
                     <div className="sticky top-6">
-                        <CreatePost />
+                        {session ? (
+                            <CreatePost />
+                        ) : (
+                            <div className="rounded-xl border bg-card text-card-foreground shadow">
+                                <div className="p-6 space-y-4">
+                                    <h3 className="font-semibold text-lg">Join the Conversation</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Log in to post questions, share projects, and connect with peers.
+                                    </p>
+                                    <Link href="/login" className="block">
+                                        <Button className="w-full">Login to Post</Button>
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

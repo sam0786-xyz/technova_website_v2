@@ -95,27 +95,52 @@ export async function searchBuddies(query?: string, skill?: string) {
 
     let queryBuilder = supabase
         .from('profiles')
-        .select(`*, users(name, email)`); // Select user data for filtering
+        .select('*');
 
     if (skill) {
         // Simple array contains check
         queryBuilder = queryBuilder.contains('skills', [skill]);
     }
 
-    const { data: results, error } = await queryBuilder;
+    const { data: profiles, error } = await queryBuilder;
 
     if (error) {
         console.error("Error searching buddies:", error);
         return [];
     }
 
+    if (!profiles || profiles.length === 0) return [];
+
+    // Manually fetch user details
+    const userIds = profiles.map((p: any) => p.id);
+    const supabaseAdmin = createAdminClient();
+    const { data: usersResponse, error: usersError } = await supabaseAdmin
+        .schema('next_auth')
+        .from('users')
+        .select('id, name, email, image')
+        .in('id', userIds);
+
+    if (usersError) {
+        console.error("Error fetching buddy users:", usersError);
+        // Continue with profiles but missing user data? Or return empty?
+        // Let's attach what we can or filter out.
+    }
+
+    const userMap = new Map(usersResponse?.map((u: any) => [u.id, u]));
+
+    const buddies = profiles.map((p: any) => ({
+        ...p,
+        users: userMap.get(p.id) || { name: 'Unknown', email: null, image: null }
+    }));
+
     if (query) {
         const lowerQuery = query.toLowerCase();
-        return results.filter((p: any) =>
-            p.users.name.toLowerCase().includes(lowerQuery) ||
-            p.users.email.toLowerCase().includes(lowerQuery)
+        return buddies.filter((p: any) =>
+            p.users.name?.toLowerCase().includes(lowerQuery) ||
+            p.users.email?.toLowerCase().includes(lowerQuery) ||
+            p.bio?.toLowerCase().includes(lowerQuery)
         );
     }
 
-    return results;
+    return buddies;
 }

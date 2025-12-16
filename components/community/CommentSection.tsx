@@ -27,21 +27,27 @@ export function CommentSection({ postId, comments, userId }: { postId: string, c
         <div className="space-y-6">
             <h3 className="text-xl font-semibold">Comments ({comments.length})</h3>
 
-            <form action={formAction} className="space-y-4">
-                <input type="hidden" name="postId" value={postId} />
-                <Textarea
-                    name="content"
-                    placeholder="Add a comment..."
-                    required
-                    className="min-h-[80px]"
-                />
-                <div className="flex justify-end">
-                    <SubmitButton />
+            {userId ? (
+                <form action={formAction} className="space-y-4">
+                    <input type="hidden" name="postId" value={postId} />
+                    <Textarea
+                        name="content"
+                        placeholder="Add a comment..."
+                        required
+                        className="min-h-[80px]"
+                    />
+                    <div className="flex justify-end">
+                        <SubmitButton />
+                    </div>
+                    {state?.error && (
+                        <p className="text-sm text-destructive">{state.error}</p>
+                    )}
+                </form>
+            ) : (
+                <div className="rounded-lg bg-muted p-4 text-center">
+                    <p className="text-sm text-muted-foreground mb-2">Please log in to comment.</p>
                 </div>
-                {state?.error && (
-                    <p className="text-sm text-destructive">{state.error}</p>
-                )}
-            </form>
+            )}
 
             <div className="space-y-4">
                 {comments.map((comment) => (

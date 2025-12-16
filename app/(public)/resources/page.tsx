@@ -1,3 +1,4 @@
+import { auth } from "@/lib/auth";
 import { getResources } from "@/lib/actions/resources";
 import { ResourceList } from "@/components/resources/ResourceList";
 import { UploadResource } from "@/components/resources/UploadResource";
@@ -16,6 +17,9 @@ export default async function ResourcesPage({ searchParams }: { searchParams: { 
     const subject = searchParams.subject;
     const semester = searchParams.semester || 'all';
 
+    const session = await auth();
+    const isAllowedToUpload = !!session?.user; // Allow any logged in user? Or just admin? User said "student", so maybe allowed.
+
     const resources = await getResources(semester, subject);
 
     return (
@@ -27,7 +31,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: { 
                         Access PYQs, notes, and study materials shared by seniors and peers.
                     </p>
                 </div>
-                <UploadResource />
+                {isAllowedToUpload && <UploadResource />}
             </div>
 
             <div className="bg-card p-4 rounded-lg border shadow-sm mb-8">

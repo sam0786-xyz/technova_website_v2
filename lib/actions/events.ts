@@ -31,11 +31,12 @@ export async function createEvent(formData: FormData) {
     const capacity = parseInt(formData.get("capacity") as string)
     const price = parseFloat(formData.get("price") as string)
     const status = formData.get("status") as string || 'draft'
+    const banner = formData.get("banner") as string
 
     // 1. Get Club ID for the user (Mocking or fetching from admin_roles)
     // For now, we'll create a default 'Technova' club if it doesn't exist or pick the first one
     let club_id = null
-    const { data: clubs } = await supabase.from('clubs').select('id').limit(1)
+    const { data: clubs } = await supabase.from('clubs').select('id').order('name', { ascending: true }).limit(1)
 
     if (clubs && clubs.length > 0) {
         club_id = clubs[0].id
@@ -58,7 +59,8 @@ export async function createEvent(formData: FormData) {
         venue,
         capacity,
         price,
-        status
+        status,
+        banner
     })
 
     if (error) {

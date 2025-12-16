@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth"
-import { Calendar, MapPin, Clock, Users, Globe } from "lucide-react"
+import { Calendar, MapPin, Clock, Users, Globe, ArrowLeft } from "lucide-react"
+import Link from "next/link"
 import { getEventById } from "@/lib/actions/events"
 import { checkRegistration } from "@/lib/actions/registrations"
 import { EventRegistrationCard } from "@/components/events/registration-card"
@@ -58,6 +59,14 @@ export default async function EventPage({ params }: { params: { id: string } }) 
             </div>
 
             <div className="container mx-auto px-4 -mt-20 relative z-10">
+                {/* Back Button */}
+                <Link href="/events" className="inline-flex items-center text-white mb-6 hover:text-blue-400 transition-colors">
+                    <div className="bg-black/50 backdrop-blur-sm p-2 rounded-full mr-2 border border-white/20">
+                        <ArrowLeft className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium drop-shadow-md">Back to Events</span>
+                </Link>
+
                 <div className="bg-white rounded-xl shadow-xl overflow-hidden">
                     <div className="p-8">
                         <div className="flex flex-col md:flex-row justify-between items-start gap-6">

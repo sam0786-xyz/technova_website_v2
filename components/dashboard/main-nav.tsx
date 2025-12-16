@@ -12,24 +12,9 @@ export function MainNav({
 
     const routes = [
         {
-            href: "/community",
-            label: "Community",
-            active: pathname.startsWith("/community"),
-        },
-        {
-            href: "/buddy-finder",
-            label: "Buddy Finder",
-            active: pathname.startsWith("/buddy-finder"),
-        },
-        {
-            href: "/showcase",
-            label: "Project Showcase",
-            active: pathname.startsWith("/showcase"),
-        },
-        {
-            href: "/resources",
-            label: "Resources",
-            active: pathname.startsWith("/resources"),
+            href: "/leaderboard",
+            label: "Leaderboard",
+            active: pathname.startsWith("/leaderboard"),
         },
     ];
 

@@ -6,13 +6,6 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const clubs = [
     {
-        name: "CyberPirates",
-        slug: "cyber-pirates",
-        logo: "/assets/logo/cyberpirates.png",
-        desc: "Guide individuals about Information security and cyber awareness to arm against modern exploits.",
-        className: "object-contain scale-110" // Adjust scaling per logo if needed
-    },
-    {
         name: "AI & Robotics",
         slug: "ai-robotics",
         logo: "/assets/logo/AI_&_Robotics_logo.png",
@@ -23,6 +16,13 @@ const clubs = [
         slug: "aws-cloud",
         logo: "/assets/logo/awscc.png",
         desc: "Building on the Cloud, for the World. Mastering AWS services and serverless architecture.",
+    },
+    {
+        name: "CyberPirates",
+        slug: "cyber-pirates",
+        logo: "/assets/logo/cyberpirates.png",
+        desc: "Guide individuals about Information security and cyber awareness to arm against modern exploits.",
+        className: "object-contain scale-110" // Adjust scaling per logo if needed
     },
     {
         name: "Datapool",
@@ -37,18 +37,18 @@ const clubs = [
         desc: "A community for exploring and developing new games. Connect, share, and build.",
     },
     {
-        name: "GitHub Club",
-        slug: "github",
-        logo: "/assets/logo/github.png",
-        desc: "Promotes open-source contribution and technical skills. A community for developers.",
-        className: "invert" // GitHub logo is black, invert for dark mode if needed (check actual image)
-    },
-    {
         name: "GDG on Campus",
         slug: "gdg",
         logo: "/assets/logo/gdg_on_campus.jpg",
         desc: "Google Developer Group. Peer-to-peer learning to build solutions for local communities.",
         className: "rounded-full" // GDG logo might look better rounded
+    },
+    {
+        name: "GitHub Club",
+        slug: "github",
+        logo: "/assets/logo/github.png",
+        desc: "Promotes open-source contribution and technical skills. A community for developers.",
+        className: "invert" // GitHub logo is black, invert for dark mode if needed (check actual image)
     },
     {
         name: "Pixelance",

@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
-import { CheckCircle, XCircle, Camera, Loader2, Upload, RefreshCw } from 'lucide-react'
+import { CheckCircle, XCircle, Camera, Loader2, Upload, RefreshCw, ArrowLeft } from 'lucide-react'
 
 export default function ScannerPage() {
     const [scanResult, setScanResult] = useState<'success' | 'error' | null>(null)
@@ -145,7 +146,12 @@ export default function ScannerPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4 relative">
+            <Link href="/" className="absolute top-6 left-6 flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                <ArrowLeft className="w-5 h-5" />
+                <span className="font-medium">Back to Home</span>
+            </Link>
+
             <div className="mb-8 text-center">
                 <Camera className="w-12 h-12 mx-auto mb-4 text-blue-400" />
                 <h1 className="text-2xl font-bold">Event Scanner</h1>

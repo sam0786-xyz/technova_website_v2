@@ -35,7 +35,7 @@ export default async function AdminLayout({
                     <h2 className="font-bold text-xl">Technova Admin</h2>
                 </div>
                 <nav className="flex-1 p-4 space-y-2">
-                    <Link href="/dashboard" className="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50">
+                    <Link href="/" className="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50">
                         <Home className="w-5 h-5" /> Back to App
                     </Link>
                     <div className="pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Manage</div>

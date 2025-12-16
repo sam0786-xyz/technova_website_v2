@@ -1,3 +1,4 @@
+import { auth } from "@/lib/auth";
 import { searchBuddies } from "@/lib/actions/profile";
 import { BuddyCard } from "@/components/buddy/BuddyCard";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import Link from "next/link";
 export default async function BuddyFinderPage({ searchParams }: { searchParams: { q?: string; skill?: string } }) {
     const query = searchParams.q;
     const skill = searchParams.skill;
+    const session = await auth();
 
     const buddies = await searchBuddies(query, skill);
 
@@ -20,9 +22,11 @@ export default async function BuddyFinderPage({ searchParams }: { searchParams: 
                         Connect with peers for hackathons, projects, and study groups.
                     </p>
                 </div>
-                <Link href="/profile/edit">
-                    <Button variant="outline">Edit My Profile</Button>
-                </Link>
+                {session?.user && (
+                    <Link href="/profile/edit">
+                        <Button variant="outline">Edit My Profile</Button>
+                    </Link>
+                )}
             </div>
 
             <div className="bg-card p-6 rounded-lg border shadow-sm mb-8">

@@ -15,6 +15,7 @@ interface NavbarProps {
     }
 }
 
+import { ChevronDown } from "lucide-react"
 export function Navbar({ user }: NavbarProps) {
     const [isOpen, setIsOpen] = useState(false)
 
@@ -23,15 +24,15 @@ export function Navbar({ user }: NavbarProps) {
         { href: "/events", label: "Events" },
         { href: "/clubs", label: "Clubs" },
         { href: "/leadership", label: "Leadership" },
+        { href: "/partners", label: "Partners" },
     ]
 
     const authLinks = [
-        { href: "/dashboard", label: "Dashboard" },
+        { href: "/leaderboard", label: "Leaderboard" },
     ]
 
     const adminLinks = [
         { href: "/admin/dashboard", label: "Admin" },
-        { href: "/admin/events", label: "Manage" },
         { href: "/scan", label: "Scanner" },
     ]
 
@@ -57,6 +58,25 @@ export function Navbar({ user }: NavbarProps) {
                                 {link.label}
                             </Link>
                         ))}
+
+                        <div className="relative group">
+                            <Link
+                                href="/community"
+                                className="flex items-center gap-1 text-gray-300 hover:text-white hover:bg-white/10 px-4 py-2 rounded-lg transition-all outline-none"
+                            >
+                                DevSpace <ChevronDown className="h-4 w-4" />
+                            </Link>
+
+                            {/* Hover Menu */}
+                            <div className="absolute right-0 top-full pt-2 hidden group-hover:block w-48 z-50">
+                                <div className="bg-black/95 backdrop-blur-xl border border-white/10 rounded-md py-1 shadow-xl">
+                                    <Link href="/community" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Community</Link>
+                                    <Link href="/buddy-finder" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Buddy Finder</Link>
+                                    <Link href="/showcase" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Showcase</Link>
+                                    <Link href="/resources" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Resources</Link>
+                                </div>
+                            </div>
+                        </div>
 
                         <div className="w-px h-6 bg-gray-700 mx-2" />
 
@@ -122,6 +142,16 @@ export function Navbar({ user }: NavbarProps) {
                             </Link>
                         ))}
 
+
+
+                        <div className="border-t border-white/10 my-2 pt-2">
+                            <p className="text-xs text-gray-500 px-4 mb-2">DevSpace</p>
+                            <Link href="/community" className="block text-gray-300 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg" onClick={() => setIsOpen(false)}>Community</Link>
+                            <Link href="/buddy-finder" className="block text-gray-300 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg" onClick={() => setIsOpen(false)}>Buddy Finder</Link>
+                            <Link href="/showcase" className="block text-gray-300 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg" onClick={() => setIsOpen(false)}>Showcase</Link>
+                            <Link href="/resources" className="block text-gray-300 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg" onClick={() => setIsOpen(false)}>Resources</Link>
+                        </div>
+
                         <div className="border-t border-white/10 my-2 pt-2">
                             <p className="text-xs text-gray-500 px-4 mb-2">Member Area</p>
                             {user && authLinks.map(link => (
@@ -163,6 +193,6 @@ export function Navbar({ user }: NavbarProps) {
                     </div>
                 )}
             </div>
-        </nav>
+        </nav >
     )
 }
