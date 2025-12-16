@@ -118,6 +118,37 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* CALENDAR SECTION */}
+      <section className="py-24 bg-zinc-900 border-t border-white/5">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-3">Schedule</h2>
+            <h3 className="text-4xl md:text-5xl font-bold mb-6">Upcoming Events Calendar</h3>
+            <p className="text-gray-400 text-lg">
+              Never miss an event. Subscribe to our official calendar.
+            </p>
+          </div>
+
+          <div className="bg-black/50 p-4 rounded-3xl border border-white/10 shadow-2xl max-w-5xl mx-auto overflow-hidden">
+            <iframe
+              src="https://calendar.google.com/calendar/embed?src=technova%40sharda.ac.in&ctz=Asia%2FKolkata&bgcolor=%23000000&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=0&showTz=1"
+              style={{ border: 0 }}
+              width="100%"
+              height="600"
+              frameBorder="0"
+              scrolling="no"
+              className="rounded-2xl w-full"
+            ></iframe>
+          </div>
+
+          <div className="text-center mt-8">
+            <Link href="https://calendar.google.com/calendar/u/0?cid=dGVjaG5vdmFAc2hhcmRhLmFjLmlu" target="_blank" className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium">
+              Add to your Google Calendar <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* DEVSPACE FEATURES */}
       <section className="py-24 bg-black/50 border-t border-white/5">
         <div className="container mx-auto px-4">
