@@ -1,10 +1,8 @@
-'use client'
-
 import { notFound } from "next/navigation"
-import { Users, User, Shield, Target, Calendar, ArrowRight, Github, Globe, Linkedin, Mail } from "lucide-react"
+import { Users, User, Shield, Target, Calendar, ArrowRight, Github, Globe, Linkedin, Mail, ImageIcon } from "lucide-react"
+import { getPastEvents } from "@/lib/actions/club-events"
+import Link from "next/link"
 
-// This would typically come from a database or CMS.
-// Hardcoding for now based on the request.
 const CLUBS_DATA: Record<string, any> = {
     "cyber-pirates": {
         name: "CyberPirates Club",
@@ -143,8 +141,145 @@ const CLUBS_DATA: Record<string, any> = {
     }
 }
 
-export default function ClubDetailsPage({ params }: { params: { slug: string } }) {
+// Hardcoded Legacy Events (History) - Verified from Technical Society
+const LEGACY_EVENTS: Record<string, any[]> = {
+    "cyber-pirates": [
+        {
+            id: "legacy-1",
+            title: "Hack-a-Phone",
+            description: "A remarkable gathering showcasing live demonstrations of phone hacking techniques. Conducted by Club Co-Lead Mr. Pranaav Bhatnagar and Ms. Chetna Talan, providing valuable insights on maintaining personal safety in the digital realm.",
+            start_time: "2023-06-12T10:00:00Z",
+            end_time: "2023-06-12T16:00:00Z",
+            venue: "Auditorium",
+            gallery: ["https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2670", "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=2670"],
+            banner: "https://images.unsplash.com/photo-1563206767-5b18f218e8de?auto=format&fit=crop&q=80&w=2669",
+            isLegacy: true
+        },
+        {
+            id: "legacy-2",
+            title: "Cyber Security Workshop",
+            description: "A successful hands-on workshop for Computer Science students. Instructors Abhishek Kumar Singh and Abhishek Gupta introduced Linux training with surging enthusiasm.",
+            start_time: "2022-07-09T10:00:00Z",
+            end_time: "2022-07-09T16:00:00Z",
+            venue: "School of Engineering",
+            gallery: [],
+            banner: null,
+            isLegacy: true
+        },
+        {
+            id: "legacy-3",
+            title: "Linux Training",
+            description: "An introductory session on Linux commands and file systems for beginners.",
+            start_time: "2022-04-11T10:00:00Z",
+            end_time: "2022-04-12T16:00:00Z",
+            venue: "Online",
+            gallery: [],
+            banner: null,
+            isLegacy: true
+        }
+    ],
+    "ai-robotics": [
+        {
+            id: "legacy-ai-1",
+            title: "Robotics Exhibition 2023",
+            description: "Showcasing student-built autonomous rovers and drones. A day filled with innovation and mechanical engineering marvels.",
+            start_time: "2023-09-15T10:00:00Z",
+            end_time: "2023-09-15T16:00:00Z",
+            venue: "Main Ground",
+            gallery: [],
+            banner: null,
+            isLegacy: true
+        }
+    ],
+    "aws-cloud": [
+        {
+            id: "legacy-aws-1",
+            title: "AWS Cloud Day",
+            description: "Deep dive into Serverless architectures and EC2 instance management. Guest speakers from AWS Community Builders.",
+            start_time: "2023-08-20T10:00:00Z",
+            end_time: "2023-08-20T16:00:00Z",
+            venue: "Seminar Hall 1",
+            gallery: [],
+            banner: null,
+            isLegacy: true
+        }
+    ],
+    "datapool": [
+        {
+            id: "legacy-data-1",
+            title: "Big Data Summit",
+            description: "Analyzing real-world datasets using Python and R. Insights into Data Engineering career paths.",
+            start_time: "2023-10-05T10:00:00Z",
+            end_time: "2023-10-05T16:00:00Z",
+            venue: "Lab 3",
+            gallery: [],
+            banner: null,
+            isLegacy: true
+        }
+    ],
+    "game-drifters": [
+        {
+            id: "legacy-game-1",
+            title: "Technova E-Sports Cup",
+            description: "Inter-college Valorant and BGMI tournament. Over 50 teams participated for the grand prize.",
+            start_time: "2023-11-10T10:00:00Z",
+            end_time: "2023-11-12T16:00:00Z",
+            venue: "Gaming Room",
+            gallery: [],
+            banner: null,
+            isLegacy: true
+        }
+    ],
+    "github": [
+        {
+            id: "legacy-git-1",
+            title: "Open Source October",
+            description: "Introduction to Git, GitHub, and creating your first Pull Request. Celebrating Hacktoberfest.",
+            start_time: "2023-10-01T10:00:00Z",
+            end_time: "2023-10-01T16:00:00Z",
+            venue: "Computer Lab 1",
+            gallery: [],
+            banner: null,
+            isLegacy: true
+        }
+    ],
+    "gdg": [
+        {
+            id: "legacy-gdg-1",
+            title: "Google I/O Extended",
+            description: "Watch party and technical discussions on the latest announcements from Google I/O 2023.",
+            start_time: "2023-05-25T18:00:00Z",
+            end_time: "2023-05-25T21:00:00Z",
+            venue: "Auditorium",
+            gallery: [],
+            banner: null,
+            isLegacy: true
+        }
+    ],
+    "pixelance": [
+        {
+            id: "legacy-pix-1",
+            title: "Photo Walk: Old Delhi",
+            description: "Capturing the heritage and streets of Old Delhi. Workshop on street photography basics.",
+            start_time: "2023-12-05T07:00:00Z",
+            end_time: "2023-12-05T14:00:00Z",
+            venue: "Old Delhi",
+            gallery: [],
+            banner: null,
+            isLegacy: true
+        }
+    ]
+}
+
+export default async function ClubDetailsPage({ params }: { params: { slug: string } }) {
     const club = CLUBS_DATA[params.slug]
+    const dbEvents = await getPastEvents(params.slug)
+    const legacyEvents = LEGACY_EVENTS[params.slug] || []
+
+    // Merge and Sort by Date Descending
+    const pastEvents = [...dbEvents, ...legacyEvents].sort((a, b) =>
+        new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+    )
 
     if (!club) {
         return (
@@ -188,8 +323,99 @@ export default function ClubDetailsPage({ params }: { params: { slug: string } }
                 </div>
             </section>
 
-            {/* WHAT WE DO */}
-            <section className="py-20 bg-zinc-900/30 border-y border-white/5">
+            {/* PAST EVENTS */}
+            {pastEvents.length > 0 && (
+                <section className="py-20 bg-zinc-900/30 border-y border-white/5">
+                    <div className="container mx-auto px-4">
+                        <div className="text-center mb-16">
+                            <h2 className="text-sm font-bold text-green-500 uppercase tracking-widest mb-3">Memories</h2>
+                            <h2 className="text-3xl font-bold mb-4">Past Events Gallery</h2>
+                            <p className="text-gray-400 max-w-2xl mx-auto">A collection of our verified past workshops, hackathons, and gatherings.</p>
+                        </div>
+
+                        <div className="relative max-w-4xl mx-auto pl-8 md:pl-0">
+                            {/* Vertical Line */}
+                            <div className="absolute left-0 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-green-500/0 via-green-500/50 to-green-500/0 md:-ml-px"></div>
+
+                            {pastEvents.map((event: any, idx: number) => {
+                                const isEven = idx % 2 === 0
+                                return (
+                                    <div key={event.id} className={`relative mb-16 md:flex ${isEven ? 'md:flex-row-reverse' : ''} group`}>
+                                        {/* Timeline Dot */}
+                                        <div className="absolute left-0 md:left-1/2 -ml-[5px] top-6 w-[11px] h-[11px] rounded-full bg-black border-2 border-green-500 z-20 group-hover:scale-125 md:-ml-[5px] transition-transform shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+
+                                        {/* Date Label (Desktop) - Opposite side */}
+                                        <div className={`hidden md:block w-1/2 pt-3 ${isEven ? 'pl-12 text-left' : 'pr-12 text-right'}`}>
+                                            <span className="text-green-400 font-mono text-xl font-bold tracking-wider">
+                                                {new Date(event.start_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
+                                            </span>
+                                        </div>
+
+                                        {/* Content Card */}
+                                        <div className={`md:w-1/2 pl-12 md:pl-0 ${isEven ? 'md:pr-12' : 'md:pl-12'}`}>
+                                            {/* Mobile Date */}
+                                            <div className="md:hidden text-green-400 font-mono font-bold mb-2 tracking-wider">
+                                                {new Date(event.start_time).toLocaleDateString()}
+                                            </div>
+
+                                            <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-green-500/30 transition-all shadow-lg">
+                                                {/* Event Banner/Gallery Hero */}
+                                                <div className="h-48 overflow-hidden relative">
+                                                    {event.banner ? (
+                                                        /* eslint-disable-next-line @next/next/no-img-element */
+                                                        <img src={event.banner} alt={event.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                    ) : (
+                                                        <div className="w-full h-full bg-gradient-to-br from-green-900/20 to-black flex items-center justify-center">
+                                                            <Calendar className="w-12 h-12 text-green-500/50" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                                                    <h3 className="absolute bottom-4 left-4 right-4 text-xl font-bold text-white leading-tight">
+                                                        {event.title}
+                                                    </h3>
+                                                </div>
+
+                                                <div className="p-6">
+                                                    <p className="text-gray-400 text-sm mb-4 line-clamp-3 leading-relaxed">
+                                                        {event.description}
+                                                    </p>
+
+                                                    {/* Mini Gallery Grid */}
+                                                    {event.gallery && event.gallery.length > 0 && (
+                                                        <div className="grid grid-cols-3 gap-2 mb-4">
+                                                            {event.gallery.slice(0, 3).map((photo: string, gIdx: number) => (
+                                                                <div key={gIdx} className="aspect-square rounded-lg overflow-hidden bg-white/5 relative group/img">
+                                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                    <img src={photo} alt="" className="w-full h-full object-cover opacity-80 group-hover/img:opacity-100 transition-opacity" />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    <Link href={`/events/${event.id}`} className="inline-flex items-center gap-2 text-sm font-bold text-white hover:text-green-400 transition-colors uppercase tracking-wide">
+                                                        Read Full Recap <ArrowRight className="w-4 h-4" />
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+
+                            {/* "The Beginning" Node */}
+                            <div className="relative md:flex items-center justify-center pt-8">
+                                <div className="absolute left-0 md:left-1/2 -ml-[4px] top-8 w-[9px] h-[9px] rounded-full bg-green-500/30 md:-ml-[4px]"></div>
+                                <div className="pl-12 md:pl-0 text-gray-500 text-sm font-mono tracking-widest uppercase">
+                                    Club Founded
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* WHAT WE DO (Existing Section Refined) */}
+            <section className="py-20">
                 <div className="container mx-auto px-4">
                     <div className="grid md:grid-cols-2 gap-12 items-center">
                         <div>
@@ -201,9 +427,9 @@ export default function ClubDetailsPage({ params }: { params: { slug: string } }
                         </div>
                         <div className="grid gap-6">
                             {[
-                                { title: "Ethical Hacking", desc: "Workshops on modern penetration testing tools." },
-                                { title: "CTF Competitions", desc: "Participate in Capture The Flag events globally." },
-                                { title: "Cyber Awareness", desc: "Seminars on digital hygiene and safety." }
+                                { title: "Workshops", desc: "Hands-on learning sessions." },
+                                { title: "Projects", desc: "Build real-world applications." },
+                                { title: "Networking", desc: "Connect with seniors and alumni." }
                             ].map((item, i) => (
                                 <div key={i} className="bg-white/5 p-6 rounded-xl border border-white/5">
                                     <h4 className="font-bold text-xl mb-2">{item.title}</h4>
@@ -216,16 +442,16 @@ export default function ClubDetailsPage({ params }: { params: { slug: string } }
             </section>
 
             {/* TEAM */}
-            <section className="py-24">
+            <section className="py-24 bg-zinc-900 border-t border-white/5">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl font-bold mb-4">Meet The Team</h2>
-                        <p className="text-gray-400">The minds behind the exploits.</p>
+                        <p className="text-gray-400">The minds behind {club.name}.</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {club.team.map((member: any) => (
-                            <div key={member.name} className="group bg-zinc-900 border border-zinc-800 p-6 rounded-2xl hover:border-green-500/50 transition-all">
+                            <div key={member.name} className="group bg-black border border-white/10 p-6 rounded-2xl hover:border-green-500/50 transition-all">
                                 <div className="w-16 h-16 bg-gradient-to-br from-gray-800 to-black rounded-full flex items-center justify-center mb-4 text-gray-400 group-hover:text-green-500 transition-colors">
                                     <User className="w-8 h-8" />
                                 </div>
