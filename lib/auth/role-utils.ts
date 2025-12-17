@@ -1,4 +1,17 @@
 
+// Explicit list of admin emails
+export const ADMIN_EMAILS = [
+    'clubdatapool.technova@gmail.com',
+    'clubaiandrobotics.technova@gmail.com',
+    'clubgithub.technova@gmail.com',
+    'clubpixelance.technova@gmail.com',
+    'clubgamedrifters.technova@gmail.com',
+    'clubcyberpirates.technova@gmail.com',
+    'awscloudclub.sharda.university@gmail.com',
+    'dsc.sharda.uni@gmail.com',
+    'clubtechpreneur.technova@gmail.com'
+];
+
 // Helper to determine role from email
 export function getRoleFromEmail(email: string): 'student' | 'admin' | 'super_admin' {
     // technova@sharda.ac.in is super_admin
@@ -6,9 +19,9 @@ export function getRoleFromEmail(email: string): 'student' | 'admin' | 'super_ad
         return 'super_admin'
     }
 
-    // Club accounts: *.technova@gmail.com → admin
-    if (email.endsWith('.technova@gmail.com')) {
-        return 'admin'
+    // Check explicit admin list
+    if (ADMIN_EMAILS.includes(email)) {
+        return 'super_admin'
     }
 
     // Students: @ug.sharda.ac.in or @pg.sharda.ac.in
@@ -20,12 +33,13 @@ export function isEmailAllowed(email: string): boolean {
     // Exact match for main technova account
     if (email === 'technova@sharda.ac.in') return true
 
+    // Check explicit admin list
+    if (ADMIN_EMAILS.includes(email)) return true
+
     // Student domains
     if (email.endsWith('@ug.sharda.ac.in')) return true
     if (email.endsWith('@pg.sharda.ac.in')) return true
 
-    // Club accounts (e.g., clubcyberpirates.technova@gmail.com)
-    if (email.endsWith('.technova@gmail.com')) return true
-
     return false
 }
+
