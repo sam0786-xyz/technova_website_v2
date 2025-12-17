@@ -33,6 +33,7 @@ export async function createEvent(formData: FormData) {
     const status = formData.get("status") as string || 'draft'
     const banner = formData.get("banner") as string
     const co_host_club_id = formData.get("co_host_club_id") as string || null
+    const registration_fields = formData.get("registration_fields") as string || "[]"
     let club_id = formData.get("club_id") as string || null
 
     // If no club selected, try to find one or create default
@@ -61,7 +62,8 @@ export async function createEvent(formData: FormData) {
         capacity,
         price,
         status,
-        banner
+        banner,
+        registration_fields: JSON.parse(registration_fields)
     })
 
     if (error) {
@@ -96,6 +98,7 @@ export async function updateEvent(formData: FormData) {
     const banner = formData.get("banner") as string
     const club_id = formData.get("club_id") as string
     const co_host_club_id = formData.get("co_host_club_id") as string || null
+    const registration_fields = formData.get("registration_fields") as string || "[]"
 
     const { error } = await supabase.from('events').update({
         club_id,
@@ -108,7 +111,8 @@ export async function updateEvent(formData: FormData) {
         capacity,
         price,
         status,
-        banner
+        banner,
+        registration_fields: JSON.parse(registration_fields)
     }).eq('id', id)
 
     if (error) {

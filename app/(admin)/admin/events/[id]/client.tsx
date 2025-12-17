@@ -28,20 +28,37 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
             return
         }
 
-        const headers = ["Name", "Email", "System ID", "Year", "Course", "Section", "Payment Status", "Checked In", "Registration Date"]
+        // Get custom fields
+        const customFields = typeof event.registration_fields === 'string'
+            ? JSON.parse(event.registration_fields)
+            : (event.registration_fields || [])
+
+        const customHeaders = customFields.map((f: any) => f.label)
+
+        const headers = ["Name", "Email", "System ID", "Year", "Course", "Section", "Payment Status", "Checked In", "Registration Date", ...customHeaders]
+
         const csvContent = [
             headers.join(","),
-            ...dataToExport.map(r => [
-                `"${r.user.name || ''}"`,
-                `"${r.user.email || ''}"`,
-                `"${r.user.system_id || ''}"`,
-                `"${r.user.year || ''}"`,
-                `"${r.user.course || ''}"`,
-                `"${r.user.section || ''}"`,
-                r.payment_status,
-                r.attended ? "Yes" : "No",
-                new Date(r.created_at).toLocaleString()
-            ].join(","))
+            ...dataToExport.map(r => {
+                const answers = r.answers || {}
+                const customValues = customFields.map((f: any) => {
+                    const val = answers[f.id]
+                    return `"${val !== undefined && val !== null ? val : ''}"`
+                })
+
+                return [
+                    `"${r.user.name || ''}"`,
+                    `"${r.user.email || ''}"`,
+                    `"${r.user.system_id || ''}"`,
+                    `"${r.user.year || ''}"`,
+                    `"${r.user.course || ''}"`,
+                    `"${r.user.section || ''}"`,
+                    r.payment_status,
+                    r.attended ? "Yes" : "No",
+                    new Date(r.created_at).toLocaleString(),
+                    ...customValues
+                ].join(",")
+            })
         ].join("\n")
 
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
@@ -149,8 +166,8 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${reg.payment_status === 'paid' ? 'bg-green-100 text-green-700' :
-                                                    reg.payment_status === 'free' ? 'bg-blue-100 text-blue-700' :
-                                                        'bg-yellow-100 text-yellow-700'
+                                                reg.payment_status === 'free' ? 'bg-blue-100 text-blue-700' :
+                                                    'bg-yellow-100 text-yellow-700'
                                                 }`}>
                                                 {reg.payment_status.toUpperCase()}
                                             </span>

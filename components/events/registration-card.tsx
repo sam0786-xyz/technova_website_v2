@@ -1,9 +1,11 @@
-'use client'
+"use client"
 
 import { useState } from "react"
 import { registerForEvent } from "@/lib/actions/registrations"
 import { useRouter } from "next/navigation"
 import { Download } from "lucide-react"
+import { RegistrationModal } from "./registration-modal"
+import { RegistrationField } from "@/components/admin/form-builder"
 
 declare global {
     interface Window {
@@ -29,6 +31,7 @@ interface EventData {
     price: number
     capacity: number
     registered_count?: number
+    registration_fields?: RegistrationField[] | string
 }
 
 interface UserData {
@@ -53,17 +56,32 @@ export function EventRegistrationCard({
     qrCode?: string | null
 }) {
     const [loading, setLoading] = useState(false)
+    const [showModal, setShowModal] = useState(false)
     const router = useRouter()
 
-    const handleRegister = async () => {
+    const registrationFields: RegistrationField[] = typeof event.registration_fields === 'string'
+        ? JSON.parse(event.registration_fields)
+        : (event.registration_fields || [])
+
+    const handleRegisterClick = () => {
         if (!user) {
             router.push(`/login?callbackUrl=/events/${event.id}`)
             return
         }
 
+        if (registrationFields.length > 0) {
+            setShowModal(true)
+        } else {
+            processRegistration({})
+        }
+    }
+
+    const processRegistration = async (answers: Record<string, any>) => {
         setLoading(true)
+        setShowModal(false)
+
         try {
-            const result = await registerForEvent(event.id)
+            const result = await registerForEvent(event.id, answers)
 
             if (result.status === 'success') {
                 alert("Registration Successful!")
@@ -137,24 +155,34 @@ export function EventRegistrationCard({
     const isFull = (event.registered_count || 0) >= event.capacity
 
     return (
-        <div className="w-full md:w-80 bg-gray-50 p-6 rounded-xl border">
-            <div className="mb-4">
-                <p className="text-sm text-gray-500">Capacity</p>
-                <div className="w-full bg-gray-200 h-2 rounded-full mt-2 overflow-hidden">
-                    <div className="bg-blue-600 h-full" style={{ width: `${((event.registered_count || 0) / event.capacity) * 100}%` }}></div>
+        <>
+            <div className="w-full md:w-80 bg-gray-50 p-6 rounded-xl border">
+                <div className="mb-4">
+                    <p className="text-sm text-gray-500">Capacity</p>
+                    <div className="w-full bg-gray-200 h-2 rounded-full mt-2 overflow-hidden">
+                        <div className="bg-blue-600 h-full" style={{ width: `${((event.registered_count || 0) / event.capacity) * 100}%` }}></div>
+                    </div>
+                    <p className="text-right text-xs mt-1 text-gray-500">{(event.registered_count || 0)} / {event.capacity} Filled</p>
                 </div>
-                <p className="text-right text-xs mt-1 text-gray-500">{(event.registered_count || 0)} / {event.capacity} Filled</p>
+
+                <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+
+                <button
+                    onClick={handleRegisterClick}
+                    disabled={loading || isFull}
+                    className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {loading ? "Processing..." : isFull ? "Event Full" : event.price > 0 ? `Pay ₹${event.price}` : "Register Now"}
+                </button>
             </div>
 
-            <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
-
-            <button
-                onClick={handleRegister}
-                disabled={loading || isFull}
-                className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {loading ? "Processing..." : isFull ? "Event Full" : event.price > 0 ? `Pay ₹${event.price}` : "Register Now"}
-            </button>
-        </div>
+            <RegistrationModal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                fields={registrationFields}
+                onConfirm={processRegistration}
+                loading={loading}
+            />
+        </>
     )
 }

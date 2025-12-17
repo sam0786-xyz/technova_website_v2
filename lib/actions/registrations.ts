@@ -32,7 +32,7 @@ export async function checkRegistration(eventId: string) {
     return data
 }
 
-export async function registerForEvent(eventId: string) {
+export async function registerForEvent(eventId: string, answers?: Record<string, any>) {
     const session = await auth()
     if (!session) throw new Error("Unauthorized")
 
@@ -59,7 +59,8 @@ export async function registerForEvent(eventId: string) {
             user_id: session.user.id,
             event_id: eventId,
             payment_status: 'pending',
-            qr_token_id: order.id
+            qr_token_id: order.id,
+            answers: answers || {}
         })
         return { status: 'payment_required', order }
     } else {
@@ -82,7 +83,8 @@ export async function registerForEvent(eventId: string) {
             user_id: session.user.id,
             event_id: eventId,
             payment_status: 'free',
-            qr_token_id: token
+            qr_token_id: token,
+            answers: answers || {}
         })
 
         if (error) throw new Error(error.message)
