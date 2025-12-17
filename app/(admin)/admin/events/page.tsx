@@ -37,7 +37,7 @@ export default async function AdminEventsPage() {
                         ) : (
                             events.map((event: { id: string; title: string; start_time: string; status: string; capacity: number }) => (
                                 <tr key={event.id} className="border-b hover:bg-gray-50">
-                                    <td className="p-4 font-medium"><Link href={`/events/${event.id}`} className="hover:underline">{event.title}</Link></td>
+                                    <td className="p-4 font-medium"><Link href={`/admin/events/${event.id}`} className="hover:underline">{event.title}</Link></td>
                                     <td className="p-4">{new Date(event.start_time).toLocaleDateString()}</td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 rounded-full text-xs ${event.status === 'live' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
@@ -45,8 +45,9 @@ export default async function AdminEventsPage() {
                                         </span>
                                     </td>
                                     <td className="p-4">{event.capacity}</td>
-                                    <td className="p-4 flex gap-3 text-sm">
-                                        <Link href={`/admin/events/${event.id}/edit`} className="text-blue-600 hover:underline">Edit</Link>
+                                    <td className="p-4 flex gap-3 text-sm items-center">
+                                        <Link href={`/admin/events/${event.id}`} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md hover:bg-blue-100 text-xs font-medium">Manage</Link>
+                                        <Link href={`/admin/events/${event.id}/edit`} className="text-gray-600 hover:underline">Edit</Link>
                                         <form action={deleteEvent.bind(null, event.id)}>
                                             <button type="submit" className="text-red-600 hover:underline">Delete</button>
                                         </form>

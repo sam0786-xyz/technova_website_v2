@@ -167,3 +167,44 @@ export async function getEventRegistrations(eventId: string) {
 
     return combined
 }
+
+export async function getAllRegistrations() {
+    const session = await auth()
+    if (!session || !session.user || !['admin', 'super_admin'].includes(session.user.role)) {
+        throw new Error("Unauthorized")
+    }
+
+    const supabase = await getSupabase()
+
+    // 1. Get All Registrations with Event details
+    const { data: registrations, error } = await supabase
+        .from('registrations')
+        .select('*, events(*)')
+        .order('created_at', { ascending: false })
+
+    if (error) throw new Error(error.message)
+    if (!registrations || registrations.length === 0) return []
+
+    // 2. Get User IDs
+    const userIds = Array.from(new Set(registrations.map(r => r.user_id)))
+
+    // 3. Get User Details
+    const { data: users, error: userError } = await supabase
+        .schema('next_auth')
+        .from('users')
+        .select('id, name, email, system_id, year, course, section')
+        .in('id', userIds)
+
+    if (userError) throw new Error(userError.message)
+
+    // 4. Merge Data
+    const combined = registrations.map(reg => {
+        const user = users?.find(u => u.id === reg.user_id)
+        return {
+            ...reg,
+            user: user || { name: 'Unknown', email: 'Unknown' }
+        }
+    })
+
+    return combined
+}

@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Calendar, Users, BarChart, Settings, Home } from "lucide-react"
+import { SidebarNav } from "@/components/admin/sidebar-nav"
+
 
 export default async function AdminLayout({
     children,
@@ -34,25 +36,7 @@ export default async function AdminLayout({
                 <div className="p-6 border-b">
                     <h2 className="font-bold text-xl">Technova Admin</h2>
                 </div>
-                <nav className="flex-1 p-4 space-y-2">
-                    <Link href="/" className="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50">
-                        <Home className="w-5 h-5" /> Back to App
-                    </Link>
-                    <div className="pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Manage</div>
-                    <Link href="/admin/dashboard" className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 text-blue-700 font-medium">
-                        <BarChart className="w-5 h-5" /> Overview
-                    </Link>
-                    <Link href="/admin/events" className="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50">
-                        <Calendar className="w-5 h-5" /> Events
-                    </Link>
-                    <Link href="/admin/registrations" className="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50">
-                        <Users className="w-5 h-5" /> Registrations
-                    </Link>
-                    <div className="pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">System</div>
-                    <Link href="/admin/settings" className="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50">
-                        <Settings className="w-5 h-5" /> Settings
-                    </Link>
-                </nav>
+                <SidebarNav />
                 <div className="p-4 border-t">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-200" />
