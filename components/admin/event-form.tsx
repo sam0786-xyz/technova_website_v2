@@ -12,6 +12,15 @@ interface EventFormProps {
 
 export function EventForm({ clubs, event }: EventFormProps) {
     const [loading, setLoading] = useState(false)
+    const [isVirtual, setIsVirtual] = useState(event?.is_virtual || false)
+
+    // Determine initial mode
+    const initialPos = event?.banner_position || "center"
+    const isCustom = initialPos.includes('%') || !['center', 'top', 'bottom', 'left', 'right'].includes(initialPos)
+
+    const [bannerPosMode, setBannerPosMode] = useState(isCustom ? 'custom' : initialPos)
+    const [bannerPosValue, setBannerPosValue] = useState(initialPos)
+
     const [questions, setQuestions] = useState<RegistrationField[]>(
         event?.registration_fields ? (typeof event.registration_fields === 'string' ? JSON.parse(event.registration_fields) : event.registration_fields) : []
     )
@@ -72,9 +81,99 @@ export function EventForm({ clubs, event }: EventFormProps) {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">Banner URL (Optional)</label>
-                    <input name="banner" type="url" defaultValue={event?.banner} className="w-full p-2 border rounded-md" placeholder="https://..." />
+                    <label className="block text-sm font-medium mb-1">Banner Image</label>
+                    {event?.banner && (
+                        <div className="mb-2">
+                            <img src={event.banner} alt="Current Banner" className="h-32 rounded-lg object-cover border" />
+                            <p className="text-xs text-gray-500 mt-1">Current Banner URL: {event.banner}</p>
+                            <input type="hidden" name="banner" value={event.banner} />
+                        </div>
+                    )}
+                    <input name="banner_file" type="file" accept="image/*" className="w-full p-2 border rounded-md" />
+                    <p className="text-xs text-gray-400 mt-1">Upload an image to replace the current one.</p>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Banner Position (Focus Point)</label>
+                        <div className="flex flex-col gap-2">
+                            <select
+                                className="w-full p-2 border rounded-md"
+                                value={bannerPosMode}
+                                onChange={(e) => {
+                                    const val = e.target.value
+                                    setBannerPosMode(val)
+                                    if (val !== 'custom') {
+                                        setBannerPosValue(val)
+                                    }
+                                }}
+                            >
+                                <option value="center">Center</option>
+                                <option value="top">Top</option>
+                                <option value="bottom">Bottom</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                                <option value="custom">Custom (Coordinates)</option>
+                            </select>
+
+                            {bannerPosMode === 'custom' && (
+                                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+                                    <div className="flex-1">
+                                        <label className="text-xs text-gray-500">Horizontal %</label>
+                                        <input
+                                            type="number"
+                                            placeholder="50"
+                                            min="0"
+                                            max="100"
+                                            className="w-full p-2 border rounded-md"
+                                            defaultValue={bannerPosValue.includes('%') ? parseInt(bannerPosValue.split(' ')[0]) : 50}
+                                            onChange={(e) => {
+                                                const y = bannerPosValue.includes(' ') ? bannerPosValue.split(' ')[1] : '50%'
+                                                setBannerPosValue(`${e.target.value}% ${y}`)
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="text-xs text-gray-500">Vertical %</label>
+                                        <input
+                                            type="number"
+                                            placeholder="50"
+                                            min="0"
+                                            max="100"
+                                            className="w-full p-2 border rounded-md"
+                                            defaultValue={bannerPosValue.includes('%') && bannerPosValue.split(' ').length > 1 ? parseInt(bannerPosValue.split(' ')[1]) : 50}
+                                            onChange={(e) => {
+                                                const x = bannerPosValue.includes(' ') ? bannerPosValue.split(' ')[0] : '50%'
+                                                setBannerPosValue(`${x} ${e.target.value}%`)
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                            <input type="hidden" name="banner_position" value={bannerPosValue} />
+                            <p className="text-xs text-gray-400">Controls which part of the image is shown when cropped.</p>
+                        </div>
+                    </div>
                 </div>
+
+                {/* Virtual Event Logic */}
+                <div className="flex items-center gap-2 border p-4 rounded-md bg-gray-50">
+                    <input
+                        type="checkbox"
+                        name="is_virtual"
+                        value="true"
+                        id="is_virtual"
+                        defaultChecked={event?.is_virtual}
+                        onChange={(e) => setIsVirtual(e.target.checked)}
+                        className="w-4 h-4"
+                    />
+                    <label htmlFor="is_virtual" className="font-medium cursor-pointer">This is a Virtual Event</label>
+                </div>
+
+                {isVirtual && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                        <label className="block text-sm font-medium mb-1">Meeting Link</label>
+                        <input name="meeting_link" type="url" defaultValue={event?.meeting_link} className="w-full p-2 border rounded-md" placeholder="e.g. Google Meet or Zoom Link" />
+                    </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-6">
                     <div>
@@ -88,8 +187,8 @@ export function EventForm({ clubs, event }: EventFormProps) {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">Venue</label>
-                    <input name="venue" required type="text" defaultValue={event?.venue} className="w-full p-2 border rounded-md" placeholder="e.g. Auditorium" />
+                    <label className="block text-sm font-medium mb-1">Venue {isVirtual ? "(or Physical Location for Hybrid)" : ""}</label>
+                    <input name="venue" required={!isVirtual} type="text" defaultValue={event?.venue} className="w-full p-2 border rounded-md" placeholder={isVirtual ? "Optional if purely online" : "e.g. Auditorium"} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">

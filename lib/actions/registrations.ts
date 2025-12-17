@@ -210,3 +210,30 @@ export async function getAllRegistrations() {
 
     return combined
 }
+export async function cancelRegistration(registrationId: string) {
+    const session = await auth()
+    if (!session) throw new Error("Unauthorized")
+
+    const supabase = await getSupabase()
+
+    // Authorization check
+    // 1. If admin, can cancel any.
+    // 2. If student, can only cancel own.
+
+    let query = supabase.from('registrations').delete().eq('id', registrationId)
+
+    if (session.user.role !== 'admin' && session.user.role !== 'super_admin') {
+        // Enforce user ownership
+        query = query.eq('user_id', session.user.id)
+    }
+
+    const { error } = await query
+
+    if (error) {
+        console.error("Cancel Error:", error)
+        throw new Error("Failed to cancel registration")
+    }
+
+    revalidatePath("/events")
+    revalidatePath("/admin/events")
+}

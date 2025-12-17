@@ -98,17 +98,32 @@ function EventCard({ event }: { event: any }) {
                 <div className="h-40 bg-gradient-to-br from-blue-600/20 to-purple-600/20 flex items-center justify-center overflow-hidden">
                     {event.banner ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={event.banner} alt={event.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <img
+                            src={event.banner}
+                            alt={event.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            style={{ objectPosition: event.banner_position || 'center' }}
+                        />
                     ) : (
                         <Calendar className="w-12 h-12 text-blue-400" />
                     )}
                 </div>
                 <div className="p-6">
-                    <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-bold group-hover:text-blue-400 transition-colors line-clamp-1">{event.title}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full ${event.price === 0 ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                            {event.price === 0 ? 'Free' : `₹${event.price}`}
-                        </span>
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-blue-400 transition-colors line-clamp-2">
+                        {event.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mb-2">
+                        {/* Price Badge */}
+                        <div className={`text-xs px-2 py-1 rounded-md inline-block ${event.price === 0 ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"}`}>
+                            {event.price === 0 ? "Free" : `₹${event.price}`}
+                        </div>
+
+                        {/* Virtual Badge */}
+                        {event.is_virtual && (
+                            <div className="text-xs px-2 py-1 rounded-md inline-block bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                {event.venue && event.venue.toLowerCase() !== 'online' ? 'Hybrid' : 'Virtual'}
+                            </div>
+                        )}
                     </div>
                     <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
                         <Calendar className="w-4 h-4" />

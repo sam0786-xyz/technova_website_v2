@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth"
-import { Calendar, MapPin, Clock, Users, Globe, ArrowLeft } from "lucide-react"
+import { Calendar, MapPin, Clock, Users, Globe, ArrowLeft, Video } from "lucide-react"
 import Link from "next/link"
 import { getEventById } from "@/lib/actions/events"
 import { checkRegistration } from "@/lib/actions/registrations"
@@ -52,8 +52,13 @@ export default async function EventPage({ params }: { params: { id: string } }) 
             {/* Banner */}
             <div className="h-64 md:h-96 w-full bg-gray-900 relative">
                 <div className="absolute inset-0 flex items-center justify-center text-gray-700">
-                    {event.banner_url ? (
-                        <img src={event.banner_url} alt={event.title} className="w-full h-full object-cover opacity-80" />
+                    {event.banner ? (
+                        <img
+                            src={event.banner}
+                            alt={event.title}
+                            className="w-full h-full object-cover opacity-80"
+                            style={{ objectPosition: event.banner_position || 'center' }}
+                        />
                     ) : "No Banner"}
                 </div>
             </div>
@@ -71,9 +76,16 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                     <div className="p-8">
                         <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                             <div className="flex-1">
-                                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
-                                    {event.price === 0 ? "Free Event" : `₹${event.price} `}
-                                </span>
+                                <div className="flex flex-wrap gap-2 mb-4">
+                                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                                        {event.price === 0 ? "Free Event" : `₹${event.price} `}
+                                    </span>
+                                    {event.is_virtual && (
+                                        <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                                            {event.venue && event.venue.toLowerCase() !== 'online' ? 'Hybrid Event' : 'Virtual Event'}
+                                        </span>
+                                    )}
+                                </div>
 
                                 {event.club && (
                                     <div className="flex items-center gap-2 mb-3">
@@ -97,8 +109,16 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <MapPin className="w-5 h-5 text-blue-500" />
-                                        <span>{event.venue}</span>
+                                        <span>{event.venue || "Online"}</span>
                                     </div>
+                                    {event.is_virtual && event.meeting_link && (
+                                        <div className="flex items-center gap-2">
+                                            <Video className="w-5 h-5 text-purple-500" />
+                                            <a href={event.meeting_link} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline font-medium">
+                                                Join Meeting
+                                            </a>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

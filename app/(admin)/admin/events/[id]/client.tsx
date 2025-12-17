@@ -68,6 +68,11 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
         link.click()
     }
 
+    // Get custom fields for column headers
+    const customFields = typeof event.registration_fields === 'string'
+        ? JSON.parse(event.registration_fields)
+        : (event.registration_fields || [])
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -135,28 +140,33 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead className="bg-gray-50 border-b text-gray-500">
                             <tr>
-                                <th className="p-4 font-medium">Student</th>
+                                <th className="p-4 font-medium sticky left-0 bg-gray-50 z-10">Student</th>
                                 <th className="p-4 font-medium">System ID</th>
                                 <th className="p-4 font-medium">Class</th>
                                 <th className="p-4 font-medium">Payment</th>
                                 <th className="p-4 font-medium">Check-In</th>
                                 <th className="p-4 font-medium">Date</th>
+                                {/* Custom Fields Headers */}
+                                {customFields.map((field: any) => (
+                                    <th key={field.id} className="p-4 font-medium min-w-[200px]">{field.label}</th>
+                                ))}
+                                <th className="p-4 font-medium text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y">
                             {filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="p-8 text-center text-gray-500">
+                                    <td colSpan={7 + customFields.length} className="p-8 text-center text-gray-500">
                                         No registrations found matching "{search}"
                                     </td>
                                 </tr>
                             ) : (
                                 filtered.map((reg) => (
-                                    <tr key={reg.id} className="hover:bg-gray-50">
-                                        <td className="p-4">
+                                    <tr key={reg.id} className="hover:bg-gray-50 group">
+                                        <td className="p-4 sticky left-0 bg-white group-hover:bg-gray-50 z-10 box-border border-r border-transparent group-hover:border-gray-100">
                                             <div className="font-medium text-gray-900">{reg.user.name}</div>
                                             <div className="text-gray-500 text-xs">{reg.user.email}</div>
                                         </td>
@@ -184,6 +194,30 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                                             )}
                                         </td>
                                         <td className="p-4 text-gray-500">{new Date(reg.created_at).toLocaleDateString()}</td>
+
+                                        {/* Custom Answers Cells */}
+                                        {customFields.map((field: any) => {
+                                            const val = reg.answers?.[field.id]
+                                            return (
+                                                <td key={field.id} className="p-4 text-gray-600 truncate max-w-[200px]" title={val}>
+                                                    {val || '-'}
+                                                </td>
+                                            )
+                                        })}
+
+                                        <td className="p-4 text-right">
+                                            <button
+                                                onClick={async () => {
+                                                    if (confirm("Are you sure you want to cancel this registration?")) {
+                                                        const { cancelRegistration } = await import("@/lib/actions/registrations")
+                                                        await cancelRegistration(reg.id)
+                                                    }
+                                                }}
+                                                className="text-red-500 hover:text-red-700 text-xs font-medium px-2 py-1 rounded hover:bg-red-50"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))
                             )}

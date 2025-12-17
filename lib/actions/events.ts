@@ -31,9 +31,29 @@ export async function createEvent(formData: FormData) {
     const capacity = parseInt(formData.get("capacity") as string)
     const price = parseFloat(formData.get("price") as string)
     const status = formData.get("status") as string || 'draft'
-    const banner = formData.get("banner") as string
+    const bannerFile = formData.get("banner_file") as File
+    let banner = formData.get("banner") as string
+
+    if (bannerFile && bannerFile.size > 0) {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('events')
+            .upload(`${Date.now()}-${bannerFile.name}`, bannerFile, {
+                upsert: true
+            })
+
+        if (uploadError) {
+            console.error("Upload Error:", uploadError)
+        } else {
+            const { data: { publicUrl } } = supabase.storage.from('events').getPublicUrl(uploadData.path)
+            banner = publicUrl
+        }
+    }
+
     const co_host_club_id = formData.get("co_host_club_id") as string || null
     const registration_fields = formData.get("registration_fields") as string || "[]"
+    const is_virtual = formData.get("is_virtual") === "true"
+    const meeting_link = formData.get("meeting_link") as string || null
+    const banner_position = formData.get("banner_position") as string || "center"
     let club_id = formData.get("club_id") as string || null
 
     // If no club selected, try to find one or create default
@@ -53,7 +73,6 @@ export async function createEvent(formData: FormData) {
     // 2. Create Event
     const { error } = await supabase.from('events').insert({
         club_id,
-        co_host_club_id: co_host_club_id === "none" ? null : co_host_club_id,
         title,
         description,
         start_time,
@@ -63,7 +82,12 @@ export async function createEvent(formData: FormData) {
         price,
         status,
         banner,
-        registration_fields: JSON.parse(registration_fields)
+        co_host_club_id: co_host_club_id === 'none' ? null : co_host_club_id,
+        updated_at: new Date().toISOString(),
+        registration_fields: JSON.parse(registration_fields),
+        is_virtual,
+        meeting_link,
+        banner_position
     })
 
     if (error) {
@@ -95,14 +119,32 @@ export async function updateEvent(formData: FormData) {
     const capacity = parseInt(formData.get("capacity") as string)
     const price = parseFloat(formData.get("price") as string)
     const status = formData.get("status") as string
-    const banner = formData.get("banner") as string
+    const bannerFile = formData.get("banner_file") as File
+    let banner = formData.get("banner") as string
+
+    if (bannerFile && bannerFile.size > 0) {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('events')
+            .upload(`${Date.now()}-${bannerFile.name}`, bannerFile, {
+                upsert: true
+            })
+
+        if (uploadError) {
+            console.error("Upload Error:", uploadError)
+        } else {
+            const { data: { publicUrl } } = supabase.storage.from('events').getPublicUrl(uploadData.path)
+            banner = publicUrl
+        }
+    }
+
     const club_id = formData.get("club_id") as string
     const co_host_club_id = formData.get("co_host_club_id") as string || null
     const registration_fields = formData.get("registration_fields") as string || "[]"
+    const is_virtual = formData.get("is_virtual") === "true"
+    const meeting_link = formData.get("meeting_link") as string || null
 
     const { error } = await supabase.from('events').update({
         club_id,
-        co_host_club_id: co_host_club_id === "none" ? null : co_host_club_id,
         title,
         description,
         start_time,
@@ -112,7 +154,11 @@ export async function updateEvent(formData: FormData) {
         price,
         status,
         banner,
-        registration_fields: JSON.parse(registration_fields)
+        co_host_club_id: co_host_club_id === 'none' ? null : co_host_club_id,
+        updated_at: new Date().toISOString(),
+        registration_fields,
+        is_virtual,
+        meeting_link
     }).eq('id', id)
 
     if (error) {
