@@ -27,6 +27,13 @@ This is the repository for the **Technova 2025/2026** college website. It serves
 - **QR Code Scanning**: Mobile-friendly interface for verifying event attendance.
 - **Real-time Validation**: Instantly marks attendance in the database.
 
+### ✨ New Event Features
+- **Custom Registration Questions**: Admins can now add custom fields (Text, Number, Checkbox, Select) to event forms.
+- **Virtual Event Support**: Toggle events as virtual/hybrid and provide meeting links.
+- **Banner Management**: Upload banners directly and adjust their focus point (Center, Top, Custom Coordinates).
+- **Real-time Capacity**: Registration cards show live capacity bars and disable automatically when full.
+- **User Cancellation**: Admins can cancel registrations directly from the dashboard.
+
 ## 🛠️ Tech Stack
 
 - **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
