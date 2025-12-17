@@ -13,7 +13,6 @@ export default function LoginPage() {
                     <p className="font-medium">Allowed Accounts:</p>
                     <ul className="text-left list-disc list-inside text-xs space-y-1">
                         <li><strong>Students:</strong> systemid.name@ug.sharda.ac.in or @pg.sharda.ac.in</li>
-                        <li><strong>Clubs:</strong> clubname.technova@gmail.com</li>
                     </ul>
                 </div>
 
