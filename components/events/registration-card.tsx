@@ -152,37 +152,50 @@ export function EventRegistrationCard({
         )
     }
 
-    const isFull = (event.registered_count || 0) >= event.capacity
+    const registeredCount = event.registered_count || 0
+    const filledPercentage = Math.min((registeredCount / event.capacity) * 100, 100)
+    const isFull = registeredCount >= event.capacity
 
     return (
-        <>
-            <div className="w-full md:w-80 bg-gray-50 p-6 rounded-xl border">
-                <div className="mb-4">
-                    <p className="text-sm text-gray-500">Capacity</p>
-                    <div className="w-full bg-gray-200 h-2 rounded-full mt-2 overflow-hidden">
-                        <div className="bg-blue-600 h-full" style={{ width: `${((event.registered_count || 0) / event.capacity) * 100}%` }}></div>
-                    </div>
-                    <p className="text-right text-xs mt-1 text-gray-500">{(event.registered_count || 0)} / {event.capacity} Filled</p>
+        <div className="w-full md:w-80 bg-white p-6 rounded-xl shadow-lg border">
+            {/* Capacity Bar */}
+            <div className="mb-6">
+                <div className="flex justify-between text-sm text-gray-500 mb-2">
+                    <span>Capacity</span>
                 </div>
-
-                <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
-
-                <button
-                    onClick={handleRegisterClick}
-                    disabled={loading || isFull}
-                    className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {loading ? "Processing..." : isFull ? "Event Full" : event.price > 0 ? `Pay ₹${event.price}` : "Register Now"}
-                </button>
+                <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                        className={`h-full rounded-full transition-all duration-500 ${isFull ? 'bg-red-500' : 'bg-green-500'}`}
+                        style={{ width: `${filledPercentage}%` }}
+                    />
+                </div>
+                <div className="text-right text-xs text-gray-500 mt-1">
+                    {registeredCount} / {event.capacity} Filled
+                </div>
             </div>
 
-            <RegistrationModal
-                isOpen={showModal}
-                onClose={() => setShowModal(false)}
-                fields={registrationFields}
-                onConfirm={processRegistration}
-                loading={loading}
-            />
-        </>
+            <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+
+            <button
+                onClick={handleRegisterClick}
+                disabled={loading || isFull}
+                className={`w-full py-3 rounded-xl font-bold text-white transition-all transform active:scale-95 ${isFull
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-black hover:bg-gray-800 shadow-lg hover:shadow-xl"
+                    }`}
+            >
+                {loading ? "Processing..." : isFull ? "Event Full" : event.price > 0 ? `Pay ₹${event.price}` : "Register Now"}
+            </button>
+
+            {showModal && user && (
+                <RegistrationModal
+                    fields={registrationFields}
+                    isOpen={showModal}
+                    onClose={() => setShowModal(false)}
+                    onConfirm={processRegistration}
+                    loading={loading}
+                />
+            )}
+        </div>
     )
 }

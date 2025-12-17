@@ -50,7 +50,7 @@ export default function LandingPage() {
               <p className="text-sm text-gray-500 uppercase tracking-widest mt-1">Events Yearly</p>
             </div>
             <div>
-              <h3 className="text-3xl font-bold text-white">1000+</h3>
+              <h3 className="text-3xl font-bold text-white">2500+</h3>
               <p className="text-sm text-gray-500 uppercase tracking-widest mt-1">Active Members</p>
             </div>
             <div>

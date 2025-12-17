@@ -211,12 +211,26 @@ export async function getEvents() {
 
 export async function getEventById(id: string) {
     const supabase = await getSupabase()
-    const { data } = await supabase.from('events')
+
+    // Fetch event with club
+    const { data: event, error } = await supabase.from('events')
         .select(`
             *,
             club:clubs!events_club_id_fkey(name, logo_url)
         `)
         .eq('id', id)
         .single()
-    return data
+
+    if (error || !event) return null
+
+    // Fetch registration count separately (more reliable than count in select sometimes with foreign keys)
+    const { count } = await supabase
+        .from('registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', id)
+
+    return {
+        ...event,
+        registered_count: count || 0
+    }
 }
