@@ -51,7 +51,7 @@ const clubs = [
         className: "invert" // GitHub logo is black, invert for dark mode if needed (check actual image)
     },
     {
-        name: "Pixelance",
+        name: "PiXelance",
         slug: "pixelance",
         logo: "/assets/logo/pixelance_logo.png",
         desc: "For photography/videography enthusiasts to share passion and explore new subjects.",

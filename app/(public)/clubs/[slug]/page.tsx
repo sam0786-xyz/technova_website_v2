@@ -119,9 +119,9 @@ const CLUBS_DATA: Record<string, any> = {
         ]
     },
     "pixelance": {
-        name: "Pixelance Club",
+        name: "PiXelance Club",
         tagline: "Capturing moments, creating memories.",
-        description: "The Pixelance Club is a community of photography/videography enthusiasts who come together to share their passion for photography, videography learn new techniques, and explore new subjects.",
+        description: "The PiXelance Club is a community of photography/videography enthusiasts who come together to share their passion for photography, videography learn new techniques, and explore new subjects.",
         whyJoin: "To foster photography enthusiasts, facilitate skill development, and create a supportive community for individuals with a passion for capturing moments and provide a platform to help them improve and refine their skills. By organising workshops, seminars, photo walks and competitions, we aim to help students connect with photography professionals by inviting professionals to share their knowledge. We aim to build a community of like-minded students with a shared interest in photography.",
         joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
         team: [

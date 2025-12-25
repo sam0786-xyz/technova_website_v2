@@ -56,7 +56,7 @@ const clubs = [
         className: "invert"
     },
     {
-        name: "Pixelance",
+        name: "PiXelance",
         slug: "pixelance",
         logo: "/assets/logo/pixelance_logo.png",
         desc: "For photography/videography enthusiasts to share passion and explore new subjects.",

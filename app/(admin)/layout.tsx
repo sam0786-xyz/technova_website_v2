@@ -1,9 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { Calendar, Users, BarChart, Settings, Home } from "lucide-react"
 import { SidebarNav } from "@/components/admin/sidebar-nav"
-
 
 export default async function AdminLayout({
     children,
@@ -16,32 +14,39 @@ export default async function AdminLayout({
         redirect("/login")
     }
 
-    // Basic Role Gate (Refine with DB check later if needed)
+    // Basic Role Gate
     if (session.user.role === 'student') {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-                    <p>You do not have permission to view this area.</p>
-                    <Link href="/dashboard" className="text-blue-500 underline mt-4 block">Return to Dashboard</Link>
+            <div className="flex h-screen items-center justify-center bg-black">
+                <div className="text-center p-8 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
+                    <h1 className="text-2xl font-bold text-red-400">Access Denied</h1>
+                    <p className="text-gray-400 mt-2">You do not have permission to view this area.</p>
+                    <Link href="/leaderboard" className="text-blue-400 hover:text-blue-300 underline mt-4 block">Return to Dashboard</Link>
                 </div>
             </div>
         )
     }
 
     return (
-        <div className="flex min-h-screen bg-gray-100">
+        <div className="flex min-h-screen bg-black">
             {/* Sidebar */}
-            <aside className="w-64 bg-white border-r hidden md:flex flex-col">
-                <div className="p-6 border-b">
-                    <h2 className="font-bold text-xl">Technova Admin</h2>
+            <aside className="w-64 bg-zinc-900/50 border-r border-white/10 hidden md:flex flex-col backdrop-blur-xl">
+                <div className="p-6 border-b border-white/10">
+                    <h2 className="font-bold text-xl text-white">Technova Admin</h2>
                 </div>
                 <SidebarNav />
-                <div className="p-4 border-t">
+                <div className="p-4 border-t border-white/10 mt-auto">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-200" />
+                        {session.user.image ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img src={session.user.image} alt={session.user.name || ''} className="w-10 h-10 rounded-full border border-white/20" />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-blue-600/30 flex items-center justify-center text-blue-400 font-bold">
+                                {session.user.name?.charAt(0).toUpperCase()}
+                            </div>
+                        )}
                         <div>
-                            <p className="text-sm font-medium">{session.user.name}</p>
+                            <p className="text-sm font-medium text-white">{session.user.name}</p>
                             <p className="text-xs text-gray-500 capitalize">{session.user.role}</p>
                         </div>
                     </div>
@@ -49,7 +54,7 @@ export default async function AdminLayout({
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 p-8 overflow-auto">
+            <main className="flex-1 overflow-auto">
                 {children}
             </main>
         </div>

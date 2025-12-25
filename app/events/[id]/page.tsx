@@ -8,15 +8,16 @@ import { notFound } from "next/navigation"
 import { generateQRToken } from "@/lib/qr/generate"
 import { createClient } from "@supabase/supabase-js"
 
-export default async function EventPage({ params }: { params: { id: string } }) {
-    const event = await getEventById(params.id)
+export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
+    const event = await getEventById(id)
     const session = await auth()
 
     if (!event) {
         notFound()
     }
 
-    const existingRegistration = await checkRegistration(params.id)
+    const existingRegistration = await checkRegistration(id)
 
     const user = session?.user || null
     let qrCode = null
@@ -40,7 +41,7 @@ export default async function EventPage({ params }: { params: { id: string } }) 
 
         const { qrDataUrl } = await generateQRToken(
             session.user.id,
-            params.id,
+            id,
             userData,
             existingRegistration.qr_token_id
         )
