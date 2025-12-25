@@ -6,6 +6,7 @@ import { createOrder } from "@/lib/payments/razorpay"
 import { revalidatePath } from "next/cache"
 import { generateQRToken } from "@/lib/qr/generate"
 import { Resend } from "resend"
+import { render } from "@react-email/render"
 import { TicketEmail } from "@/emails/ticket-email"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -91,19 +92,29 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
 
         // Send Email
         try {
-            await resend.emails.send({
+            const emailHtml = await render(TicketEmail({
+                eventName: event.title,
+                userName: session.user.name || 'Student',
+                eventDate: new Date(event.start_time).toLocaleString(),
+                venue: event.venue,
+                qrDataUrl: qrDataUrl,
+                ticketId: token
+            }))
+
+            const { data, error: emailError } = await resend.emails.send({
                 from: 'Technova <onboarding@resend.dev>',
                 to: session.user.email!,
-                subject: `Ticket: ${event.title}`,
-                react: TicketEmail({
-                    eventName: event.title,
-                    userName: session.user.name || 'Student',
-                    eventDate: new Date(event.start_time).toLocaleString(),
-                    venue: event.venue,
-                    qrDataUrl: qrDataUrl,
-                    ticketId: token
-                })
+                subject: `🎫 Your Ticket for ${event.title}`,
+                html: emailHtml
             })
+
+            if (emailError) {
+                console.error("Resend API Error:", emailError)
+            } else {
+                console.log("Email sent successfully!")
+                console.log("Email ID:", data?.id)
+                console.log("Sent to:", session.user.email)
+            }
         } catch (emailError) {
             console.error("Failed to send email:", emailError)
             // Don't block registration on email failure
