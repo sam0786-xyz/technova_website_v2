@@ -69,6 +69,8 @@ export default function ClubsPage() {
         <div className="min-h-screen bg-black text-white">
             <section className="relative pt-32 pb-12 overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black" />
+                <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] animate-float" />
+                <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-blue-600/15 rounded-full blur-[80px] animate-float-slow" />
                 <div className="container mx-auto px-4 relative z-10 text-center">
                     <h1 className="text-5xl md:text-7xl font-bold mb-6">Our Clubs</h1>
                     <p className="text-xl text-gray-400 max-w-2xl mx-auto">
@@ -81,8 +83,8 @@ export default function ClubsPage() {
                 <div className="container mx-auto px-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {clubs.map((club) => (
-                            <Link key={club.slug} href={`/clubs/${club.slug}`} className="group bg-zinc-900/50 border border-white/5 p-10 rounded-3xl hover:bg-zinc-900 hover:border-white/10 transition-all flex flex-col items-center text-center">
-                                <div className={`w-32 h-32 ${club.bg} rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform p-4`}>
+                            <Link key={club.slug} href={`/clubs/${club.slug}`} className="group bg-white/[0.03] backdrop-blur-xl border border-white/10 p-10 rounded-3xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 flex flex-col items-center text-center shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(59,130,246,0.12)] hover:-translate-y-1">
+                                <div className={`w-32 h-32 ${club.bg} backdrop-blur-xl rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500 p-4 border border-white/10`}>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                         src={club.logo}
