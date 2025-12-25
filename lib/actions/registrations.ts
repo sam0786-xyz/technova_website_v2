@@ -102,7 +102,7 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
             }))
 
             const { data, error: emailError } = await resend.emails.send({
-                from: 'Technova <onboarding@resend.dev>',
+                from: 'Technova <noreply@technovashardauniversity.in>',
                 to: session.user.email!,
                 subject: `🎫 Your Ticket for ${event.title}`,
                 html: emailHtml
