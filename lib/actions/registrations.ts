@@ -115,6 +115,7 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
                         filename: 'qr-code.png',
                         content: qrBuffer,
                         contentType: 'image/png',
+                        contentId: 'qrcode'
                     }
                 ]
             })
