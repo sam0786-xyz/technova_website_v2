@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { User, GraduationCap, BookOpen, Hash, Phone, Sparkles, ArrowRight, Loader2 } from "lucide-react"
+import { updateProfile } from "@/lib/actions/profile"
+import { User, Hash, GraduationCap, Phone, Sparkles, ArrowLeft, Save, Loader2 } from "lucide-react"
+import Link from "next/link"
 
 const COURSES = [
     { value: "CSE", label: "Computer Science & Engineering" },
@@ -24,22 +26,48 @@ const SECTIONS = Array.from({ length: 19 }, (_, i) => String.fromCharCode(65 + i
 
 const SKILL_SUGGESTIONS = [
     "Python", "JavaScript", "React", "Node.js", "Java", "C++", "Machine Learning",
-    "Data Science", "AWS", "Docker", "UI/UX Design", "Figma", "Flutter", "Android",
-    "iOS", "Blockchain", "Cybersecurity", "DevOps", "SQL", "MongoDB"
+    "Data Science", "AWS", "Docker", "UI/UX Design", "Figma", "Flutter", "Android"
 ]
 
-interface OnboardingFormProps {
-    userId: string
-    userName?: string
+interface ProfileEditFormProps {
+    initialData: {
+        system_id?: string
+        year?: number
+        course?: string
+        section?: string
+        mobile?: string
+        skills?: string[]
+    } | null
 }
 
-export function OnboardingForm({ userId, userName }: OnboardingFormProps) {
-    const [loading, setLoading] = useState(false)
+export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
+    const [isPending, startTransition] = useTransition()
     const [error, setError] = useState("")
-    const [skills, setSkills] = useState<string[]>([])
+    const [success, setSuccess] = useState(false)
+
+    // Controlled form state
+    const [systemId, setSystemId] = useState(initialData?.system_id || '')
+    const [year, setYear] = useState(initialData?.year?.toString() || '')
+    const [course, setCourse] = useState(initialData?.course || '')
+    const [section, setSection] = useState(initialData?.section || '')
+    const [mobile, setMobile] = useState(initialData?.mobile || '')
+    const [skills, setSkills] = useState<string[]>(initialData?.skills || [])
     const [skillInput, setSkillInput] = useState("")
     const [systemIdError, setSystemIdError] = useState("")
+
     const router = useRouter()
+
+    function addSkill(skill: string) {
+        const trimmed = skill.trim()
+        if (trimmed && !skills.includes(trimmed) && skills.length < 10) {
+            setSkills([...skills, trimmed])
+            setSkillInput("")
+        }
+    }
+
+    function removeSkill(skill: string) {
+        setSkills(skills.filter(s => s !== skill))
+    }
 
     function validateSystemId(value: string): boolean {
         if (value.length !== 10) {
@@ -54,63 +82,37 @@ export function OnboardingForm({ userId, userName }: OnboardingFormProps) {
         return true
     }
 
-    function addSkill(skill: string) {
-        const trimmed = skill.trim()
-        if (trimmed && !skills.includes(trimmed) && skills.length < 10) {
-            setSkills([...skills, trimmed])
-            setSkillInput("")
-        }
-    }
-
-    function removeSkill(skill: string) {
-        setSkills(skills.filter(s => s !== skill))
-    }
-
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
-        setLoading(true)
         setError("")
+        setSuccess(false)
 
-        const formData = new FormData(e.currentTarget)
-        const systemId = formData.get("system_id") as string
-
-        // Validate system ID is exactly 10 digits
-        if (!validateSystemId(systemId)) {
-            setLoading(false)
+        if (systemId && !validateSystemId(systemId)) {
             return
         }
 
-        const data = {
-            system_id: systemId,
-            year: parseInt(formData.get("year") as string),
-            course: formData.get("course"),
-            section: formData.get("section"),
-            mobile: formData.get("mobile") || null,
-            skills: skills,
-            userId
-        }
+        const formData = new FormData()
+        formData.set("system_id", systemId)
+        formData.set("year", year)
+        formData.set("course", course)
+        formData.set("section", section)
+        formData.set("mobile", mobile)
+        formData.set("skills", skills.join(", "))
 
-        try {
-            const res = await fetch("/api/user/onboarding", {
-                method: "POST",
-                body: JSON.stringify(data),
-                headers: { "Content-Type": "application/json" }
-            })
-
-            if (!res.ok) {
-                const msg = await res.text()
-                throw new Error(msg || "Failed to update profile")
+        startTransition(async () => {
+            try {
+                const result = await updateProfile(formData)
+                if (result?.error) {
+                    setError(result.error)
+                } else {
+                    setSuccess(true)
+                    router.refresh()
+                    setTimeout(() => setSuccess(false), 3000)
+                }
+            } catch {
+                setError("Failed to save changes")
             }
-
-            // Refresh session and redirect to dashboard
-            router.refresh()
-            router.push("/dashboard")
-        } catch (err: unknown) {
-            const error = err as Error
-            setError(error.message)
-        } finally {
-            setLoading(false)
-        }
+        })
     }
 
     return (
@@ -119,16 +121,13 @@ export function OnboardingForm({ userId, userName }: OnboardingFormProps) {
             <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
                     <Hash className="w-4 h-4 text-blue-500" />
-                    System ID <span className="text-red-400">*</span>
+                    System ID
                 </label>
                 <input
-                    name="system_id"
-                    required
-                    pattern="\d{10}"
-                    maxLength={10}
+                    value={systemId}
                     onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, '')
-                        e.target.value = value
+                        setSystemId(value)
                         if (value.length === 10) {
                             validateSystemId(value)
                         } else if (value.length > 0) {
@@ -137,8 +136,9 @@ export function OnboardingForm({ userId, userName }: OnboardingFormProps) {
                             setSystemIdError("")
                         }
                     }}
-                    placeholder="e.g. 2021001234"
+                    maxLength={10}
                     className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all font-mono tracking-wider"
+                    placeholder="e.g. 2023001234"
                 />
                 {systemIdError && (
                     <p className="text-xs text-red-400">{systemIdError}</p>
@@ -146,16 +146,16 @@ export function OnboardingForm({ userId, userName }: OnboardingFormProps) {
                 <p className="text-xs text-gray-500">Must be exactly 10 digits (found on your ID card)</p>
             </div>
 
-            {/* Year & Course Grid */}
+            {/* Year & Course */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
                         <GraduationCap className="w-4 h-4 text-blue-500" />
-                        Year <span className="text-red-400">*</span>
+                        Year
                     </label>
                     <select
-                        name="year"
-                        required
+                        value={year}
+                        onChange={(e) => setYear(e.target.value)}
                         className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer"
                     >
                         <option value="" className="bg-zinc-900">Select Year</option>
@@ -169,34 +169,34 @@ export function OnboardingForm({ userId, userName }: OnboardingFormProps) {
 
                 <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
-                        <BookOpen className="w-4 h-4 text-blue-500" />
-                        Course <span className="text-red-400">*</span>
+                        <GraduationCap className="w-4 h-4 text-purple-500" />
+                        Course
                     </label>
                     <select
-                        name="course"
-                        required
+                        value={course}
+                        onChange={(e) => setCourse(e.target.value)}
                         className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer"
                     >
                         <option value="" className="bg-zinc-900">Select Course</option>
-                        {COURSES.map(course => (
-                            <option key={course.value} value={course.value} className="bg-zinc-900">
-                                {course.label}
+                        {COURSES.map(c => (
+                            <option key={c.value} value={c.value} className="bg-zinc-900">
+                                {c.label}
                             </option>
                         ))}
                     </select>
                 </div>
             </div>
 
-            {/* Section & Mobile Grid */}
+            {/* Section & Mobile */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
                         <User className="w-4 h-4 text-blue-500" />
-                        Section <span className="text-red-400">*</span>
+                        Section
                     </label>
                     <select
-                        name="section"
-                        required
+                        value={section}
+                        onChange={(e) => setSection(e.target.value)}
                         className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer"
                     >
                         <option value="" className="bg-zinc-900">Select Section</option>
@@ -208,14 +208,15 @@ export function OnboardingForm({ userId, userName }: OnboardingFormProps) {
 
                 <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
-                        <Phone className="w-4 h-4 text-blue-500" />
+                        <Phone className="w-4 h-4 text-green-500" />
                         Mobile Number
                     </label>
                     <input
-                        name="mobile"
                         type="tel"
-                        placeholder="+91 9876543210"
+                        value={mobile}
+                        onChange={(e) => setMobile(e.target.value)}
                         className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all"
+                        placeholder="+91 9876543210"
                     />
                 </div>
             </div>
@@ -223,11 +224,10 @@ export function OnboardingForm({ userId, userName }: OnboardingFormProps) {
             {/* Skills */}
             <div className="space-y-3">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
-                    <Sparkles className="w-4 h-4 text-blue-500" />
+                    <Sparkles className="w-4 h-4 text-yellow-500" />
                     Skills & Interests
                 </label>
 
-                {/* Skill Input */}
                 <div className="flex gap-2">
                     <input
                         type="text"
@@ -251,7 +251,6 @@ export function OnboardingForm({ userId, userName }: OnboardingFormProps) {
                     </button>
                 </div>
 
-                {/* Selected Skills */}
                 {skills.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                         {skills.map(skill => (
@@ -272,9 +271,8 @@ export function OnboardingForm({ userId, userName }: OnboardingFormProps) {
                     </div>
                 )}
 
-                {/* Skill Suggestions */}
                 <div className="flex flex-wrap gap-2">
-                    {SKILL_SUGGESTIONS.filter(s => !skills.includes(s)).slice(0, 8).map(skill => (
+                    {SKILL_SUGGESTIONS.filter(s => !skills.includes(s)).slice(0, 6).map(skill => (
                         <button
                             key={skill}
                             type="button"
@@ -288,31 +286,46 @@ export function OnboardingForm({ userId, userName }: OnboardingFormProps) {
                 <p className="text-xs text-gray-500">These help you find teammates in Buddy Finder</p>
             </div>
 
-            {/* Error Display */}
+            {/* Error/Success Messages */}
             {error && (
                 <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
                     {error}
                 </div>
             )}
+            {success && (
+                <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
+                    Profile updated successfully!
+                </div>
+            )}
 
-            {/* Submit Button */}
-            <button
-                type="submit"
-                disabled={loading}
-                className="group w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-6 py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(59,130,246,0.4)] hover:shadow-[0_0_50px_rgba(59,130,246,0.6)] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {loading ? (
-                    <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Setting up your account...
-                    </>
-                ) : (
-                    <>
-                        Complete Setup
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </>
-                )}
-            </button>
+            {/* Actions */}
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+                <Link
+                    href="/profile"
+                    className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Profile
+                </Link>
+
+                <button
+                    type="submit"
+                    disabled={isPending || !!systemIdError}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isPending ? (
+                        <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Saving...
+                        </>
+                    ) : (
+                        <>
+                            <Save className="w-4 h-4" />
+                            Save Changes
+                        </>
+                    )}
+                </button>
+            </div>
         </form>
     )
 }

@@ -119,9 +119,9 @@ const CLUBS_DATA: Record<string, any> = {
         ]
     },
     "pixelance": {
-        name: "Pixelance Club",
+        name: "PiXelance Club",
         tagline: "Capturing moments, creating memories.",
-        description: "The Pixelance Club is a community of photography/videography enthusiasts who come together to share their passion for photography, videography learn new techniques, and explore new subjects.",
+        description: "The PiXelance Club is a community of photography/videography enthusiasts who come together to share their passion for photography, videography learn new techniques, and explore new subjects.",
         whyJoin: "To foster photography enthusiasts, facilitate skill development, and create a supportive community for individuals with a passion for capturing moments and provide a platform to help them improve and refine their skills. By organising workshops, seminars, photo walks and competitions, we aim to help students connect with photography professionals by inviting professionals to share their knowledge. We aim to build a community of like-minded students with a shared interest in photography.",
         joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
         team: [
@@ -271,10 +271,11 @@ const LEGACY_EVENTS: Record<string, any[]> = {
     ]
 }
 
-export default async function ClubDetailsPage({ params }: { params: { slug: string } }) {
-    const club = CLUBS_DATA[params.slug]
-    const dbEvents = await getPastEvents(params.slug)
-    const legacyEvents = LEGACY_EVENTS[params.slug] || []
+export default async function ClubDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params
+    const club = CLUBS_DATA[slug]
+    const dbEvents = await getPastEvents(slug)
+    const legacyEvents = LEGACY_EVENTS[slug] || []
 
     // Merge and Sort by Date Descending
     const pastEvents = [...dbEvents, ...legacyEvents].sort((a, b) =>

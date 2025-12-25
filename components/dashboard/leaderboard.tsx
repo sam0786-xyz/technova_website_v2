@@ -2,17 +2,21 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Trophy } from 'lucide-react'
+import { Search, Trophy, ChevronLeft, ChevronRight, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LeaderboardUser } from '@/lib/actions/leaderboard'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Link from 'next/link'
 
 interface LeaderboardProps {
     initialUsers: LeaderboardUser[]
 }
 
+const ITEMS_PER_PAGE = 10
+
 export function Leaderboard({ initialUsers }: LeaderboardProps) {
     const [searchTerm, setSearchTerm] = useState('')
+    const [currentPage, setCurrentPage] = useState(1)
 
     const filteredUsers = initialUsers.filter((user) =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -20,31 +24,54 @@ export function Leaderboard({ initialUsers }: LeaderboardProps) {
     )
 
     const topThree = filteredUsers.slice(0, 3)
-    const rest = filteredUsers.slice(3)
+
+    // Pagination for list (excluding top 3 when not searching)
+    const listUsers = searchTerm ? filteredUsers : filteredUsers.slice(3)
+    const totalPages = Math.ceil(listUsers.length / ITEMS_PER_PAGE)
+    const paginatedUsers = listUsers.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    )
+
+    // Reset to page 1 when search changes
+    const handleSearch = (value: string) => {
+        setSearchTerm(value)
+        setCurrentPage(1)
+    }
 
     return (
         <div className="w-full bg-gray-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 space-y-8">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2 text-sm">
+                <Link href="/" className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors">
+                    <Home className="w-4 h-4" />
+                    Home
+                </Link>
+                <span className="text-gray-600">/</span>
+                <span className="text-white">Leaderboard</span>
+            </div>
+
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                         <Trophy className="w-6 h-6 text-yellow-400" />
                         Technova Leaderboard
                     </h2>
-                    <p className="text-gray-400 text-sm">Top performers this season</p>
+                    <p className="text-gray-400 text-sm">Top performers this season • {filteredUsers.length} members</p>
                 </div>
                 <div className="relative w-full md:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search name or System ID..."
+                        placeholder="Search name or email..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => handleSearch(e.target.value)}
                         className="w-full bg-gray-800/50 border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/50 transition-all"
                     />
                 </div>
             </div>
 
-            {/* Top 3 Podium (2 - 1 - 3 Arrangement) */}
+            {/* Top 3 Podium (Only when not searching) */}
             {!searchTerm && topThree.length > 0 && (
                 <div className="flex justify-center items-end gap-4 md:gap-8 pt-12 pb-8 mb-8">
                     {/* 2nd Place (Left) */}
@@ -65,12 +92,11 @@ export function Leaderboard({ initialUsers }: LeaderboardProps) {
                                 <h3 className="font-bold text-gray-200 text-base md:text-lg text-center max-w-[120px] truncate">{topThree[1].name}</h3>
                                 <p className="text-cyan-400 font-mono text-sm md:text-base font-medium">{topThree[1].xp_points} XP</p>
                             </div>
-                            {/* Podium Block */}
                             <div className="w-24 md:w-32 h-32 md:h-40 bg-gradient-to-t from-gray-900/80 to-gray-800/50 rounded-t-lg border-t border-x border-gray-700/50 mt-4 backdrop-blur-sm" />
                         </div>
                     )}
 
-                    {/* 1st Place (Center, Highest) */}
+                    {/* 1st Place (Center) */}
                     {topThree[0] && (
                         <div className="flex flex-col items-center z-20 -mx-2 md:mx-0 order-first md:order-none">
                             <div className="relative mb-4">
@@ -91,7 +117,6 @@ export function Leaderboard({ initialUsers }: LeaderboardProps) {
                                 <h3 className="font-bold text-white text-lg md:text-xl text-center max-w-[150px] truncate">{topThree[0].name}</h3>
                                 <p className="text-cyan-400 font-mono text-base md:text-lg font-bold">{topThree[0].xp_points} XP</p>
                             </div>
-                            {/* Podium Block */}
                             <div className="w-28 md:w-40 h-40 md:h-52 bg-gradient-to-t from-yellow-900/40 to-yellow-600/20 rounded-t-lg border-t border-x border-yellow-500/30 mt-4 backdrop-blur-md relative overflow-hidden">
                                 <div className="absolute inset-0 bg-yellow-400/5" />
                             </div>
@@ -116,7 +141,6 @@ export function Leaderboard({ initialUsers }: LeaderboardProps) {
                                 <h3 className="font-bold text-gray-200 text-base md:text-lg text-center max-w-[120px] truncate">{topThree[2].name}</h3>
                                 <p className="text-cyan-400 font-mono text-sm md:text-base font-medium">{topThree[2].xp_points} XP</p>
                             </div>
-                            {/* Podium Block */}
                             <div className="w-24 md:w-32 h-24 md:h-32 bg-gradient-to-t from-gray-900/80 to-gray-800/50 rounded-t-lg border-t border-x border-gray-700/50 mt-4 backdrop-blur-sm" />
                         </div>
                     )}
@@ -134,41 +158,102 @@ export function Leaderboard({ initialUsers }: LeaderboardProps) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {filteredUsers.slice(searchTerm ? 0 : 3).map((user, idx) => (
-                            <motion.tr
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                                key={user.id}
-                                className="hover:bg-white/5 transition-colors group"
-                            >
-                                <td className="px-6 py-4 text-gray-500 font-mono text-sm">
-                                    #{searchTerm ? idx + 1 : idx + 4}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xs font-bold text-white">
-                                            {user.name.charAt(0)}
+                        {paginatedUsers.map((user, idx) => {
+                            const rank = searchTerm
+                                ? (currentPage - 1) * ITEMS_PER_PAGE + idx + 1
+                                : (currentPage - 1) * ITEMS_PER_PAGE + idx + 4
+                            return (
+                                <motion.tr
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.03 }}
+                                    key={user.id}
+                                    className="hover:bg-white/5 transition-colors group"
+                                >
+                                    <td className="px-6 py-4 text-gray-500 font-mono text-sm">
+                                        #{rank}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xs font-bold text-white">
+                                                {user.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-gray-200 group-hover:text-cyan-300 transition-colors">{user.name}</p>
+                                                <p className="text-xs text-gray-500 truncate max-w-[150px]">{user.email}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-medium text-gray-200 group-hover:text-cyan-300 transition-colors">{user.name}</p>
-                                            <p className="text-xs text-gray-500 truncate max-w-[150px]">{user.email}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-right font-mono text-cyan-300 font-medium">
-                                    {user.xp_points}
-                                </td>
-                            </motion.tr>
-                        ))}
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-mono text-cyan-300 font-medium">
+                                        {user.xp_points}
+                                    </td>
+                                </motion.tr>
+                            )
+                        })}
                     </tbody>
                 </table>
-                {filteredUsers.length === 0 && (
+
+                {paginatedUsers.length === 0 && (
                     <div className="text-center py-12 text-gray-500">
                         No users found matching "{searchTerm}"
                     </div>
                 )}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4">
+                    <p className="text-sm text-gray-400">
+                        Page {currentPage} of {totalPages}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="flex items-center gap-1 px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                            Previous
+                        </button>
+                        <div className="flex gap-1">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                let pageNum: number
+                                if (totalPages <= 5) {
+                                    pageNum = i + 1
+                                } else if (currentPage <= 3) {
+                                    pageNum = i + 1
+                                } else if (currentPage >= totalPages - 2) {
+                                    pageNum = totalPages - 4 + i
+                                } else {
+                                    pageNum = currentPage - 2 + i
+                                }
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        className={cn(
+                                            "w-10 h-10 rounded-lg text-sm font-medium transition-colors",
+                                            currentPage === pageNum
+                                                ? "bg-blue-600 text-white"
+                                                : "bg-white/5 text-gray-300 hover:bg-white/10"
+                                        )}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="flex items-center gap-1 px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            Next
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

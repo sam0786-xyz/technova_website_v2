@@ -14,7 +14,7 @@ const createPostSchema = z.object({
 });
 
 export async function createPost(prevState: any, formData: FormData) {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get current user
     const session = await auth();
@@ -73,7 +73,7 @@ export async function createPost(prevState: any, formData: FormData) {
 }
 
 export async function getPosts() {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: posts, error } = await supabase
         .from('community_posts')
         .select(`
@@ -110,7 +110,7 @@ export async function getPosts() {
 }
 
 export async function getPost(id: string) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: post, error } = await supabase
         .from('community_posts')
         .select(`
@@ -166,7 +166,7 @@ const createCommentSchema = z.object({
 });
 
 export async function addComment(prevState: any, formData: FormData) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const session = await auth();
     const user = session?.user;
 

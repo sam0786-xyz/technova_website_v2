@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Calendar, Users, BarChart, Settings, Home } from "lucide-react"
+import { Calendar, BarChart, Settings, Home } from "lucide-react"
 
 export function SidebarNav() {
     const pathname = usePathname()
@@ -14,17 +14,17 @@ export function SidebarNav() {
 
     return (
         <nav className="flex-1 p-4 space-y-2">
-            <Link href="/" className="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+            <Link href="/" className="flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
                 <Home className="w-5 h-5" /> Back to App
             </Link>
 
-            <div className="pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Manage</div>
+            <div className="pt-4 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Manage</div>
 
             <Link
                 href="/admin/dashboard"
-                className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive('/admin/dashboard')
-                    ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
+                className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isActive('/admin/dashboard')
+                    ? 'bg-blue-600/20 text-blue-400 font-medium border border-blue-500/30'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}
             >
                 <BarChart className="w-5 h-5" /> Overview
@@ -32,21 +32,21 @@ export function SidebarNav() {
 
             <Link
                 href="/admin/events"
-                className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive('/admin/events')
-                    ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
+                className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isActive('/admin/events')
+                    ? 'bg-blue-600/20 text-blue-400 font-medium border border-blue-500/30'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}
             >
                 <Calendar className="w-5 h-5" /> Events
             </Link>
 
-            <div className="pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">System</div>
+            <div className="pt-4 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
 
             <Link
                 href="/admin/settings"
-                className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive('/admin/settings')
-                    ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
+                className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isActive('/admin/settings')
+                    ? 'bg-blue-600/20 text-blue-400 font-medium border border-blue-500/30'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}
             >
                 <Settings className="w-5 h-5" /> Settings

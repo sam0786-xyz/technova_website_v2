@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { registerForEvent } from "@/lib/actions/registrations"
+import { registerForEvent, cancelRegistration } from "@/lib/actions/registrations"
 import { useRouter } from "next/navigation"
-import { Download } from "lucide-react"
+import { Download, XCircle, Loader2 } from "lucide-react"
 import { RegistrationModal } from "./registration-modal"
 import { RegistrationField } from "@/components/admin/form-builder"
 
@@ -56,7 +56,9 @@ export function EventRegistrationCard({
     qrCode?: string | null
 }) {
     const [loading, setLoading] = useState(false)
+    const [canceling, setCanceling] = useState(false)
     const [showModal, setShowModal] = useState(false)
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false)
     const router = useRouter()
 
     const registrationFields: RegistrationField[] = typeof event.registration_fields === 'string'
@@ -118,6 +120,22 @@ export function EventRegistrationCard({
         }
     }
 
+    const handleCancelRegistration = async () => {
+        if (!existingRegistration) return
+        setCanceling(true)
+        try {
+            await cancelRegistration(existingRegistration.id)
+            alert("Registration cancelled successfully!")
+            router.refresh()
+        } catch (err: unknown) {
+            const error = err as Error
+            alert(error.message)
+        } finally {
+            setCanceling(false)
+            setShowCancelConfirm(false)
+        }
+    }
+
     const downloadQR = () => {
         if (!qrCode) return
         const link = document.createElement('a')
@@ -137,6 +155,7 @@ export function EventRegistrationCard({
                 </div>
                 {qrCode && (
                     <div className="flex flex-col items-center justify-center p-4 bg-white rounded-lg border border-green-100">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={qrCode} alt="Event Ticket QR" className="w-48 h-48" />
                         <p className="text-xs text-gray-400 mt-2">Scan at entrance</p>
                         <button
@@ -148,6 +167,44 @@ export function EventRegistrationCard({
                         </button>
                     </div>
                 )}
+
+                {/* Cancel Registration Section */}
+                <div className="mt-4 pt-4 border-t border-green-200">
+                    {!showCancelConfirm ? (
+                        <button
+                            onClick={() => setShowCancelConfirm(true)}
+                            className="w-full py-2 text-red-600 hover:text-red-700 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                        >
+                            <XCircle className="w-4 h-4" />
+                            Can't attend? Cancel registration
+                        </button>
+                    ) : (
+                        <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4 space-y-4">
+                            <div className="flex items-center gap-2 text-amber-800">
+                                <XCircle className="w-5 h-5 flex-shrink-0" />
+                                <p className="font-bold">Cancel Registration?</p>
+                            </div>
+                            <p className="text-sm text-amber-700">This action cannot be undone. You&apos;ll need to register again if you change your mind.</p>
+                            <div className="flex flex-col gap-2">
+                                <button
+                                    onClick={handleCancelRegistration}
+                                    disabled={canceling}
+                                    className="w-full py-3 px-4 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    {canceling ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                                    Yes, Cancel My Registration
+                                </button>
+                                <button
+                                    onClick={() => setShowCancelConfirm(false)}
+                                    className="w-full py-3 px-4 bg-gray-100 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                                    disabled={canceling}
+                                >
+                                    No, Keep My Spot
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         )
     }

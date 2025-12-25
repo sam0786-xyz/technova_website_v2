@@ -39,7 +39,7 @@ export function Navbar({ user }: NavbarProps) {
     const isPrivileged = user?.role === 'admin' || user?.role === 'super_admin'
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-2xl border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.3)]">
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
                     <Link href="/" className="text-xl font-bold text-white flex items-center gap-3">
@@ -53,7 +53,7 @@ export function Navbar({ user }: NavbarProps) {
                             <Link
                                 key={link.href}
                                 href={link.href}
-                                className="text-gray-300 hover:text-white hover:bg-white/10 px-4 py-2 rounded-lg transition-all"
+                                className="text-gray-300 hover:text-white hover:bg-white/10 px-4 py-2 rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)]"
                             >
                                 {link.label}
                             </Link>
@@ -62,14 +62,14 @@ export function Navbar({ user }: NavbarProps) {
                         <div className="relative group">
                             <Link
                                 href="/community"
-                                className="flex items-center gap-1 text-gray-300 hover:text-white hover:bg-white/10 px-4 py-2 rounded-lg transition-all outline-none"
+                                className="flex items-center gap-1 text-gray-300 hover:text-white hover:bg-white/10 px-4 py-2 rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] outline-none"
                             >
                                 DevSpace <ChevronDown className="h-4 w-4" />
                             </Link>
 
                             {/* Hover Menu */}
                             <div className="absolute right-0 top-full pt-2 hidden group-hover:block w-48 z-50">
-                                <div className="bg-black/95 backdrop-blur-xl border border-white/10 rounded-md py-1 shadow-xl">
+                                <div className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-xl py-2 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
                                     <Link href="/community" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Community</Link>
                                     <Link href="/buddy-finder" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Buddy Finder</Link>
                                     <Link href="/showcase" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Showcase</Link>
@@ -112,7 +112,7 @@ export function Navbar({ user }: NavbarProps) {
                         ) : (
                             <Link
                                 href="/login"
-                                className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition-colors"
+                                className="ml-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-5 py-2 rounded-xl font-medium transition-all duration-300 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
                             >
                                 Login
                             </Link>

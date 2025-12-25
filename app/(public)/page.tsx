@@ -12,10 +12,12 @@ export default function LandingPage() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
         {/* Background Effects */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/30 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] animate-float" />
+        <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-cyan-600/15 rounded-full blur-[80px] animate-float-slow" />
 
         <div className="container mx-auto px-4 relative z-10 text-center">
-          <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 backdrop-blur-sm">
+          <div className="inline-block mb-4 px-5 py-2 rounded-full border border-blue-500/30 bg-blue-500/10 backdrop-blur-xl shadow-[0_0_30px_rgba(59,130,246,0.2)]">
             <span className="text-blue-400 font-medium text-sm tracking-wider uppercase">Technical Society of Sharda University</span>
           </div>
 
@@ -30,17 +32,17 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/events" className="group bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold transition-all flex items-center gap-2">
+            <Link href="/events" className="group bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-8 py-4 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 shadow-[0_0_30px_rgba(59,130,246,0.4)] hover:shadow-[0_0_50px_rgba(59,130,246,0.6)] hover:scale-105">
               Explore Events
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/clubs" className="px-8 py-4 rounded-xl font-bold border border-white/10 hover:bg-white/5 transition-all">
+            <Link href="/clubs" className="px-8 py-4 rounded-xl font-bold border border-white/20 bg-white/5 backdrop-blur-xl hover:bg-white/10 hover:border-white/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]">
               View Clubs
             </Link>
           </div>
 
           {/* Stats or Trusted By (Optional) */}
-          <div className="mt-20 pt-10 border-t border-white/5 grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="mt-20 pt-10 border-t border-white/5 grid grid-cols-2 md:grid-cols-4 gap-8 bg-white/[0.02] backdrop-blur-xl rounded-2xl py-8 px-4 border border-white/5">
             <div>
               <h3 className="text-3xl font-bold text-white">8+</h3>
               <p className="text-sm text-gray-500 uppercase tracking-widest mt-1">Specialized Clubs</p>
@@ -66,7 +68,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-start">
             {/* Vision Card */}
-            <div className="p-8 rounded-3xl bg-gradient-to-br from-white/5 to-transparent border border-white/10 hover:border-blue-500/50 transition-all group">
+            <div className="p-8 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 hover:border-blue-500/40 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(59,130,246,0.15)]">
               <div className="w-14 h-14 bg-blue-600/20 rounded-2xl flex items-center justify-center mb-6 text-blue-500 group-hover:scale-110 transition-transform">
                 <Target className="w-7 h-7" />
               </div>
@@ -77,7 +79,7 @@ export default function LandingPage() {
             </div>
 
             {/* Mission Card */}
-            <div className="p-8 rounded-3xl bg-gradient-to-br from-white/5 to-transparent border border-white/10 hover:border-purple-500/50 transition-all group">
+            <div className="p-8 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 hover:border-purple-500/40 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(147,51,234,0.15)]">
               <div className="w-14 h-14 bg-purple-600/20 rounded-2xl flex items-center justify-center mb-6 text-purple-500 group-hover:scale-110 transition-transform">
                 <Rocket className="w-7 h-7" />
               </div>
@@ -108,7 +110,7 @@ export default function LandingPage() {
               { icon: Users, title: "Community", text: "Connecting students with similar interests and interacting with alumni and professionals." },
               { icon: Zap, title: "Growth", text: "Introduction to principles and practices that are the foundation of engineering technology." },
             ].map((feature, idx) => (
-              <div key={idx} className="bg-white/5 p-8 rounded-2xl hover:bg-white/10 transition-colors">
+              <div key={idx} className="bg-white/[0.03] backdrop-blur-xl p-8 rounded-2xl border border-white/10 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 hover:shadow-[0_8px_32px_rgba(59,130,246,0.1)]">
                 <feature.icon className="w-10 h-10 text-blue-400 mb-4" />
                 <h4 className="text-xl font-bold mb-3">{feature.title}</h4>
                 <p className="text-gray-400 leading-relaxed">{feature.text}</p>
@@ -129,7 +131,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="bg-black/50 p-4 rounded-3xl border border-white/10 shadow-2xl max-w-5xl mx-auto overflow-hidden">
+          <div className="bg-black/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] max-w-5xl mx-auto overflow-hidden">
             <iframe
               src="https://calendar.google.com/calendar/embed?src=technova%40sharda.ac.in&ctz=Asia%2FKolkata&bgcolor=%23000000&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=0&showTz=1"
               style={{ border: 0 }}
@@ -191,7 +193,7 @@ export default function LandingPage() {
                 color: "text-amber-500"
               },
             ].map((item, idx) => (
-              <Link key={idx} href={item.href} className="group p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all">
+              <Link key={idx} href={item.href} className="group p-6 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/10 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 hover:shadow-[0_8px_40px_rgba(59,130,246,0.12)]">
                 <div className={`w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-4 ${item.color} group-hover:scale-110 transition-transform`}>
                   <item.icon className="w-6 h-6" />
                 </div>
@@ -223,7 +225,7 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-black py-12 border-t border-white/10">
+      <footer className="bg-black/60 backdrop-blur-xl py-12 border-t border-white/10">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">

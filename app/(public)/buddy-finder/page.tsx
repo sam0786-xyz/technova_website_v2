@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import Link from "next/link";
 
-export default async function BuddyFinderPage({ searchParams }: { searchParams: { q?: string; skill?: string } }) {
-    const query = searchParams.q;
-    const skill = searchParams.skill;
+export default async function BuddyFinderPage({ searchParams }: { searchParams: Promise<{ q?: string; skill?: string }> }) {
+    const params = await searchParams;
+    const query = params.q;
+    const skill = params.skill;
     const session = await auth();
 
     const buddies = await searchBuddies(query, skill);

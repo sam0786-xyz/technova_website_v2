@@ -132,7 +132,7 @@ export default function LeadershipPage() {
             <section className="relative pt-32 pb-20 overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-black to-black" />
                 <div className="container mx-auto px-4 relative z-10 text-center">
-                    <div className="inline-block mb-6 px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 backdrop-blur-sm">
+                    <div className="inline-block mb-6 px-5 py-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 backdrop-blur-xl shadow-[0_0_30px_rgba(99,102,241,0.2)]">
                         <span className="text-indigo-400 font-medium text-sm tracking-wider uppercase">The Council & Mentors</span>
                     </div>
 
@@ -261,9 +261,9 @@ export default function LeadershipPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {TEAM.map((member) => (
-                            <div key={member.name} className="group bg-zinc-900/50 border border-white/5 p-8 rounded-3xl hover:bg-zinc-900 hover:border-white/10 transition-all hover:-translate-y-1 overflow-hidden relative">
+                            <div key={member.name} className="group bg-white/[0.03] backdrop-blur-xl border border-white/10 p-8 rounded-3xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 hover:-translate-y-1 overflow-hidden relative shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(59,130,246,0.12)]">
                                 <div className="flex justify-between items-start mb-6 relative z-10">
-                                    <div className={`w-32 h-32 ${member.bg} ${member.color} rounded-2xl flex items-center justify-center text-current group-hover:scale-110 transition-transform overflow-hidden relative border border-white/5`}>
+                                    <div className={`w-32 h-32 ${member.bg} ${member.color} backdrop-blur-xl rounded-2xl flex items-center justify-center text-current group-hover:scale-110 transition-transform duration-500 overflow-hidden relative border border-white/10`}>
                                         {/* @ts-ignore */}
                                         {member.imagePath ? (
                                             <img
