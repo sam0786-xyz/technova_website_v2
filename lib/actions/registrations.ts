@@ -92,12 +92,16 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
 
         // Send Email
         try {
+            // Convert base64 QR to buffer for attachment
+            const qrBase64 = qrDataUrl.split(',')[1]
+            const qrBuffer = Buffer.from(qrBase64, 'base64')
+
             const emailHtml = await render(TicketEmail({
                 eventName: event.title,
                 userName: session.user.name || 'Student',
                 eventDate: new Date(event.start_time).toLocaleString(),
                 venue: event.venue,
-                qrDataUrl: qrDataUrl,
+                qrDataUrl: 'cid:qrcode', // Use CID reference for inline attachment
                 ticketId: token
             }))
 
@@ -105,7 +109,14 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
                 from: 'Technova <noreply@technovashardauniversity.in>',
                 to: session.user.email!,
                 subject: `🎫 Your Ticket for ${event.title}`,
-                html: emailHtml
+                html: emailHtml,
+                attachments: [
+                    {
+                        filename: 'qr-code.png',
+                        content: qrBuffer,
+                        contentType: 'image/png',
+                    }
+                ]
             })
 
             if (emailError) {
