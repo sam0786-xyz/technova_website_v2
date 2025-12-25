@@ -271,10 +271,11 @@ const LEGACY_EVENTS: Record<string, any[]> = {
     ]
 }
 
-export default async function ClubDetailsPage({ params }: { params: { slug: string } }) {
-    const club = CLUBS_DATA[params.slug]
-    const dbEvents = await getPastEvents(params.slug)
-    const legacyEvents = LEGACY_EVENTS[params.slug] || []
+export default async function ClubDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params
+    const club = CLUBS_DATA[slug]
+    const dbEvents = await getPastEvents(slug)
+    const legacyEvents = LEGACY_EVENTS[slug] || []
 
     // Merge and Sort by Date Descending
     const pastEvents = [...dbEvents, ...legacyEvents].sort((a, b) =>

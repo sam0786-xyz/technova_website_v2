@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 
 export type LeaderboardUser = {
     id: string
@@ -13,7 +13,7 @@ export type LeaderboardUser = {
 }
 
 export async function getLeaderboardData() {
-    const supabase = createClient()
+    const supabase = createAdminClient()
 
     const { data: users, error } = await supabase
         .schema('next_auth')

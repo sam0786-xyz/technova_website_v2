@@ -24,6 +24,7 @@ export async function updateProfile(formData: FormData) {
     const section = formData.get("section") as string
     const system_id = formData.get("system_id") as string
     const year = parseInt(formData.get("year") as string)
+    const course = formData.get("course") as string
     const mobile = formData.get("mobile") as string
     const skills = (formData.get("skills") as string).split(',').map(s => s.trim()).filter(s => s.length > 0)
 
@@ -32,6 +33,7 @@ export async function updateProfile(formData: FormData) {
         section,
         system_id,
         year,
+        course,
         mobile
     }).eq('id', userId)
 
@@ -82,52 +84,55 @@ export async function getProfileData() {
 export async function searchBuddies(query?: string, skill?: string) {
     const supabase = await getSupabase()
 
-    let dbQuery = supabase
-        .from('profiles')
-        .select(`
-            skills,
-            user:users!inner(
-                id,
-                name,
-                image,
-                role,
-                course,
-                year
-            )
-        `)
+    // Get profiles first
+    let profilesQuery = supabase.from('profiles').select('id, skills')
 
     // Filter by skill if provided
     if (skill && skill.trim() !== '') {
-        dbQuery = dbQuery.contains('skills', [skill])
+        profilesQuery = profilesQuery.contains('skills', [skill])
     }
 
-    // Note: Filtering by name on the joined table is tricky with standard Supabase client in one go if RLS allows.
-    // simpler approach: fetch all (or limit) and filter in memory if query is complex, 
-    // BUT for 'name', we can search on the joined relation if we use !inner join and proper syntax,
-    // or we can search users first then get profiles.
+    const { data: profiles, error: profilesError } = await profilesQuery
 
-    // Let's stick to skill based mostly, as that's the primary use case.
-    // If query is present (name search), we might need a text search on user.name
-
-    const { data, error } = await dbQuery
-
-    if (error) {
-        console.error("Search Buddies Error:", error)
+    if (profilesError) {
+        console.error("Search Buddies Error:", profilesError)
         return []
     }
 
-    // Flatten logic
-    let buddies = data.map((item: any) => ({
-        id: item.user.id,
-        name: item.user.name,
-        image: item.user.image,
-        role: item.user.role,
-        course: item.user.course,
-        year: item.user.year,
-        skills: item.skills
+    if (!profiles || profiles.length === 0) {
+        return []
+    }
+
+    // Get user IDs from profiles
+    const userIds = profiles.map((p: any) => p.id)
+
+    // Fetch user details from next_auth.users
+    const { data: users, error: usersError } = await supabase
+        .schema('next_auth')
+        .from('users')
+        .select('id, name, image, role, course, year')
+        .in('id', userIds)
+
+    if (usersError) {
+        console.error("Search Users Error:", usersError)
+        return []
+    }
+
+    // Create a map of profiles by id for quick lookup
+    const profilesMap = new Map(profiles.map((p: any) => [p.id, p.skills]))
+
+    // Combine users with their skills
+    let buddies = (users || []).map((user: any) => ({
+        id: user.id,
+        name: user.name,
+        image: user.image,
+        role: user.role,
+        course: user.course,
+        year: user.year,
+        skills: profilesMap.get(user.id) || []
     }))
 
-    // Manual filter for name match if query exists (simple substring match)
+    // Manual filter for name match if query exists
     if (query && query.trim() !== '') {
         const lowerQ = query.toLowerCase()
         buddies = buddies.filter(b => b.name?.toLowerCase().includes(lowerQ))

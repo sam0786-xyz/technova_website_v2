@@ -17,7 +17,7 @@ const createResourceSchema = z.object({
 });
 
 export async function createResource(prevState: any, formData: FormData) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const session = await auth();
     const user = session?.user;
 
@@ -66,7 +66,7 @@ export async function createResource(prevState: any, formData: FormData) {
 }
 
 export async function getResources(semester?: string, subject?: string) {
-    const supabase = createClient();
+    const supabase = await createClient();
     let query = supabase
         .from('resources')
         .select('*')

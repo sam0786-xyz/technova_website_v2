@@ -18,7 +18,7 @@ const createProjectSchema = z.object({
 });
 
 export async function createProject(prevState: any, formData: FormData) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const session = await auth();
     const user = session?.user;
 
@@ -64,7 +64,7 @@ export async function createProject(prevState: any, formData: FormData) {
 }
 
 export async function getProjects() {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: projects, error } = await supabase
         .from('projects')
         .select(`*`)

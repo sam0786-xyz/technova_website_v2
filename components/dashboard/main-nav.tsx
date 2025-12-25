@@ -16,6 +16,11 @@ export function MainNav({
             label: "Leaderboard",
             active: pathname.startsWith("/leaderboard"),
         },
+        {
+            href: "/profile",
+            label: "Profile",
+            active: pathname.startsWith("/profile"),
+        },
     ];
 
     return (

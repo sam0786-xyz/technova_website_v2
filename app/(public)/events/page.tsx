@@ -1,6 +1,6 @@
 import { getPublicEvents } from "@/lib/actions/events"
 import Link from "next/link"
-import { Calendar, MapPin, Clock, ArrowRight } from "lucide-react"
+import { Calendar, MapPin, Clock, ArrowRight, Home, ChevronRight } from "lucide-react"
 
 export default async function PublicEventsPage() {
     const allEvents = await getPublicEvents()
@@ -12,6 +12,16 @@ export default async function PublicEventsPage() {
     return (
         <div className="min-h-screen bg-black text-white">
             <div className="container mx-auto py-24 px-4">
+                {/* Breadcrumb */}
+                <nav className="flex items-center gap-2 text-sm mb-8">
+                    <Link href="/" className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors">
+                        <Home className="w-4 h-4" />
+                        Home
+                    </Link>
+                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                    <span className="text-white font-medium">Events</span>
+                </nav>
+
                 <h1 className="text-4xl font-bold text-center mb-4">Events</h1>
                 <p className="text-center text-gray-400 max-w-2xl mx-auto mb-12">
                     Join our workshops, hackathons, and tech talks.
