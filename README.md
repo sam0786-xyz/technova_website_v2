@@ -104,8 +104,13 @@ app/
 
 ## 🤝 Contributing
 
-1.  Fork the repository.
-2.  Create a new branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
+We welcome contributions! See **[CONTRIBUTING.md](CONTRIBUTING.md)** for detailed setup instructions.
+
+**Quick Start for Contributors:**
+1. Fork the repository
+2. Create your own [Supabase](https://supabase.com) project (free tier works!)
+3. Copy `.env.example` to `.env` and add your credentials
+4. Run the database migrations
+5. Start developing!
+
+> **Note**: You don't need access to our production database. The CONTRIBUTING.md guide walks you through setting up your own local development environment.

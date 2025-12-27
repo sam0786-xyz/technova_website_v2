@@ -227,84 +227,105 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer className="bg-black/60 backdrop-blur-xl py-12 border-t border-white/10">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex flex-wrap items-center gap-6 mb-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Logo & Branding */}
+            <div className="col-span-1 md:col-span-2 lg:col-span-1">
+              <div className="flex flex-wrap items-center gap-4 mb-6">
                 <Link href="/" className="block">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/assets/logo/technova-white.png" alt="Technova Logo" className="h-24 w-auto object-contain" />
+                  <img src="/assets/logo/technova-white.png" alt="Technova Logo" className="h-16 w-auto object-contain" />
                 </Link>
-                <div className="hidden md:block h-12 w-px bg-white/20" />
+                <div className="hidden md:block h-10 w-px bg-white/20" />
                 <Link href="https://www.sharda.ac.in/" target="_blank" className="block">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/assets/logo/sharda.png" alt="Sharda University" className="h-20 w-auto object-contain bg-white rounded-lg p-2" />
+                  <img src="/assets/logo/sharda.png" alt="Sharda University" className="h-14 w-auto object-contain bg-white rounded-lg p-1.5" />
                 </Link>
-                <div className="hidden md:block h-12 w-px bg-white/20" />
+                <div className="hidden lg:block h-10 w-px bg-white/20" />
                 <div className="block">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/assets/logo/naac.png" alt="NAAC Accredited" className="h-20 w-auto object-contain bg-white/90 rounded-lg p-1" />
+                  <img src="/assets/logo/naac.png" alt="NAAC Accredited" className="h-14 w-auto object-contain bg-white/90 rounded-lg p-1" />
                 </div>
               </div>
 
-              <p className="text-gray-400 max-w-sm mb-6">
+              <p className="text-gray-400 text-sm mb-4">
                 Sharda School of Engineering and Technology, Sharda University,
                 Knowledge Park III, Greater Noida, Uttar Pradesh - 201310, India
               </p>
-              <div className="flex gap-4">
+              <div className="flex gap-3">
                 <Link
                   href="https://www.instagram.com/technova_sharda/"
                   target="_blank"
-                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-pink-600 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-600/20"
+                  className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-pink-600 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-600/20"
                 >
-                  <Instagram className="w-5 h-5" />
+                  <Instagram className="w-4 h-4" />
                 </Link>
                 <Link
                   href="https://www.linkedin.com/company/technova-su/"
                   target="_blank"
-                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-600/20"
+                  className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-600/20"
                 >
-                  <Linkedin className="w-5 h-5" />
+                  <Linkedin className="w-4 h-4" />
                 </Link>
                 <Link
                   href="mailto:technova@sharda.ac.in"
-                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-red-500 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/20"
+                  className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-red-500 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/20"
                 >
-                  <Mail className="w-5 h-5" />
+                  <Mail className="w-4 h-4" />
                 </Link>
                 <Link
                   href="/"
-                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-emerald-500 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/20"
+                  className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-emerald-500 hover:text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/20"
                 >
-                  <Globe className="w-5 h-5" />
+                  <Globe className="w-4 h-4" />
                 </Link>
               </div>
             </div>
 
+            {/* Quick Links */}
             <div>
-              <h4 className="font-bold text-white mb-6">Quick Links</h4>
-              <ul className="space-y-3">
-                <li><Link href="/events" className="text-gray-400 hover:text-blue-400 transition-colors">Events</Link></li>
-                <li><Link href="/clubs" className="text-gray-400 hover:text-blue-400 transition-colors">Clubs</Link></li>
-                <li><Link href="/leadership" className="text-gray-400 hover:text-blue-400 transition-colors">Leadership</Link></li>
-                <li><Link href="/login" className="text-gray-400 hover:text-blue-400 transition-colors">Login / Register</Link></li>
+              <h4 className="font-bold text-white mb-4">Quick Links</h4>
+              <ul className="space-y-2">
+                <li><Link href="/events" className="text-gray-400 hover:text-blue-400 transition-colors text-sm">Events</Link></li>
+                <li><Link href="/clubs" className="text-gray-400 hover:text-blue-400 transition-colors text-sm">Clubs</Link></li>
+                <li><Link href="/leadership" className="text-gray-400 hover:text-blue-400 transition-colors text-sm">Leadership</Link></li>
+                <li><Link href="/login" className="text-gray-400 hover:text-blue-400 transition-colors text-sm">Login / Register</Link></li>
               </ul>
             </div>
 
+            {/* Contact */}
             <div>
-              <h4 className="font-bold text-white mb-6">Contact</h4>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3 text-gray-400">
-                  <MapPin className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+              <h4 className="font-bold text-white mb-4">Contact</h4>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2 text-gray-400 text-sm">
+                  <MapPin className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                   <span>Knowledge Park III, Greater Noida</span>
                 </li>
-                <li className="flex items-center gap-3 text-gray-400">
-                  <Mail className="w-5 h-5 text-blue-500 shrink-0" />
+                <li className="flex items-center gap-2 text-gray-400 text-sm">
+                  <Mail className="w-4 h-4 text-blue-500 shrink-0" />
                   <span>technova@sharda.ac.in</span>
                 </li>
               </ul>
             </div>
+
+            {/* Google Maps */}
+            <div className="col-span-1 md:col-span-2 lg:col-span-1">
+              <h4 className="font-bold text-white mb-4">Find Us</h4>
+              <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:border-blue-500/30 transition-all duration-500">
+                <iframe
+                  src="https://www.google.com/maps?q=Sharda+University,+Knowledge+Park+III,+Greater+Noida,+Uttar+Pradesh&output=embed"
+                  width="100%"
+                  height="200"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Sharda University Location"
+                  className="w-full h-48 md:h-52"
+                ></iframe>
+              </div>
+            </div>
           </div>
-          <div className="border-t border-white/10 mt-12 pt-8 text-center text-gray-600 text-sm">
+          <div className="border-t border-white/10 mt-10 pt-6 text-center text-gray-600 text-sm">
             &copy; {new Date().getFullYear()} Technova Technical Society.
           </div>
         </div>
