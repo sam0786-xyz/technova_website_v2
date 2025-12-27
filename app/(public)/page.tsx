@@ -312,7 +312,7 @@ export default function LandingPage() {
               <h4 className="font-bold text-white mb-4">Find Us</h4>
               <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:border-blue-500/30 transition-all duration-500">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3507.9886889269286!2d77.47195!3d28.4619!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cc1b4b8f!2sSharda%20University!5e0!3m2!1sen!2sin!4v1703710000000!5m2!1sen!2sin"
+                  src="https://www.google.com/maps?q=Sharda+University,+Knowledge+Park+III,+Greater+Noida,+Uttar+Pradesh&output=embed"
                   width="100%"
                   height="200"
                   style={{ border: 0 }}
