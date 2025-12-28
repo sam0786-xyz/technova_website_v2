@@ -22,7 +22,6 @@ const clubs = [
         slug: "cyber-pirates",
         logo: "/assets/logo/cyberpirates.png",
         desc: "Guide individuals about Information security and cyber awareness to arm against modern exploits.",
-        className: "object-contain scale-110" // Adjust scaling per logo if needed
     },
     {
         name: "Datapool",
@@ -41,14 +40,12 @@ const clubs = [
         slug: "gdg",
         logo: "/assets/logo/gdg_on_campus.jpg",
         desc: "Google Developer Group. Peer-to-peer learning to build solutions for local communities.",
-        className: "rounded-full" // GDG logo might look better rounded
     },
     {
         name: "GitHub Club",
         slug: "github",
         logo: "/assets/logo/github.png",
         desc: "Promotes open-source contribution and technical skills. A community for developers.",
-        className: "invert" // GitHub logo is black, invert for dark mode if needed (check actual image)
     },
     {
         name: "PiXelance",
@@ -148,13 +145,13 @@ export function ClubsCarousel() {
                             <div className="absolute -inset-0.5 bg-gradient-to-br from-blue-500/30 to-purple-600/30 rounded-[34px] blur opacity-30 group-hover/card:opacity-100 transition duration-500" />
 
                             <div className="relative h-full bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 flex flex-col items-center text-center transition-all duration-300 group-hover/card:scale-[1.02] group-hover/card:-translate-y-2">
-                                {/* Logo Container with Glow */}
-                                <div className="h-40 w-40 mb-8 relative flex items-center justify-center p-6 rounded-3xl bg-gradient-to-b from-white/5 to-transparent group-hover/card:from-blue-500/10 transition-colors duration-500">
+                                {/* Logo Container - Circular White Background */}
+                                <div className="h-40 w-40 mb-8 relative flex items-center justify-center rounded-full bg-white shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-hover/card:shadow-[0_12px_40px_rgba(59,130,246,0.3)] transition-all duration-500">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                         src={club.logo}
                                         alt={club.name}
-                                        className={`w-full h-full object-contain drop-shadow-2xl ${club.className || ''}`}
+                                        className="w-32 h-32 object-contain"
                                     />
                                 </div>
 

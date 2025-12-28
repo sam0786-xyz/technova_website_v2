@@ -39,7 +39,7 @@ export default async function AdminLayout({
                     <div className="flex items-center gap-3">
                         {session.user.image ? (
                             /* eslint-disable-next-line @next/next/no-img-element */
-                            <img src={session.user.image} alt={session.user.name || ''} className="w-10 h-10 rounded-full border border-white/20" />
+                            <img src={session.user.image} alt={session.user.name || ''} className="w-10 h-10 rounded-full border border-white/20" referrerPolicy="no-referrer" />
                         ) : (
                             <div className="w-10 h-10 rounded-full bg-blue-600/30 flex items-center justify-center text-blue-400 font-bold">
                                 {session.user.name?.charAt(0).toUpperCase()}
