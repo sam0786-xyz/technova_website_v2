@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
+import jsQR from 'jsqr'
 import {
     CheckCircle, XCircle, Camera, Loader2, Upload, RefreshCw, ArrowLeft,
     Users, UserCheck, Search, ChevronDown, Clock, QrCode, List
@@ -198,24 +199,56 @@ export default function ScannerPage() {
         setMessage('')
 
         try {
-            if (!scannerRef.current) {
-                scannerRef.current = new Html5Qrcode("reader", {
-                    verbose: false,
-                    formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
-                })
-            }
-
+            // Stop camera if active
             if (cameraActive) await stopCamera()
 
-            const decodedText = await scannerRef.current.scanFileV2(file, true)
-            handleScanSuccess(decodedText.decodedText)
+            // Use canvas and jsQR for more reliable file scanning
+            const imageData = await loadImageData(file)
+            const code = jsQR(imageData.data, imageData.width, imageData.height)
+
+            if (code) {
+                handleScanSuccess(code.data)
+            } else {
+                throw new Error('No QR code found')
+            }
         } catch (err) {
             console.error("File scan error", err)
             setScanResult('error')
-            setMessage("Could not find a QR code in this image.")
+            setMessage("Could not detect QR code. Try using the camera instead.")
             setIsScanning(false)
         }
+
+        // Reset the file input so the same file can be uploaded again
+        e.target.value = ''
     }
+
+    // Helper function to load image data from file
+    const loadImageData = (file: File): Promise<ImageData> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = (event) => {
+                const img = new Image()
+                img.onload = () => {
+                    const canvas = document.createElement('canvas')
+                    canvas.width = img.width
+                    canvas.height = img.height
+                    const ctx = canvas.getContext('2d')
+                    if (!ctx) {
+                        reject(new Error('Could not get canvas context'))
+                        return
+                    }
+                    ctx.drawImage(img, 0, 0)
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+                    resolve(imageData)
+                }
+                img.onerror = () => reject(new Error('Failed to load image'))
+                img.src = event.target?.result as string
+            }
+            reader.onerror = () => reject(new Error('Failed to read file'))
+            reader.readAsDataURL(file)
+        })
+    }
+
 
     const switchMode = async (newMode: 'camera' | 'file') => {
         if (newMode === mode) return
@@ -375,7 +408,9 @@ export default function ScannerPage() {
 
                             {mode === 'file' && (
                                 <div className="p-8 w-full text-center">
+                                    {/* Hidden divs for scanner instances */}
                                     <div id="reader" className="hidden"></div>
+                                    <div id="file-reader" className="hidden"></div>
                                     <label className="flex flex-col items-center gap-4 cursor-pointer p-8 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-white/5 transition-colors">
                                         <Upload className="w-12 h-12 text-gray-500" />
                                         <div className="text-sm text-gray-400">
@@ -389,7 +424,7 @@ export default function ScannerPage() {
                             {/* Result Overlay */}
                             {scanResult && (
                                 <div className={`absolute inset-0 flex flex-col items-center justify-center z-10 p-6 text-center ${scanResult === 'success' ? 'bg-green-950/95' :
-                                        scanResult === 'already' ? 'bg-amber-950/95' : 'bg-red-950/95'
+                                    scanResult === 'already' ? 'bg-amber-950/95' : 'bg-red-950/95'
                                     }`}>
                                     {scanResult === 'success' ? (
                                         <CheckCircle className="w-20 h-20 mb-4 text-green-500" />
@@ -404,7 +439,7 @@ export default function ScannerPage() {
                                     )}
 
                                     <p className={`text-lg font-medium ${scanResult === 'success' ? 'text-green-400' :
-                                            scanResult === 'already' ? 'text-amber-400' : 'text-red-400'
+                                        scanResult === 'already' ? 'text-amber-400' : 'text-red-400'
                                         }`}>
                                         {message}
                                     </p>
@@ -500,13 +535,13 @@ export default function ScannerPage() {
                                     <div
                                         key={attendee.id}
                                         className={`flex items-center gap-4 p-4 rounded-xl border ${attendee.attended
-                                                ? 'bg-green-500/5 border-green-500/20'
-                                                : 'bg-white/[0.02] border-white/10'
+                                            ? 'bg-green-500/5 border-green-500/20'
+                                            : 'bg-white/[0.02] border-white/10'
                                             }`}
                                     >
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${attendee.attended
-                                                ? 'bg-green-500/20 text-green-400'
-                                                : 'bg-white/10 text-gray-400'
+                                            ? 'bg-green-500/20 text-green-400'
+                                            : 'bg-white/10 text-gray-400'
                                             }`}>
                                             {attendee.name.charAt(0).toUpperCase()}
                                         </div>
