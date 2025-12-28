@@ -8,14 +8,11 @@ export default async function ScannerLayout({
 }) {
     const session = await auth()
 
-    // Only admins can access scanner
+    // Only admins/super_admins can access scanner
     if (!session || session.user.role === 'student') {
         redirect('/login')
     }
 
-    return (
-        <html lang="en">
-            <body>{children}</body>
-        </html>
-    )
+    // Just return children - root layout handles html/body
+    return <>{children}</>
 }

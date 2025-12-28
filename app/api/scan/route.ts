@@ -34,7 +34,19 @@ export async function POST(req: NextRequest) {
 
         // 2. Check if already marked
         if (registration.attended) {
-            return NextResponse.json({ success: false, message: 'Already checked in' }, { status: 400 })
+            // Get user name for display
+            const { data: existingUser } = await supabase
+                .schema('next_auth' as unknown as 'public')
+                .from('users')
+                .select('name')
+                .eq('id', userId)
+                .single()
+
+            return NextResponse.json({
+                success: false,
+                message: 'Already checked in',
+                userName: existingUser?.name || 'Attendee'
+            }, { status: 400 })
         }
 
         // 3. Mark as attended
