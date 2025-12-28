@@ -31,14 +31,12 @@ export async function getPastEvents(slug: string) {
     if (!club) return []
 
     // 2. Get Past Events for this Club (or Co-Hosted)
-    // "Past" means end_time has passed.
-    const now = new Date().toISOString()
-
+    // Only show events that are EXPLICITLY marked as past by admins via is_past_event flag
     const { data: events } = await supabase.from('events')
         .select('*')
         .or(`club_id.eq.${club.id},co_host_club_id.eq.${club.id}`)
-        .lt('end_time', now)
         .eq('status', 'live') // Only public events
+        .eq('is_past_event', true) // Only events explicitly marked as past
         .order('end_time', { ascending: false })
 
     return events || []

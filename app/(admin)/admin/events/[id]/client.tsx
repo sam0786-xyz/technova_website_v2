@@ -2,10 +2,40 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Download, Search, CheckCircle, XCircle } from "lucide-react"
+import { ArrowLeft, Download, Search, CheckCircle, XCircle, Clock, Loader2, X } from "lucide-react"
+import { Toast, useToast } from "@/components/ui/toast"
+import { togglePastEvent } from "@/lib/actions/events"
 
 export function AdminEventClient({ event, registrations }: { event: any, registrations: any[] }) {
     const [search, setSearch] = useState("")
+    const [isToggling, setIsToggling] = useState(false)
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [isPastEvent, setIsPastEvent] = useState(event.is_past_event || false)
+    const { toast, showToast, hideToast } = useToast()
+
+    // Check if event is completed (end_time has passed)
+    const isCompleted = new Date(event.end_time) < new Date()
+    // Can add to past only if completed and not already past
+    // Can remove from past anytime if it's marked as past
+    const canToggle = isCompleted || isPastEvent
+
+    const handleTogglePastEvent = async () => {
+        setShowConfirmModal(false)
+        setIsToggling(true)
+        try {
+            const result = await togglePastEvent(event.id)
+            setIsPastEvent(result.isPastEvent)
+            if (result.isPastEvent) {
+                showToast("Event added to past events timeline!", "success")
+            } else {
+                showToast("Event removed from past events timeline!", "success")
+            }
+        } catch (error: any) {
+            showToast(error.message || "Failed to update event", "error")
+        } finally {
+            setIsToggling(false)
+        }
+    }
 
     // Filter
     const filtered = registrations.filter(r =>
@@ -93,7 +123,26 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                     </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                    {canToggle && (
+                        <button
+                            onClick={() => setShowConfirmModal(true)}
+                            disabled={isToggling}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors ${isPastEvent
+                                ? 'bg-red-600 text-white hover:bg-red-700'
+                                : 'bg-purple-600 text-white hover:bg-purple-700'
+                                }`}
+                        >
+                            {isToggling ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : isPastEvent ? (
+                                <X className="w-4 h-4" />
+                            ) : (
+                                <Clock className="w-4 h-4" />
+                            )}
+                            {isPastEvent ? 'Remove from Timeline' : 'Add to Past Events'}
+                        </button>
+                    )}
                     <button
                         onClick={() => downloadCSV(false)}
                         className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 text-sm font-medium"
@@ -228,6 +277,49 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                     Showing {filtered.length} of {registrations.length} registrations
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl p-6 max-w-md mx-4 shadow-2xl">
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">
+                            {isPastEvent ? 'Remove from Timeline?' : 'Add to Past Events?'}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                            {isPastEvent
+                                ? `This will remove "${event.title}" from the club's past events timeline.`
+                                : `This will add "${event.title}" to the club's past events timeline. The event will be visible in the club page history section.`
+                            }
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setShowConfirmModal(false)}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleTogglePastEvent}
+                                className={`px-4 py-2 rounded-lg font-medium transition-colors ${isPastEvent
+                                        ? 'bg-red-600 text-white hover:bg-red-700'
+                                        : 'bg-purple-600 text-white hover:bg-purple-700'
+                                    }`}
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Toast Notification */}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={hideToast}
+                />
+            )}
         </div>
     )
 }
