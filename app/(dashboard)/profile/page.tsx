@@ -67,6 +67,7 @@ export default async function ProfilePage() {
                                         src={session.user.image}
                                         alt={session.user.name || "User"}
                                         className="w-28 h-28 rounded-full object-cover border-4 border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.3)]"
+                                        referrerPolicy="no-referrer"
                                     />
                                 ) : (
                                     <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center border-4 border-blue-500/30">

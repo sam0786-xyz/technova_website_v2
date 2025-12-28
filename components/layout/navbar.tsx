@@ -44,7 +44,7 @@ export function Navbar({ user }: NavbarProps) {
                 <div className="flex items-center justify-between h-16">
                     <Link href="/" className="text-xl font-bold text-white flex items-center gap-3">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/assets/logo/technova.png" alt="Technova" className="h-10 w-auto" />
+                        <img src="/assets/logo/technova-new.png" alt="Technova" className="h-10 w-auto" />
                     </Link>
 
                     {/* Desktop Links */}

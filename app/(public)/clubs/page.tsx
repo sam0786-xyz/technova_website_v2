@@ -44,16 +44,14 @@ const clubs = [
         slug: "gdg",
         logo: "/assets/logo/gdg_on_campus.jpg",
         desc: "Google Developer Group. Peer-to-peer learning to build solutions for local communities.",
-        bg: "bg-red-500/10",
-        className: "rounded-full"
+        bg: "bg-red-500/10"
     },
     {
         name: "GitHub Club",
         slug: "github",
         logo: "/assets/logo/github.png",
         desc: "Promotes open-source contribution and technical skills. A community for developers.",
-        bg: "bg-white/10",
-        className: "invert"
+        bg: "bg-white/10"
     },
     {
         name: "PiXelance",
@@ -84,12 +82,12 @@ export default function ClubsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {clubs.map((club) => (
                             <Link key={club.slug} href={`/clubs/${club.slug}`} className="group bg-white/[0.03] backdrop-blur-xl border border-white/10 p-10 rounded-3xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 flex flex-col items-center text-center shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(59,130,246,0.12)] hover:-translate-y-1">
-                                <div className={`w-32 h-32 ${club.bg} backdrop-blur-xl rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500 p-4 border border-white/10`}>
+                                <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500 shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-hover:shadow-[0_12px_40px_rgba(59,130,246,0.2)]">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                         src={club.logo}
                                         alt={club.name}
-                                        className={`w-full h-full object-contain ${club.className || ''}`}
+                                        className="w-24 h-24 object-contain"
                                     />
                                 </div>
 

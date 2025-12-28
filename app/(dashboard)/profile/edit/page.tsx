@@ -20,6 +20,7 @@ export default async function EditProfilePage() {
                         src={session.user.image}
                         alt={session.user.name || "User"}
                         className="w-16 h-16 rounded-2xl object-cover border-2 border-blue-500/30"
+                        referrerPolicy="no-referrer"
                     />
                 ) : (
                     <div className="w-16 h-16 rounded-2xl bg-blue-600/20 flex items-center justify-center border-2 border-blue-500/30">
