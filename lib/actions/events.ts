@@ -190,6 +190,58 @@ export async function deleteEvent(id: string) {
     revalidatePath("/admin/events")
 }
 
+export async function togglePastEvent(eventId: string) {
+    const session = await auth()
+    if (!session || session.user.role === 'student') {
+        throw new Error("Unauthorized")
+    }
+
+    const supabase = await getSupabase()
+
+    // First verify the event exists
+    const { data: event, error: fetchError } = await supabase
+        .from('events')
+        .select('id, end_time, is_past_event')
+        .eq('id', eventId)
+        .single()
+
+    if (fetchError || !event) {
+        console.error("Fetch Event Error:", fetchError)
+        throw new Error("Event not found")
+    }
+
+    const now = new Date()
+    const endTime = new Date(event.end_time)
+
+    // Only allow adding to past events if the event has ended
+    // But always allow removing from past events
+    if (endTime > now && !event.is_past_event) {
+        throw new Error("Cannot mark an ongoing or future event as past")
+    }
+
+    // Toggle the is_past_event flag
+    const newValue = !event.is_past_event
+
+    const { error } = await supabase.from('events')
+        .update({
+            is_past_event: newValue,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', eventId)
+
+    if (error) {
+        console.error("Toggle Past Event Error:", error)
+        throw new Error("Failed to update event")
+    }
+
+    revalidatePath("/events")
+    revalidatePath("/admin/events")
+    revalidatePath(`/events/${eventId}`)
+    revalidatePath(`/admin/events/${eventId}`)
+
+    return { success: true, isPastEvent: newValue }
+}
+
 export async function getPublicEvents() {
     const supabase = await getSupabase()
     const { data, error } = await supabase.from('events')

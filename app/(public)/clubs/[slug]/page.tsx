@@ -141,134 +141,16 @@ const CLUBS_DATA: Record<string, any> = {
     }
 }
 
-// Hardcoded Legacy Events (History) - Verified from Technical Society
+// Legacy Events - Cleared. Past events will now come from the database via "Add to Past Events" feature.
 const LEGACY_EVENTS: Record<string, any[]> = {
-    "cyber-pirates": [
-        {
-            id: "legacy-1",
-            title: "Hack-a-Phone",
-            description: "A remarkable gathering showcasing live demonstrations of phone hacking techniques. Conducted by Club Co-Lead Mr. Pranaav Bhatnagar and Ms. Chetna Talan, providing valuable insights on maintaining personal safety in the digital realm.",
-            start_time: "2023-06-12T10:00:00Z",
-            end_time: "2023-06-12T16:00:00Z",
-            venue: "Auditorium",
-            gallery: ["https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2670", "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=2670"],
-            banner: "https://images.unsplash.com/photo-1563206767-5b18f218e8de?auto=format&fit=crop&q=80&w=2669",
-            isLegacy: true
-        },
-        {
-            id: "legacy-2",
-            title: "Cyber Security Workshop",
-            description: "A successful hands-on workshop for Computer Science students. Instructors Abhishek Kumar Singh and Abhishek Gupta introduced Linux training with surging enthusiasm.",
-            start_time: "2022-07-09T10:00:00Z",
-            end_time: "2022-07-09T16:00:00Z",
-            venue: "School of Engineering",
-            gallery: [],
-            banner: null,
-            isLegacy: true
-        },
-        {
-            id: "legacy-3",
-            title: "Linux Training",
-            description: "An introductory session on Linux commands and file systems for beginners.",
-            start_time: "2022-04-11T10:00:00Z",
-            end_time: "2022-04-12T16:00:00Z",
-            venue: "Online",
-            gallery: [],
-            banner: null,
-            isLegacy: true
-        }
-    ],
-    "ai-robotics": [
-        {
-            id: "legacy-ai-1",
-            title: "Star Grazing",
-            description: "Showcasing student-built autonomous rovers and drones. A day filled with innovation and mechanical engineering marvels.",
-            start_time: "2023-09-15T10:00:00Z",
-            end_time: "2023-09-15T16:00:00Z",
-            venue: "Main Ground",
-            gallery: [],
-            banner: null,
-            isLegacy: true
-        }
-    ],
-    "aws-cloud": [
-        {
-            id: "legacy-aws-1",
-            title: "AWS Cloud Day",
-            description: "Deep dive into Serverless architectures and EC2 instance management. Guest speakers from AWS Community Builders.",
-            start_time: "2023-08-20T10:00:00Z",
-            end_time: "2023-08-20T16:00:00Z",
-            venue: "Seminar Hall 1",
-            gallery: [],
-            banner: null,
-            isLegacy: true
-        }
-    ],
-    "datapool": [
-        {
-            id: "legacy-data-1",
-            title: "Big Data Summit",
-            description: "Analyzing real-world datasets using Python and R. Insights into Data Engineering career paths.",
-            start_time: "2023-10-05T10:00:00Z",
-            end_time: "2023-10-05T16:00:00Z",
-            venue: "Lab 3",
-            gallery: [],
-            banner: null,
-            isLegacy: true
-        }
-    ],
-    "game-drifters": [
-        {
-            id: "legacy-game-1",
-            title: "Technova E-Sports Cup",
-            description: "Inter-college Valorant and BGMI tournament. Over 50 teams participated for the grand prize.",
-            start_time: "2023-11-10T10:00:00Z",
-            end_time: "2023-11-12T16:00:00Z",
-            venue: "Gaming Room",
-            gallery: [],
-            banner: null,
-            isLegacy: true
-        }
-    ],
-    "github": [
-        {
-            id: "legacy-git-1",
-            title: "Open Source October",
-            description: "Introduction to Git, GitHub, and creating your first Pull Request. Celebrating Hacktoberfest.",
-            start_time: "2023-10-01T10:00:00Z",
-            end_time: "2023-10-01T16:00:00Z",
-            venue: "Computer Lab 1",
-            gallery: [],
-            banner: null,
-            isLegacy: true
-        }
-    ],
-    "gdg": [
-        {
-            id: "legacy-gdg-1",
-            title: "Google I/O Extended",
-            description: "Watch party and technical discussions on the latest announcements from Google I/O 2023.",
-            start_time: "2023-05-25T18:00:00Z",
-            end_time: "2023-05-25T21:00:00Z",
-            venue: "Auditorium",
-            gallery: [],
-            banner: null,
-            isLegacy: true
-        }
-    ],
-    "pixelance": [
-        {
-            id: "legacy-pix-1",
-            title: "Photo Walk: Old Delhi",
-            description: "Capturing the heritage and streets of Old Delhi. Workshop on street photography basics.",
-            start_time: "2023-12-05T07:00:00Z",
-            end_time: "2023-12-05T14:00:00Z",
-            venue: "Old Delhi",
-            gallery: [],
-            banner: null,
-            isLegacy: true
-        }
-    ]
+    "cyber-pirates": [],
+    "ai-robotics": [],
+    "aws-cloud": [],
+    "datapool": [],
+    "game-drifters": [],
+    "github": [],
+    "gdg": [],
+    "pixelance": []
 }
 
 export default async function ClubDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
