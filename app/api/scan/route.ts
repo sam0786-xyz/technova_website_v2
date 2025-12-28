@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { awardXPForAttendance } from '@/lib/xp'
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -59,7 +60,16 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, message: 'Failed to update' }, { status: 500 })
         }
 
-        // 4. Get User Name from next_auth schema
+        // 4. Award XP for attendance
+        const xpResult = await awardXPForAttendance(userId, eventId, {
+            event_type: registration.events?.event_type,
+            difficulty_level: registration.events?.difficulty_level,
+            start_time: registration.events?.start_time,
+            end_time: registration.events?.end_time,
+            is_multi_day: registration.events?.is_multi_day
+        })
+
+        // 5. Get User Name from next_auth schema
         const { data: user } = await supabase
             .schema('next_auth' as unknown as 'public')
             .from('users')
@@ -70,7 +80,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             message: 'Check-in successful',
-            userName: user?.name || 'Attendee'
+            userName: user?.name || 'Attendee',
+            xpAwarded: xpResult.xpAwarded,
+            xpMessage: xpResult.message
         })
 
     } catch (err) {

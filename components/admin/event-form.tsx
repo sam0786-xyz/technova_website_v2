@@ -240,6 +240,33 @@ export function EventForm({ clubs, event }: EventFormProps) {
                         <option value="live">Live (Public)</option>
                     </select>
                 </div>
+
+                {/* XP System Fields */}
+                <div className="grid grid-cols-2 gap-6 p-4 rounded-xl bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/20">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Event Type <span className="text-purple-400 text-xs">(XP Reward)</span>
+                        </label>
+                        <select name="event_type" className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-purple-500 focus:outline-none" defaultValue={event?.event_type || "workshop"}>
+                            <option value="talk_seminar">Talk / Seminar (50 XP)</option>
+                            <option value="workshop">Workshop (80 XP)</option>
+                            <option value="competition">Competition (100 XP)</option>
+                            <option value="hackathon">Hackathon (150 XP)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Difficulty Level <span className="text-purple-400 text-xs">(Multiplier)</span>
+                        </label>
+                        <select name="difficulty_level" className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-purple-500 focus:outline-none" defaultValue={event?.difficulty_level || "easy"}>
+                            <option value="easy">Easy (×1.0) - No prerequisite</option>
+                            <option value="moderate">Moderate (×1.3) - Basic prerequisite</option>
+                            <option value="hard">Hard (×1.6) - Strong prerequisite</option>
+                            <option value="elite">Elite (×2.0) - Advanced</option>
+                        </select>
+                    </div>
+                    <p className="col-span-2 text-xs text-gray-400">XP = Base XP × Duration Multiplier × Difficulty Multiplier</p>
+                </div>
             </div>
 
             <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-2xl space-y-6">
