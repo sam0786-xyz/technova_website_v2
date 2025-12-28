@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth"
-import { Calendar, MapPin, Clock, Users, Globe, ArrowLeft, Video } from "lucide-react"
+import { Calendar, MapPin, Clock, Users, Globe, ArrowLeft, Video, CalendarDays } from "lucide-react"
 import Link from "next/link"
 import { getEventById } from "@/lib/actions/events"
 import { checkRegistration } from "@/lib/actions/registrations"
@@ -7,6 +7,7 @@ import { EventRegistrationCard } from "@/components/events/registration-card"
 import { notFound } from "next/navigation"
 import { generateQRToken } from "@/lib/qr/generate"
 import { createClient } from "@supabase/supabase-js"
+import { formatDate, formatDateRange, formatTime } from "@/lib/utils"
 
 export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -100,14 +101,33 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
 
                                 <h1 className="text-4xl font-bold mb-4">{event.title}</h1>
                                 <div className="flex flex-wrap gap-6 text-gray-600">
-                                    <div className="flex items-center gap-2">
-                                        <Calendar className="w-5 h-5 text-blue-500" />
-                                        <span>{new Date(event.start_time).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="w-5 h-5 text-blue-500" />
-                                        <span>{new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </div>
+                                    {event.is_multi_day ? (
+                                        /* Multi-Day Event Display */
+                                        <>
+                                            <div className="flex items-center gap-2">
+                                                <CalendarDays className="w-5 h-5 text-purple-500" />
+                                                <span>{formatDateRange(event.start_time, event.end_time)}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="w-5 h-5 text-purple-500" />
+                                                <span>
+                                                    {event.daily_start_time?.slice(0, 5)} - {event.daily_end_time?.slice(0, 5)} daily
+                                                </span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        /* Single-Day Event Display */
+                                        <>
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="w-5 h-5 text-blue-500" />
+                                                <span>{formatDate(event.start_time)}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="w-5 h-5 text-blue-500" />
+                                                <span>{formatTime(event.start_time)} - {formatTime(event.end_time)}</span>
+                                            </div>
+                                        </>
+                                    )}
                                     <div className="flex items-center gap-2">
                                         <MapPin className="w-5 h-5 text-blue-500" />
                                         <span>{event.venue || "Online"}</span>
