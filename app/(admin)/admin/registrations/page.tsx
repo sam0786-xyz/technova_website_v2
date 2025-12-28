@@ -1,5 +1,6 @@
 import { getAllRegistrations } from "@/lib/actions/registrations"
 import { Check, Clock, QrCode } from "lucide-react"
+import { formatDate, formatTime } from "@/lib/utils"
 
 export default async function AdminRegistrationsPage() {
     const registrations = await getAllRegistrations()
@@ -39,16 +40,16 @@ export default async function AdminRegistrationsPage() {
                                         </td>
                                         <td className="p-4">
                                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${reg.payment_status === 'paid' || reg.payment_status === 'free'
-                                                    ? 'bg-green-50 text-green-700 border-green-200'
-                                                    : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                                ? 'bg-green-50 text-green-700 border-green-200'
+                                                : 'bg-yellow-50 text-yellow-700 border-yellow-200'
                                                 }`}>
                                                 {reg.payment_status === 'paid' || reg.payment_status === 'free' ? <Check className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                                                 <span className="capitalize">{reg.payment_status}</span>
                                             </span>
                                         </td>
                                         <td className="p-4 text-gray-500">
-                                            {new Date(reg.created_at).toLocaleDateString()}
-                                            <div className="text-xs text-gray-400">{new Date(reg.created_at).toLocaleTimeString()}</div>
+                                            {formatDate(reg.created_at)}
+                                            <div className="text-xs text-gray-400">{formatTime(reg.created_at)}</div>
                                         </td>
                                         <td className="p-4 text-gray-500 font-mono text-xs">
                                             <div className="flex items-center gap-2">

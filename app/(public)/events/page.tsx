@@ -1,6 +1,7 @@
 import { getPublicEvents } from "@/lib/actions/events"
 import Link from "next/link"
 import { Calendar, MapPin, Clock, ArrowRight, Home, ChevronRight } from "lucide-react"
+import { formatDateShort, formatDateRange } from "@/lib/utils"
 
 export default async function PublicEventsPage() {
     const allEvents = await getPublicEvents()
@@ -134,14 +135,21 @@ function EventCard({ event }: { event: any }) {
                                 {event.venue && event.venue.toLowerCase() !== 'online' ? 'Hybrid' : 'Virtual'}
                             </div>
                         )}
+
+                        {/* Multi-Day Badge */}
+                        {event.is_multi_day && (
+                            <div className="text-xs px-2 py-1 rounded-md inline-block bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                                Multi-Day
+                            </div>
+                        )}
                     </div>
                     <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
                         <Calendar className="w-4 h-4" />
-                        {new Date(event.start_time).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                        })}
+                        {event.is_multi_day ? (
+                            formatDateRange(event.start_time, event.end_time)
+                        ) : (
+                            formatDateShort(event.start_time)
+                        )}
                     </div>
                     <div className="flex items-center gap-2 text-gray-400 text-sm">
                         <MapPin className="w-4 h-4" />

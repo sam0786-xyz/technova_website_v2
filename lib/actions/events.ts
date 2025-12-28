@@ -25,8 +25,6 @@ export async function createEvent(formData: FormData) {
 
     const title = formData.get("title") as string
     const description = formData.get("description") as string
-    const start_time = formData.get("start_time") as string
-    const end_time = formData.get("end_time") as string
     const venue = formData.get("venue") as string
     const capacity = parseInt(formData.get("capacity") as string)
     const price = parseFloat(formData.get("price") as string)
@@ -55,6 +53,27 @@ export async function createEvent(formData: FormData) {
     const meeting_link = formData.get("meeting_link") as string || null
     const banner_position = formData.get("banner_position") as string || "center"
     let club_id = formData.get("club_id") as string || null
+
+    // Multi-day scheduling
+    const is_multi_day = formData.get("is_multi_day") === "true"
+    let start_time: string
+    let end_time: string
+    let daily_start_time: string | null = null
+    let daily_end_time: string | null = null
+
+    if (is_multi_day) {
+        const start_date = formData.get("start_date") as string
+        const end_date = formData.get("end_date") as string
+        daily_start_time = formData.get("daily_start_time") as string
+        daily_end_time = formData.get("daily_end_time") as string
+
+        // Combine date + time for start_time and end_time
+        start_time = `${start_date}T${daily_start_time}:00`
+        end_time = `${end_date}T${daily_end_time}:00`
+    } else {
+        start_time = formData.get("start_time") as string
+        end_time = formData.get("end_time") as string
+    }
 
     // If no club selected, try to find one or create default
     if (!club_id) {
@@ -87,7 +106,10 @@ export async function createEvent(formData: FormData) {
         registration_fields: JSON.parse(registration_fields),
         is_virtual,
         meeting_link,
-        banner_position
+        banner_position,
+        is_multi_day,
+        daily_start_time,
+        daily_end_time
     })
 
     if (error) {
@@ -113,8 +135,6 @@ export async function updateEvent(formData: FormData) {
 
     const title = formData.get("title") as string
     const description = formData.get("description") as string
-    const start_time = formData.get("start_time") as string
-    const end_time = formData.get("end_time") as string
     const venue = formData.get("venue") as string
     const capacity = parseInt(formData.get("capacity") as string)
     const price = parseFloat(formData.get("price") as string)
@@ -143,6 +163,27 @@ export async function updateEvent(formData: FormData) {
     const is_virtual = formData.get("is_virtual") === "true"
     const meeting_link = formData.get("meeting_link") as string || null
 
+    // Multi-day scheduling
+    const is_multi_day = formData.get("is_multi_day") === "true"
+    let start_time: string
+    let end_time: string
+    let daily_start_time: string | null = null
+    let daily_end_time: string | null = null
+
+    if (is_multi_day) {
+        const start_date = formData.get("start_date") as string
+        const end_date = formData.get("end_date") as string
+        daily_start_time = formData.get("daily_start_time") as string
+        daily_end_time = formData.get("daily_end_time") as string
+
+        // Combine date + time for start_time and end_time
+        start_time = `${start_date}T${daily_start_time}:00`
+        end_time = `${end_date}T${daily_end_time}:00`
+    } else {
+        start_time = formData.get("start_time") as string
+        end_time = formData.get("end_time") as string
+    }
+
     const { error } = await supabase.from('events').update({
         club_id,
         title,
@@ -158,7 +199,10 @@ export async function updateEvent(formData: FormData) {
         updated_at: new Date().toISOString(),
         registration_fields,
         is_virtual,
-        meeting_link
+        meeting_link,
+        is_multi_day,
+        daily_start_time,
+        daily_end_time
     }).eq('id', id)
 
     if (error) {

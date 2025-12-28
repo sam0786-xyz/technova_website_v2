@@ -3,7 +3,7 @@
 import { useState, useRef, MouseEvent } from "react"
 import { createEvent, updateEvent } from "@/lib/actions/events"
 import { FormBuilder, RegistrationField } from "./form-builder"
-import { Loader2, Move } from "lucide-react"
+import { Loader2, Move, CalendarDays } from "lucide-react"
 
 interface EventFormProps {
     clubs: any[]
@@ -13,6 +13,7 @@ interface EventFormProps {
 export function EventForm({ clubs, event }: EventFormProps) {
     const [loading, setLoading] = useState(false)
     const [isVirtual, setIsVirtual] = useState(event?.is_virtual || false)
+    const [isMultiDay, setIsMultiDay] = useState(event?.is_multi_day || false)
 
     // Banner position state
     const initialPos = event?.banner_position || "center"
@@ -168,16 +169,53 @@ export function EventForm({ clubs, event }: EventFormProps) {
                     </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Start Time</label>
-                        <input name="start_time" required type="datetime-local" defaultValue={event?.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">End Time</label>
-                        <input name="end_time" required type="datetime-local" defaultValue={event?.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
-                    </div>
+                {/* Multi-Day Event Toggle */}
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <input type="checkbox" name="is_multi_day" value="true" id="is_multi_day" defaultChecked={event?.is_multi_day} onChange={(e) => setIsMultiDay(e.target.checked)} className="w-5 h-5 rounded border-white/20 bg-black text-purple-600 focus:ring-purple-500/50" />
+                    <label htmlFor="is_multi_day" className="font-medium text-white cursor-pointer flex items-center gap-2">
+                        <CalendarDays className="w-4 h-4 text-purple-400" />
+                        Multi-Day Event (same daily timing)
+                    </label>
                 </div>
+
+                {isMultiDay ? (
+                    /* Multi-Day Event: Date Range + Daily Times */
+                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
+                                <input name="start_date" required type="date" defaultValue={event?.start_time ? new Date(event.start_time).toISOString().slice(0, 10) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">End Date</label>
+                                <input name="end_date" required type="date" defaultValue={event?.end_time ? new Date(event.end_time).toISOString().slice(0, 10) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Daily Start Time</label>
+                                <input name="daily_start_time" required type="time" defaultValue={event?.daily_start_time?.slice(0, 5) || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Daily End Time</label>
+                                <input name="daily_end_time" required type="time" defaultValue={event?.daily_end_time?.slice(0, 5) || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-400">The event will occur daily from the daily start time to the daily end time, between the start and end dates.</p>
+                    </div>
+                ) : (
+                    /* Single-Day Event: Standard datetime inputs */
+                    <div className="grid grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Start Time</label>
+                            <input name="start_time" required type="datetime-local" defaultValue={event?.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">End Time</label>
+                            <input name="end_time" required type="datetime-local" defaultValue={event?.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                        </div>
+                    </div>
+                )}
 
                 <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Venue {isVirtual ? "(Physical Location for Hybrid)" : ""}</label>

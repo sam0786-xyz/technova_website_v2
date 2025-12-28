@@ -8,6 +8,7 @@ import {
     CheckCircle, XCircle, Camera, Loader2, Upload, RefreshCw, ArrowLeft,
     Users, UserCheck, Search, ChevronDown, Clock, QrCode, List
 } from 'lucide-react'
+import { formatDate } from '@/lib/utils'
 
 interface Attendee {
     id: string
@@ -314,7 +315,7 @@ export default function ScannerPage() {
                                         className={`w-full p-4 text-left hover:bg-white/5 transition-colors ${selectedEvent === event.id ? 'bg-blue-600/20 border-l-4 border-blue-500' : ''}`}
                                     >
                                         <p className="font-medium">{event.title}</p>
-                                        <p className="text-sm text-gray-500">{new Date(event.start_time).toLocaleDateString()}</p>
+                                        <p className="text-sm text-gray-500">{formatDate(event.start_time)}</p>
                                     </button>
                                 ))}
                             </div>
