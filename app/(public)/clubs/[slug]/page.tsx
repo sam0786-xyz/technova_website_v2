@@ -80,17 +80,17 @@ const CLUB_THEMES: Record<string, {
         heroPattern: "radial-gradient(ellipse at top, rgba(139,92,246,0.15) 0%, transparent 50%)"
     },
     "github": {
-        // GitHub: White/Gray (GitHub colors on dark)
+        // GitHub: Eye‑catching neon gradient with vivid accent
         colors: {
-            primary: "from-slate-300 to-slate-200",
-            secondary: "slate-300",
-            bg: "bg-slate-900/50",
-            border: "border-slate-500/40",
-            text: "text-slate-300",
-            glow: "rgba(148,163,184,0.3)",
-            gradient: "from-slate-900 via-black to-black"
+            primary: "from-fuchsia-500 via-violet-500 to-blue-500",
+            secondary: "fuchsia-500",
+            bg: "bg-fuchsia-900/20",
+            border: "border-fuchsia-400/40",
+            text: "text-fuchsia-300",
+            glow: "rgba(217,70,239,0.6)",
+            gradient: "from-black via-violet-950 to-fuchsia-900"
         },
-        heroPattern: "radial-gradient(ellipse at top, rgba(148,163,184,0.1) 0%, transparent 50%)"
+        heroPattern: "radial-gradient(ellipse at top, rgba(217,70,239,0.12) 0%, transparent 50%)"
     },
     "gdg": {
         // GDG: Google Blue (primary Google color #4285F4)
@@ -525,8 +525,8 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                                     href={club.joinLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`group inline-flex items-center gap-2 bg-gradient-to-r ${colors.primary} text-white px-8 py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105`}
-                                    style={{ boxShadow: `0 0 40px ${colors.glow}` }}
+                                    className={`group inline-flex items-center gap-2 bg-gradient-to-r ${colors.primary} text-white px-8 py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105 hover:brightness-110 ring-2 ring-white/10 hover:ring-white/20`}
+                                    style={{ boxShadow: `0 0 60px ${colors.glow}` }}
                                 >
                                     Join Now
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -701,8 +701,8 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                             href={club.joinLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`inline-flex items-center gap-2 bg-gradient-to-r ${colors.primary} text-white px-10 py-5 rounded-xl font-bold text-lg transition-all hover:scale-105`}
-                            style={{ boxShadow: `0 0 50px ${colors.glow}` }}
+                            className={`inline-flex items-center gap-2 bg-gradient-to-r ${colors.primary} text-white px-10 py-5 rounded-xl font-bold text-lg transition-all hover:scale-105 hover:brightness-110 ring-2 ring-white/10 hover:ring-white/20`}
+                            style={{ boxShadow: `0 0 70px ${colors.glow}` }}
                         >
                             Join {club.name} Now
                             <ArrowRight className="w-6 h-6" />

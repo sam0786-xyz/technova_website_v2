@@ -51,7 +51,6 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
 
     return (
         <div className="min-h-screen bg-gray-50 pb-24">
-            {/* Banner */}
             <div className="h-64 md:h-96 w-full bg-gray-900 relative">
                 <div className="absolute inset-0 flex items-center justify-center text-gray-700">
                     {event.banner ? (
@@ -66,7 +65,6 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
             </div>
 
             <div className="container mx-auto px-4 -mt-20 relative z-10">
-                {/* Back Button */}
                 <Link href="/events" className="inline-flex items-center text-white mb-6 hover:text-blue-400 transition-colors">
                     <div className="bg-black/50 backdrop-blur-sm p-2 rounded-full mr-2 border border-white/20">
                         <ArrowLeft className="w-5 h-5" />
@@ -74,88 +72,93 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                     <span className="font-medium drop-shadow-md">Back to Events</span>
                 </Link>
 
+                {/* Card 1: Heading & Meta */}
                 <div className="bg-white rounded-xl shadow-xl overflow-hidden">
                     <div className="p-8">
-                        <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-                            <div className="flex-1">
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                                        {event.price === 0 ? "Free Event" : `₹${event.price} `}
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-wrap gap-2">
+                                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                                    {event.price === 0 ? "Free Event" : `₹${event.price} `}
+                                </span>
+                                {event.is_virtual && (
+                                    <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                                        {event.venue && event.venue.toLowerCase() !== 'online' ? 'Hybrid Event' : 'Virtual Event'}
                                     </span>
-                                    {event.is_virtual && (
-                                        <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                                            {event.venue && event.venue.toLowerCase() !== 'online' ? 'Hybrid Event' : 'Virtual Event'}
-                                        </span>
-                                    )}
-                                </div>
-
-                                {event.club && (
-                                    <div className="flex items-center gap-2 mb-3">
-                                        {event.club.logo_url && (
-                                            /* eslint-disable-next-line @next/next/no-img-element */
-                                            <img src={event.club.logo_url} alt={event.club.name} className="w-6 h-6 object-contain rounded-full" />
-                                        )}
-                                        <span className="text-gray-500 font-medium">Organized by <span className="text-blue-600">{event.club.name}</span></span>
-                                    </div>
                                 )}
-
-                                <h1 className="text-4xl font-bold mb-4">{event.title}</h1>
-                                <div className="flex flex-wrap gap-6 text-gray-600">
-                                    {event.is_multi_day ? (
-                                        /* Multi-Day Event Display */
-                                        <>
-                                            <div className="flex items-center gap-2">
-                                                <CalendarDays className="w-5 h-5 text-purple-500" />
-                                                <span>{formatDateRange(event.start_time, event.end_time)}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="w-5 h-5 text-purple-500" />
-                                                <span>
-                                                    {event.daily_start_time?.slice(0, 5)} - {event.daily_end_time?.slice(0, 5)} daily
-                                                </span>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        /* Single-Day Event Display */
-                                        <>
-                                            <div className="flex items-center gap-2">
-                                                <Calendar className="w-5 h-5 text-blue-500" />
-                                                <span>{formatDate(event.start_time)}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="w-5 h-5 text-blue-500" />
-                                                <span>{formatTime(event.start_time)} - {formatTime(event.end_time)}</span>
-                                            </div>
-                                        </>
-                                    )}
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="w-5 h-5 text-blue-500" />
-                                        <span>{event.venue || "Online"}</span>
-                                    </div>
-                                    {event.is_virtual && event.meeting_link && (
-                                        <div className="flex items-center gap-2">
-                                            <Video className="w-5 h-5 text-purple-500" />
-                                            <a href={event.meeting_link} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline font-medium">
-                                                Join Meeting
-                                            </a>
-                                        </div>
-                                    )}
-                                </div>
                             </div>
 
-                            <EventRegistrationCard
-                                event={event}
-                                user={user}
-                                existingRegistration={existingRegistration}
-                                qrCode={qrCode}
-                            />
+                            {event.club && (
+                                <div className="flex items-center gap-2">
+                                    {event.club.logo_url && (
+                                        <img src={event.club.logo_url} alt={event.club.name} className="w-6 h-6 object-contain rounded-full" />
+                                    )}
+                                    <span className="text-gray-500 font-medium">Organized by <span className="text-blue-600">{event.club.name}</span></span>
+                                </div>
+                            )}
+
+                            <h1 className="text-4xl font-bold">{event.title}</h1>
+
+                            <div className="flex flex-wrap gap-6 text-gray-600">
+                                {event.is_multi_day ? (
+                                    <>
+                                        <div className="flex items-center gap-2">
+                                            <CalendarDays className="w-5 h-5 text-purple-500" />
+                                            <span>{formatDateRange(event.start_time, event.end_time)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="w-5 h-5 text-purple-500" />
+                                            <span>
+                                                {event.daily_start_time?.slice(0, 5)} - {event.daily_end_time?.slice(0, 5)} daily
+                                            </span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-2">
+                                            <Calendar className="w-5 h-5 text-blue-500" />
+                                            <span>{formatDate(event.start_time)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="w-5 h-5 text-blue-500" />
+                                            <span>{formatTime(event.start_time)} - {formatTime(event.end_time)}</span>
+                                        </div>
+                                    </>
+                                )}
+                                <div className="flex items-center gap-2">
+                                    <MapPin className="w-5 h-5 text-blue-500" />
+                                    <span>{event.venue || "Online"}</span>
+                                </div>
+                                {event.is_virtual && event.meeting_link && (
+                                    <div className="flex items-center gap-2">
+                                        <Video className="w-5 h-5 text-purple-500" />
+                                        <a href={event.meeting_link} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline font-medium">
+                                            Join Meeting
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
                         </div>
+                    </div>
+                </div>
 
-                        <hr className="my-8" />
-
-                        <div className="prose max-w-none">
-                            <h2 className="text-2xl font-bold mb-4">About this Event</h2>
-                            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{event.description}</p>
+                {/* Card 2: About + Right Sidebar */}
+                <div className="mt-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="md:col-span-2">
+                            <div className="bg-white rounded-xl shadow-xl p-8">
+                                <h2 className="text-2xl font-bold mb-4">About this Event</h2>
+                                <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{event.description}</p>
+                            </div>
+                        </div>
+                        <div className="md:sticky md:top-24">
+                            <div className="bg-white rounded-xl shadow-xl p-6">
+                                <EventRegistrationCard
+                                    event={event}
+                                    user={user}
+                                    existingRegistration={existingRegistration}
+                                    qrCode={qrCode}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
