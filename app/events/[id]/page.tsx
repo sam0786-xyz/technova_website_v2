@@ -4,6 +4,7 @@ import Link from "next/link"
 import { getEventById } from "@/lib/actions/events"
 import { checkRegistration } from "@/lib/actions/registrations"
 import { EventRegistrationCard } from "@/components/events/registration-card"
+import { POCCard } from "@/components/events/poc-card"
 import { notFound } from "next/navigation"
 import { generateQRToken } from "@/lib/qr/generate"
 import { createClient } from "@supabase/supabase-js"
@@ -157,6 +158,11 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                                     user={user}
                                     existingRegistration={existingRegistration}
                                     qrCode={qrCode}
+                                />
+                                <POCCard
+                                    name={event.poc_name}
+                                    email={event.poc_email}
+                                    phone={event.poc_phone}
                                 />
                             </div>
                         </div>

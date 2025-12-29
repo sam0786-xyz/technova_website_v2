@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef, MouseEvent } from "react"
+import { useState, useRef, MouseEvent, useEffect } from "react"
+import { getClubMembers } from "@/lib/actions/clubs"
 import { createEvent, updateEvent } from "@/lib/actions/events"
 import { FormBuilder, RegistrationField } from "./form-builder"
 import { Loader2, Move, CalendarDays } from "lucide-react"
@@ -14,6 +15,29 @@ export function EventForm({ clubs, event }: EventFormProps) {
     const [loading, setLoading] = useState(false)
     const [isVirtual, setIsVirtual] = useState(event?.is_virtual || false)
     const [isMultiDay, setIsMultiDay] = useState(event?.is_multi_day || false)
+    const [selectedClubId, setSelectedClubId] = useState<string>(event?.club_id || "")
+    const [pocMembers, setPocMembers] = useState<any[]>([])
+    const [loadingMembers, setLoadingMembers] = useState(false)
+
+    useEffect(() => {
+        if (!selectedClubId) {
+            setPocMembers([])
+            return
+        }
+
+        const fetchMembers = async () => {
+            setLoadingMembers(true)
+            try {
+                const members = await getClubMembers(selectedClubId)
+                setPocMembers(members)
+            } catch (error) {
+                console.error("Failed to fetch members", error)
+            } finally {
+                setLoadingMembers(false)
+            }
+        }
+        fetchMembers()
+    }, [selectedClubId])
 
     // Banner position state
     const initialPos = event?.banner_position || "center"
@@ -93,7 +117,7 @@ export function EventForm({ clubs, event }: EventFormProps) {
                 <div className="grid grid-cols-2 gap-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">Hosting Club</label>
-                        <select name="club_id" required defaultValue={event?.club_id || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+                        <select name="club_id" required defaultValue={event?.club_id || ""} onChange={(e) => setSelectedClubId(e.target.value)} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none">
                             <option value="" disabled>Select Club</option>
                             {clubs.map((club: any) => (
                                 <option key={club.id} value={club.id}>{club.name}</option>
@@ -109,6 +133,19 @@ export function EventForm({ clubs, event }: EventFormProps) {
                             ))}
                         </select>
                     </div>
+                </div>
+
+                {/* Point of Contact (POC) */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Point of Contact (POC)</label>
+                    <select name="poc_name" defaultValue={event?.poc_name || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" disabled={!selectedClubId || loadingMembers}>
+                        <option value="">
+                            {loadingMembers ? 'Loading members...' : (!selectedClubId ? 'Select hosting club first' : 'Select POC')}
+                        </option>
+                        {pocMembers.map((m: any) => (
+                            <option key={m.id} value={m.name}>{m.name}</option>
+                        ))}
+                    </select>
                 </div>
 
                 <div>

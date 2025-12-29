@@ -3,13 +3,33 @@
 import { notFound } from "next/navigation"
 import { Users, User, Shield, Target, Calendar, ArrowRight, Github, Globe, Linkedin, Mail, ImageIcon, Home, ChevronRight, Sparkles, Trophy, Rocket, Zap, Phone, ExternalLink, Code, Cpu, Cloud, Database, Gamepad2, Camera, Lock, Server, Brain, Palette } from "lucide-react"
 import { getPastEvents } from "@/lib/actions/club-events"
+import { getClubMembersByName, getClubWithMembers } from "@/lib/actions/clubs"
 import Link from "next/link"
 import { use, useEffect, useState } from "react"
 import { motion } from "framer-motion"
 
+const ensureAbsoluteUrl = (url: string) => {
+    if (!url) return "#"
+    if (url.startsWith("http://") || url.startsWith("https://")) return url
+    return `https://${url}`
+}
+
 // ===============================================
 // CLUB THEMES - Colors matched to actual logos
 // ===============================================
+
+const SLUG_TO_DB_NAME: Record<string, string> = {
+    "technova-main": "Technova Main",
+    "ai-robotics": "AI & Robotics",
+    "aws-cloud": "AWS Cloud",
+    "cyber-pirates": "CyberPirates",
+    "datapool": "Datapool",
+    "game-drifters": "Game Drifters",
+    "gdg": "GDG on Campus",
+    "github": "GitHub Club",
+    "pixelance": "Pixelance"
+}
+
 const CLUB_THEMES: Record<string, {
     colors: { primary: string; secondary: string; bg: string; border: string; text: string; glow: string; gradient: string }
     heroPattern: string
@@ -159,15 +179,7 @@ const CLUBS_DATA: Record<string, {
             { icon: Shield, title: "CTF Challenges", desc: "Compete in capture-the-flag competitions" },
             { icon: Target, title: "Bug Bounties", desc: "Find vulnerabilities in real systems" }
         ],
-        team: [
-            { name: "Sneha Mishra", role: "Club Lead", phone: "8750396990", email: "2023311024.sneha@ug.sharda.ac.in" },
-            { name: "Ishika Dhiman", role: "Club Co-Lead", phone: "8810481150", email: "2023000121.ishika@ug.sharda.ac.in" },
-            { name: "Aditya Kumar Singh", role: "Designer", phone: "8595865070", email: "2025293514.aditya@ug.sharda.ac.in" },
-            { name: "Anusha Bhardwaj", role: "Documentation", phone: "9798076460", email: "2023548664.anusha@ug.sharda.ac.in" },
-            { name: "Miriam Victoria", role: "Technical", phone: "7303912590", email: "2023845674.miriam@ug.sharda.ac.in" },
-            { name: "Ritesh Sharma", role: "Technical", phone: "9817577149", email: "2025284855.ritesh@ug.sharda.ac.in" },
-            { name: "Aditya Dhanraj", role: "PR", phone: "7462050476", email: "2025193343.aditya@ug.sharda.ac.in" }
-        ]
+        team: []
     },
     "ai-robotics": {
         name: "AI & Robotics Club",
@@ -182,15 +194,7 @@ const CLUBS_DATA: Record<string, {
             { icon: Cpu, title: "Robotics Projects", desc: "Create autonomous machines & drones" },
             { icon: Sparkles, title: "Research", desc: "Explore cutting-edge AI papers" }
         ],
-        team: [
-            { name: "Muskan", role: "Lead", phone: "8607980945", email: "2023419688.muskan@ug.sharda.ac.in" },
-            { name: "Sapna", role: "Co-lead", phone: "7982654060", email: "2023360481.sapna@ug.sharda.ac.in" },
-            { name: "Kusuma", role: "Coordinator", phone: "7795746498", email: "2023443738.kusuma@ug.sharda.ac.in" },
-            { name: "Pratham", role: "Coordinator", phone: "8532009999", email: "2024164168.pratham@ug.sharda.ac.in" },
-            { name: "Manya Singh", role: "Coordinator", phone: "9305032218", email: "2023406503.manya@ug.sharda.ac.in" },
-            { name: "Preeti Pal", role: "Coordinator", phone: "9580331010", email: "2023310314.preeti@ug.sharda.ac.in" },
-            { name: "Saurav Suman", role: "Coordinator", phone: "9508899651", email: "2023203393.saurav@ug.sharda.ac.in" }
-        ]
+        team: []
     },
     "aws-cloud": {
         name: "AWS Cloud Club",
@@ -205,15 +209,7 @@ const CLUBS_DATA: Record<string, {
             { icon: Server, title: "Serverless", desc: "Build with Lambda & API Gateway" },
             { icon: Trophy, title: "Certifications", desc: "AWS certification preparation" }
         ],
-        team: [
-            { name: "Utkarsh Gaur", role: "Club Captain", phone: "8512030569", email: "2023346887.utkarsh@ug.sharda.ac.in" },
-            { name: "Shweta", role: "Marketing & Outreach", phone: "8595483318", email: "2023329880.shweta@ug.sharda.ac.in" },
-            { name: "Vashu Kaushik", role: "Events Executive", phone: "8791201151", email: "2023375557.vashu@ug.sharda.ac.in" },
-            { name: "Vidit Gupta", role: "Sponsorship", phone: "7505485975", email: "2023419546.vidit@ug.sharda.ac.in" },
-            { name: "Ayush Harsh", role: "Technical", phone: "9508370518", email: "2022476818.ayush@ug.sharda.ac.in" },
-            { name: "Aditya Maheshwari", role: "Logistics", phone: "8510022148", email: "2023340499.aditya@ug.sharda.ac.in" },
-            { name: "Deepak", role: "Technical", phone: "9773850767", email: "2023336502.deepak@ug.sharda.ac.in" }
-        ]
+        team: []
     },
     "datapool": {
         name: "Datapool Club",
@@ -228,14 +224,7 @@ const CLUBS_DATA: Record<string, {
             { icon: Sparkles, title: "ML Models", desc: "Build predictive algorithms" },
             { icon: Globe, title: "Kaggle", desc: "Compete in data challenges" }
         ],
-        team: [
-            { name: "Rajeev Kumar", role: "Club Lead", phone: "9334286864", email: "2023382761.rajeev@ug.sharda.ac.in" },
-            { name: "Tanisha", role: "Club Co-Lead", phone: "9416349244", email: "2024361865.tanisha@ug.sharda.ac.in" },
-            { name: "Dushyant Prajapati", role: "Designer", phone: "8882236416", email: "2025273581.dushyant@ug.sharda.ac.in" },
-            { name: "Al Dua Khan", role: "PR", phone: "8353956645", email: "2025429573.al@ug.sharda.ac.in" },
-            { name: "Siya Rathi", role: "Documentation", phone: "8178213821", email: "2024157412.siya@ug.sharda.ac.in" },
-            { name: "Rahul Gupta", role: "Technical", phone: "7309964567", email: "2023336847.rahul@ug.sharda.ac.in" }
-        ]
+        team: []
     },
     "game-drifters": {
         name: "Game Drifters Club",
@@ -250,15 +239,7 @@ const CLUBS_DATA: Record<string, {
             { icon: Code, title: "Game Dev", desc: "Build games with Unity & Unreal" },
             { icon: Trophy, title: "Tournaments", desc: "Regular gaming competitions" }
         ],
-        team: [
-            { name: "Adhyyan Sharma", role: "Club Lead", phone: "9103230071", email: "2022618081.adhyyan@ug.sharda.ac.in" },
-            { name: "Aarav Kashyap", role: "Club Co-Lead", phone: "7836809633", email: "2024468363.aarav@ug.sharda.ac.in" },
-            { name: "Harshit Singh", role: "Coordinator", phone: "8460279630", email: "2024597770.harshit@ug.sharda.ac.in" },
-            { name: "Siddhartha Singh", role: "Coordinator", phone: "8005237791", email: "2024244201.siddhartha@ug.sharda.ac.in" },
-            { name: "Tanushi Jain", role: "Coordinator", phone: "7560949605", email: "2024244955.tanushi@ug.sharda.ac.in" },
-            { name: "Sukaina Shakeel Ansari", role: "Coordinator", phone: "7173173678", email: "2023519649.sukaina@ug.sharda.ac.in" },
-            { name: "Anupam Vasudeva", role: "Coordinator", phone: "9582873959", email: "2020718956.anupam@ug.sharda.ac.in" }
-        ]
+        team: []
     },
     "github": {
         name: "GitHub Club",
@@ -273,14 +254,7 @@ const CLUBS_DATA: Record<string, {
             { icon: Code, title: "Coding", desc: "Learn modern development practices" },
             { icon: Users, title: "Collaboration", desc: "Work with fellow developers" }
         ],
-        team: [
-            { name: "Suryansh Rai", role: "Club Lead", phone: "8171192097", email: "2023349070.suryansh@ug.sharda.ac.in" },
-            { name: "Arnima Chakravarty", role: "Club Co-Lead", phone: "8240479460", email: "2023413608.arnima@ug.sharda.ac.in" },
-            { name: "Shubham Shukla", role: "Designer", phone: "9303178846", email: "2024294955.shubham@ug.sharda.ac.in" },
-            { name: "Deepanshu Singh", role: "Documentation", phone: "8582670020", email: "2024194135.deepanshu@ug.sharda.ac.in" },
-            { name: "Parikshit Singh", role: "Technical", phone: "9625619910", email: "2024189810.parikshit@ug.sharda.ac.in" },
-            { name: "Tanisha Mittal", role: "PR", phone: "8071047527", email: "2025350343.tanisha@ug.sharda.ac.in" }
-        ]
+        team: []
     },
     "gdg": {
         name: "GDG on Campus",
@@ -295,19 +269,7 @@ const CLUBS_DATA: Record<string, {
             { icon: Rocket, title: "Solution Challenge", desc: "Build solutions for local problems" },
             { icon: Users, title: "Community", desc: "Join a global developer network" }
         ],
-        team: [
-            { name: "Sanskriti Verma", role: "Club Lead (Organizer)", phone: "7011428007", email: "2022004547.sanskriti@ug.sharda.ac.in" },
-            { name: "Abhishek Pandey", role: "AIML & Robotics Lead", phone: "7088219552", email: "2024156131.abhishek@ug.sharda.ac.in" },
-            { name: "Masood Aslam", role: "Cyber Security Lead", phone: "9540379738", email: "2023305225.masood@ug.sharda.ac.in" },
-            { name: "Priyanshu Verma", role: "Web dev & DSA Lead", phone: "6306930929", email: "2023392450.priyanshu@ug.sharda.ac.in" },
-            { name: "Yash Kumar Choudhary", role: "XR Lead", phone: "9871802235", email: "2023368660.yash@ug.sharda.ac.in" },
-            { name: "Utkarsh Gaur", role: "Cloud & Open Source Lead", phone: "8512030569", email: "2023346887.utkarsh@ug.sharda.ac.in" },
-            { name: "Saksham Sharma", role: "Social Media Lead", phone: "9720549549", email: "2025188304.saksham@ug.sharda.ac.in" },
-            { name: "Vansh Chauhan", role: "Design Lead", phone: "9897281748", email: "2024341632.vansh@ug.sharda.ac.in" },
-            { name: "Narmada", role: "PR & Marketing Lead", phone: "9871370761", email: "2024131677.narmada@ug.sharda.ac.in" },
-            { name: "Aditya Singh", role: "Sponsorship & Outreach", phone: "6201954727" },
-            { name: "Harshit Singh", role: "Content Lead", phone: "9058624242", email: "2025368857.harshit@ug.sharda.ac.in" }
-        ]
+        team: []
     },
     "pixelance": {
         name: "PiXelance Club",
@@ -322,20 +284,7 @@ const CLUBS_DATA: Record<string, {
             { icon: Palette, title: "Editing", desc: "Master Lightroom & Photoshop" },
             { icon: ImageIcon, title: "Portfolio", desc: "Showcase your best work" }
         ],
-        team: [
-            { name: "Krishna Narula", role: "Club Lead", phone: "9582087205", email: "2023286720.krishna@ug.sharda.ac.in" },
-            { name: "Abhijit Dutta", role: "Co-Lead (Photography)", phone: "7542693791", email: "2023008089.abhijit@ug.sharda.ac.in" },
-            { name: "Madwesha R", role: "Co-Lead (Videography)", phone: "9521150008", email: "2023055241.madwesha@ug.sharda.ac.in" },
-            { name: "Swastik Garg", role: "Coordinator", phone: "8449216462", email: "2024134202.swastik@ug.sharda.ac.in" },
-            { name: "Rishiyendra Kumar", role: "Coordinator", phone: "7667010826", email: "2024136214.rishiyendra@ug.sharda.ac.in" },
-            { name: "Shivansh Tiwari", role: "Coordinator", phone: "8404048102", email: "2023216262.shivansh@ug.sharda.ac.in" },
-            { name: "Keshav Grover", role: "Coordinator", phone: "7773477710", email: "2024342595.keshav@ug.sharda.ac.in" },
-            { name: "Sarthak Choudhary", role: "Coordinator", phone: "9130071357", email: "2024446375.sarthak@ug.sharda.ac.in" },
-            { name: "Navya Tyagi", role: "Coordinator", phone: "9135048681", email: "2022111945.navya@ug.sharda.ac.in" },
-            { name: "Christopher Yumnam", role: "Coordinator", phone: "8414906254", email: "2024341974.christopher@ug.sharda.ac.in" },
-            { name: "Shakhawat Ansari", role: "Coordinator", phone: "8794196897", email: "2023508416.shakhawat@ug.sharda.ac.in" },
-            { name: "Kavay Dahiya", role: "Coordinator", phone: "7082307180", email: "2024321206.kavay@ug.sharda.ac.in" }
-        ]
+        team: []
     }
 }
 
@@ -437,6 +386,45 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
 
     const colors = theme.colors
 
+    const [teamMembers, setTeamMembers] = useState<TeamMember[]>(club.team || [])
+    const [dbClub, setDbClub] = useState<any>(null)
+    const [loadingData, setLoadingData] = useState(true)
+
+    useEffect(() => {
+        async function fetchData() {
+            if (!slug || !SLUG_TO_DB_NAME[slug]) {
+                setLoadingData(false)
+                return
+            }
+            try {
+                const dbName = SLUG_TO_DB_NAME[slug]
+                const result = await getClubWithMembers(dbName)
+
+                if (result) {
+                    setDbClub(result.club)
+                    if (result.members && result.members.length > 0) {
+                        const mappedMembers = result.members.map((m: any) => ({
+                            name: m.name,
+                            role: m.role || "Core Team",
+                            email: m.email,
+                            phone: m.phone,
+                            linkedin: m.linkedin_id,
+                            photo: undefined
+                        }))
+                        setTeamMembers(mappedMembers)
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch club data:", error)
+            } finally {
+                setLoadingData(false)
+            }
+        }
+        fetchData()
+    }, [slug])
+
+    const displayDescription = dbClub?.description || club.description
+
     return (
         <div className="min-h-screen bg-black text-white overflow-hidden">
             {/* =============== HERO SECTION =============== */}
@@ -512,7 +500,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                                 transition={{ delay: 0.4 }}
                                 className="text-gray-400 text-lg leading-relaxed mb-8 max-w-lg"
                             >
-                                {club.description}
+                                {displayDescription}
                             </motion.p>
 
                             <motion.div
@@ -631,7 +619,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                     </motion.div>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {club.team.map((member, idx) => (
+                        {teamMembers.map((member, idx) => (
                             <motion.div
                                 key={member.name}
                                 initial={{ opacity: 0, y: 30 }}
@@ -669,7 +657,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                                         </a>
                                     )}
                                     {member.linkedin && (
-                                        <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-600/10 transition-all">
+                                        <a href={ensureAbsoluteUrl(member.linkedin)} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-600/10 transition-all">
                                             <Linkedin className="w-4 h-4" />
                                         </a>
                                     )}
