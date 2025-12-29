@@ -52,6 +52,8 @@ export async function createEvent(formData: FormData) {
     const is_virtual = formData.get("is_virtual") === "true"
     const meeting_link = formData.get("meeting_link") as string || null
     const banner_position = formData.get("banner_position") as string || "center"
+    const event_type = formData.get("event_type") as string || "workshop"
+    const difficulty_level = formData.get("difficulty_level") as string || "easy"
     let club_id = formData.get("club_id") as string || null
     const poc_name = formData.get("poc_name") as string || null
     const event_type = formData.get("event_type") as string || "workshop"
@@ -114,8 +116,12 @@ export async function createEvent(formData: FormData) {
         daily_start_time,
         daily_end_time,
         event_type,
+<<<<<<< HEAD
         difficulty_level,
         poc_name
+=======
+        difficulty_level
+>>>>>>> origin/main
     })
 
     if (error) {
@@ -170,7 +176,10 @@ export async function updateEvent(formData: FormData) {
     const meeting_link = formData.get("meeting_link") as string || null
     const event_type = formData.get("event_type") as string || "workshop"
     const difficulty_level = formData.get("difficulty_level") as string || "easy"
+<<<<<<< HEAD
     const poc_name = formData.get("poc_name") as string || null
+=======
+>>>>>>> origin/main
 
     // Multi-day scheduling
     const is_multi_day = formData.get("is_multi_day") === "true"

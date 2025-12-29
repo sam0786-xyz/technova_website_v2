@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getProfileData } from "@/lib/actions/profile"
+import { getXPHistory } from "@/lib/actions/xp-history"
+import { XPHistoryChart } from "@/components/profile/xp-history-chart"
 import Link from "next/link"
 import { User, Mail, Hash, GraduationCap, BookOpen, Phone, Sparkles, Pencil, Trophy, Calendar, Award, ArrowRight, Home, ChevronRight } from "lucide-react"
 
@@ -8,7 +10,10 @@ export default async function ProfilePage() {
     const session = await auth()
     if (!session) redirect("/login")
 
-    const data = await getProfileData()
+    const [data, xpHistory] = await Promise.all([
+        getProfileData(),
+        session.user?.id ? getXPHistory(session.user.id) : { history: [], totalXp: 0, eventCount: 0 }
+    ])
 
     const yearLabel = (year: number) => {
         switch (year) {
@@ -242,6 +247,9 @@ export default async function ProfilePage() {
                                 </div>
                             )}
                         </div>
+
+                        {/* XP History Chart */}
+                        <XPHistoryChart data={xpHistory} />
                     </div>
                 </div>
             </div>
