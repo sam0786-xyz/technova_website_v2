@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth"
 import { getLeaderboardData, getTopThreeUsers, getUserRank } from "@/lib/actions/leaderboard"
 import { Leaderboard } from "@/components/dashboard/leaderboard"
-import { StatsCards } from "@/components/dashboard/stats-cards"
 import { MyRankWidget } from "@/components/dashboard/my-rank-widget"
 
 export default async function DashboardPage() {
@@ -29,21 +28,8 @@ export default async function DashboardPage() {
                 </div>
             </div>
 
-            {/* My Rank + Stats Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* My Rank Widget */}
-                <div className="lg:col-span-1">
-                    <MyRankWidget rankInfo={userRank} userName={session?.user?.name || undefined} />
-                </div>
-
-                {/* Stats Overview */}
-                <div className="lg:col-span-2">
-                    <StatsCards
-                        xp={session?.user?.xp_points || 0}
-                        role={session?.user?.role || 'Member'}
-                    />
-                </div>
-            </div>
+            {/* My Rank Widget */}
+            <MyRankWidget rankInfo={userRank} userName={session?.user?.name || undefined} />
 
             {/* Leaderboard Section */}
             <Leaderboard initialData={leaderboardData} topThree={topThree} />

@@ -6,6 +6,7 @@ import { Search, Trophy, ChevronLeft, ChevronRight, Home, Loader2, Calendar } fr
 import { cn } from '@/lib/utils'
 import { getLeaderboardData, getTopThreeUsers, LeaderboardUser, LeaderboardResponse, TimeFilter } from '@/lib/actions/leaderboard'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ProfileHoverCard } from "@/components/dashboard/profile-hover-card"
 import Link from 'next/link'
 
 interface LeaderboardProps {
@@ -129,76 +130,82 @@ export function Leaderboard({ initialData, topThree: initialTopThree }: Leaderbo
 
             {/* Top 3 Podium (Only when not searching) */}
             {!searchTerm && topThree.length > 0 && (
-                <div className="flex justify-center items-end gap-4 md:gap-8 pt-12 pb-8 mb-8">
+                <div className="flex justify-center items-end gap-2 sm:gap-4 md:gap-8 pt-8 sm:pt-12 pb-6 sm:pb-8 mb-6 sm:mb-8 overflow-x-auto">
                     {/* 2nd Place (Left) */}
                     {topThree[1] && (
-                        <Link href={`/user/${topThree[1].id}`} className="flex flex-col items-center z-10 cursor-pointer hover:scale-105 transition-transform">
-                            <div className="relative mb-4">
-                                <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-gray-400 shadow-[0_0_20px_rgba(156,163,175,0.3)]">
-                                    <AvatarImage src={topThree[1].image || ""} alt={topThree[1].name} />
-                                    <AvatarFallback className="bg-gray-800 text-gray-400 text-2xl font-bold">
-                                        {topThree[1].name.charAt(0)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-black font-bold text-sm border-2 border-gray-900">
-                                    2
+                        <ProfileHoverCard user={topThree[1]} rank={2}>
+                            <Link href={`/user/${topThree[1].id}`} className="flex flex-col items-center z-10 cursor-pointer hover:scale-105 transition-transform">
+                                <div className="relative mb-4">
+                                    <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-gray-400 shadow-[0_0_20px_rgba(156,163,175,0.3)]">
+                                        <AvatarImage src={topThree[1].image || ""} alt={topThree[1].name} />
+                                        <AvatarFallback className="bg-gray-800 text-gray-400 text-2xl font-bold">
+                                            {topThree[1].name.charAt(0)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-black font-bold text-sm border-2 border-gray-900">
+                                        2
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex flex-col items-center">
-                                <h3 className="font-bold text-gray-200 text-base md:text-lg text-center max-w-[120px] truncate">{topThree[1].name}</h3>
-                                <p className="text-cyan-400 font-mono text-sm md:text-base font-medium">{topThree[1].xp_points} XP</p>
-                            </div>
-                            <div className="w-24 md:w-32 h-32 md:h-40 bg-gradient-to-t from-gray-900/80 to-gray-800/50 rounded-t-lg border-t border-x border-gray-700/50 mt-4 backdrop-blur-sm" />
-                        </Link>
+                                <div className="flex flex-col items-center">
+                                    <h3 className="font-bold text-gray-200 text-base md:text-lg text-center max-w-[120px] truncate">{topThree[1].name}</h3>
+                                    <p className="text-cyan-400 font-mono text-sm md:text-base font-medium">{topThree[1].xp_points} XP</p>
+                                </div>
+                                <div className="w-24 md:w-32 h-32 md:h-40 bg-gradient-to-t from-gray-900/80 to-gray-800/50 rounded-t-lg border-t border-x border-gray-700/50 mt-4 backdrop-blur-sm" />
+                            </Link>
+                        </ProfileHoverCard>
                     )}
 
                     {/* 1st Place (Center) */}
                     {topThree[0] && (
-                        <Link href={`/user/${topThree[0].id}`} className="flex flex-col items-center z-20 -mx-2 md:mx-0 order-first md:order-none cursor-pointer hover:scale-105 transition-transform">
-                            <div className="relative mb-4">
-                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-yellow-400 animate-bounce">
-                                    <Trophy className="w-8 h-8 fill-yellow-400" />
+                        <ProfileHoverCard user={topThree[0]} rank={1}>
+                            <Link href={`/user/${topThree[0].id}`} className="flex flex-col items-center z-20 -mx-2 md:mx-0 order-first md:order-none cursor-pointer hover:scale-105 transition-transform">
+                                <div className="relative mb-4">
+                                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-yellow-400 animate-bounce">
+                                        <Trophy className="w-8 h-8 fill-yellow-400" />
+                                    </div>
+                                    <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.4)] ring-4 ring-yellow-500/20">
+                                        <AvatarImage src={topThree[0].image || ""} alt={topThree[0].name} />
+                                        <AvatarFallback className="bg-gray-800 text-yellow-400 text-3xl font-bold">
+                                            {topThree[0].name.charAt(0)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold text-lg border-4 border-gray-900">
+                                        1
+                                    </div>
                                 </div>
-                                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.4)] ring-4 ring-yellow-500/20">
-                                    <AvatarImage src={topThree[0].image || ""} alt={topThree[0].name} />
-                                    <AvatarFallback className="bg-gray-800 text-yellow-400 text-3xl font-bold">
-                                        {topThree[0].name.charAt(0)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-black font-bold text-lg border-4 border-gray-900">
-                                    1
+                                <div className="flex flex-col items-center">
+                                    <h3 className="font-bold text-white text-lg md:text-xl text-center max-w-[150px] truncate">{topThree[0].name}</h3>
+                                    <p className="text-cyan-400 font-mono text-base md:text-lg font-bold">{topThree[0].xp_points} XP</p>
                                 </div>
-                            </div>
-                            <div className="flex flex-col items-center">
-                                <h3 className="font-bold text-white text-lg md:text-xl text-center max-w-[150px] truncate">{topThree[0].name}</h3>
-                                <p className="text-cyan-400 font-mono text-base md:text-lg font-bold">{topThree[0].xp_points} XP</p>
-                            </div>
-                            <div className="w-28 md:w-40 h-40 md:h-52 bg-gradient-to-t from-yellow-900/40 to-yellow-600/20 rounded-t-lg border-t border-x border-yellow-500/30 mt-4 backdrop-blur-md relative overflow-hidden">
-                                <div className="absolute inset-0 bg-yellow-400/5" />
-                            </div>
-                        </Link>
+                                <div className="w-28 md:w-40 h-40 md:h-52 bg-gradient-to-t from-yellow-900/40 to-yellow-600/20 rounded-t-lg border-t border-x border-yellow-500/30 mt-4 backdrop-blur-md relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-yellow-400/5" />
+                                </div>
+                            </Link>
+                        </ProfileHoverCard>
                     )}
 
                     {/* 3rd Place (Right) */}
                     {topThree[2] && (
-                        <Link href={`/user/${topThree[2].id}`} className="flex flex-col items-center z-10 cursor-pointer hover:scale-105 transition-transform">
-                            <div className="relative mb-4">
-                                <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]">
-                                    <AvatarImage src={topThree[2].image || ""} alt={topThree[2].name} />
-                                    <AvatarFallback className="bg-gray-800 text-orange-500 text-2xl font-bold">
-                                        {topThree[2].name.charAt(0)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-black font-bold text-sm border-2 border-gray-900">
-                                    3
+                        <ProfileHoverCard user={topThree[2]} rank={3}>
+                            <Link href={`/user/${topThree[2].id}`} className="flex flex-col items-center z-10 cursor-pointer hover:scale-105 transition-transform">
+                                <div className="relative mb-4">
+                                    <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]">
+                                        <AvatarImage src={topThree[2].image || ""} alt={topThree[2].name} />
+                                        <AvatarFallback className="bg-gray-800 text-orange-500 text-2xl font-bold">
+                                            {topThree[2].name.charAt(0)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-black font-bold text-sm border-2 border-gray-900">
+                                        3
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex flex-col items-center">
-                                <h3 className="font-bold text-gray-200 text-base md:text-lg text-center max-w-[120px] truncate">{topThree[2].name}</h3>
-                                <p className="text-cyan-400 font-mono text-sm md:text-base font-medium">{topThree[2].xp_points} XP</p>
-                            </div>
-                            <div className="w-24 md:w-32 h-24 md:h-32 bg-gradient-to-t from-gray-900/80 to-gray-800/50 rounded-t-lg border-t border-x border-gray-700/50 mt-4 backdrop-blur-sm" />
-                        </Link>
+                                <div className="flex flex-col items-center">
+                                    <h3 className="font-bold text-gray-200 text-base md:text-lg text-center max-w-[120px] truncate">{topThree[2].name}</h3>
+                                    <p className="text-cyan-400 font-mono text-sm md:text-base font-medium">{topThree[2].xp_points} XP</p>
+                                </div>
+                                <div className="w-24 md:w-32 h-24 md:h-32 bg-gradient-to-t from-gray-900/80 to-gray-800/50 rounded-t-lg border-t border-x border-gray-700/50 mt-4 backdrop-blur-sm" />
+                            </Link>
+                        </ProfileHoverCard>
                     )}
                 </div>
             )}
@@ -241,15 +248,17 @@ export function Leaderboard({ initialData, topThree: initialTopThree }: Leaderbo
                                         #{rank}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <Link href={`/user/${user.id}`} className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xs font-bold text-white">
-                                                {user.name.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-gray-200 group-hover:text-cyan-300 transition-colors">{user.name}</p>
-                                                <p className="text-xs text-gray-500 truncate max-w-[150px]">{user.email}</p>
-                                            </div>
-                                        </Link>
+                                        <ProfileHoverCard user={user} rank={rank}>
+                                            <Link href={`/user/${user.id}`} className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xs font-bold text-white">
+                                                    {user.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-gray-200 group-hover:text-cyan-300 transition-colors">{user.name}</p>
+                                                    <p className="text-xs text-gray-500 truncate max-w-[150px]">{user.email}</p>
+                                                </div>
+                                            </Link>
+                                        </ProfileHoverCard>
                                     </td>
                                     <td className="px-6 py-4 text-right font-mono text-cyan-300 font-medium">
                                         {user.xp_points}

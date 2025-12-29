@@ -1,6 +1,6 @@
 'use client'
 
-import { Trophy, TrendingUp, Star, Award } from 'lucide-react'
+import { Trophy, TrendingUp, Star, Award, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UserRankInfo } from '@/lib/actions/leaderboard'
 
@@ -18,7 +18,7 @@ export function MyRankWidget({ rankInfo, userName }: MyRankWidgetProps) {
         )
     }
 
-    const { rank, xp_points, totalUsers, percentile, isTopTen } = rankInfo
+    const { rank, xp_points, totalUsers, percentile, isTopTen, eventsAttended } = rankInfo
 
     return (
         <div className={cn(
@@ -76,7 +76,7 @@ export function MyRankWidget({ rankInfo, userName }: MyRankWidgetProps) {
                 </div>
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-3">
                     {/* XP */}
                     <div className="bg-white/5 rounded-xl p-3">
                         <div className="flex items-center gap-2 mb-1">
@@ -85,6 +85,17 @@ export function MyRankWidget({ rankInfo, userName }: MyRankWidgetProps) {
                         </div>
                         <p className="text-xl font-bold text-cyan-400 font-mono">
                             {xp_points.toLocaleString()}
+                        </p>
+                    </div>
+
+                    {/* Events Attended */}
+                    <div className="bg-white/5 rounded-xl p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Calendar className="w-4 h-4 text-purple-400" />
+                            <span className="text-xs text-gray-400">Events</span>
+                        </div>
+                        <p className="text-xl font-bold text-purple-400 font-mono">
+                            {eventsAttended}
                         </p>
                     </div>
 

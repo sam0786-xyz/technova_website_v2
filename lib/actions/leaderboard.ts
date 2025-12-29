@@ -284,6 +284,7 @@ export interface UserRankInfo {
     totalUsers: number
     percentile: number
     isTopTen: boolean
+    eventsAttended: number
 }
 
 /**
@@ -329,12 +330,19 @@ async function fetchUserRankFromDB(userId: string): Promise<UserRankInfo | null>
     const totalUsers = totalCount || 1
     const percentile = Math.round(((totalUsers - rank) / totalUsers) * 100)
 
+    // Get events attended count
+    const { count: eventsCount } = await supabase
+        .from('xp_awards')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+
     return {
         rank,
         xp_points: user.xp_points,
         totalUsers,
         percentile,
-        isTopTen: rank <= 10
+        isTopTen: rank <= 10,
+        eventsAttended: eventsCount || 0
     }
 }
 
