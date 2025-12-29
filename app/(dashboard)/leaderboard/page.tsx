@@ -1,11 +1,17 @@
 import { auth } from "@/lib/auth"
-import { getLeaderboardData } from "@/lib/actions/leaderboard"
+import { getLeaderboardData, getTopThreeUsers, getUserRank } from "@/lib/actions/leaderboard"
 import { Leaderboard } from "@/components/dashboard/leaderboard"
-import { StatsCards } from "@/components/dashboard/stats-cards"
+import { MyRankWidget } from "@/components/dashboard/my-rank-widget"
 
 export default async function DashboardPage() {
     const session = await auth()
-    const leaderboardData = await getLeaderboardData()
+
+    // Fetch all data in parallel
+    const [leaderboardData, topThree, userRank] = await Promise.all([
+        getLeaderboardData(1, 10),
+        getTopThreeUsers(),
+        session?.user?.id ? getUserRank(session.user.id) : null
+    ])
 
     return (
         <div className="min-h-screen bg-black p-6 md:p-8 space-y-8">
@@ -22,14 +28,11 @@ export default async function DashboardPage() {
                 </div>
             </div>
 
-            {/* Stats Overview */}
-            <StatsCards
-                xp={session?.user?.xp_points || 0}
-                role={session?.user?.role || 'Member'}
-            />
+            {/* My Rank Widget */}
+            <MyRankWidget rankInfo={userRank} userName={session?.user?.name || undefined} />
 
             {/* Leaderboard Section */}
-            <Leaderboard initialUsers={leaderboardData} />
+            <Leaderboard initialData={leaderboardData} topThree={topThree} />
 
             {/* Background Decorative Elements */}
             <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden">
