@@ -56,8 +56,7 @@ export async function createEvent(formData: FormData) {
     const difficulty_level = formData.get("difficulty_level") as string || "easy"
     let club_id = formData.get("club_id") as string || null
     const poc_name = formData.get("poc_name") as string || null
-    const event_type = formData.get("event_type") as string || "workshop"
-    const difficulty_level = formData.get("difficulty_level") as string || "easy"
+
 
     // Multi-day scheduling
     const is_multi_day = formData.get("is_multi_day") === "true"
