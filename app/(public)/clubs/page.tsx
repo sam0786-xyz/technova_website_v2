@@ -43,11 +43,6 @@ const CLUB_ASSETS: Record<string, { slug: string, logo: string, bg: string }> = 
         slug: "pixelance",
         logo: "/assets/logo/pixelance_logo.png",
         bg: "bg-pink-500/10"
-    },
-    "Technova Main": {
-        slug: "technova-main",
-        logo: "/assets/logo/technova_logo.png",
-        bg: "bg-blue-500/10"
     }
 }
 
