@@ -1,68 +1,61 @@
-'use client'
-
 import Link from "next/link"
-import { Terminal, Database, Gamepad2, Globe, Camera, ArrowRight, Github, Cpu, Cloud } from "lucide-react"
+import { ArrowRight } from "lucide-react"
+import { getClubs } from "@/lib/actions/clubs"
 
-const clubs = [
-    {
-        name: "AI & Robotics",
+// Static assets mapping since these aren't in DB yet
+const CLUB_ASSETS: Record<string, { slug: string, logo: string, bg: string }> = {
+    "AI & Robotics": {
         slug: "ai-robotics",
         logo: "/assets/logo/AI_&_Robotics_logo.png",
-        desc: "Innovating the future with Intelligence. Exploring AI, Machine Learning, and Robotics.",
         bg: "bg-indigo-500/10"
     },
-    {
-        name: "AWS Cloud",
+    "AWS Cloud": {
         slug: "aws-cloud",
         logo: "/assets/logo/awscc.png",
-        desc: "Building on the Cloud, for the World. Mastering AWS services and serverless architecture.",
         bg: "bg-orange-500/10"
     },
-    {
-        name: "CyberPirates",
+    "CyberPirates": {
         slug: "cyber-pirates",
         logo: "/assets/logo/cyberpirates.png",
-        desc: "Guide individuals about Information security and cyber awareness to arm against modern exploits.",
         bg: "bg-green-500/10"
     },
-    {
-        name: "Datapool",
+    "Datapool": {
         slug: "datapool",
         logo: "/assets/logo/datapool.png",
-        desc: "Focusing on data insights, Database Management Systems, and languages like MySQL.",
         bg: "bg-blue-500/10"
     },
-    {
-        name: "Game Drifters",
+    "Game Drifters": {
         slug: "game-drifters",
         logo: "/assets/logo/Game Drifters.png",
-        desc: "A community for exploring and developing new games. Connect, share, and build.",
         bg: "bg-purple-500/10"
     },
-    {
-        name: "GDG on Campus",
+    "GDG on Campus": {
         slug: "gdg",
         logo: "/assets/logo/gdg_on_campus.jpg",
-        desc: "Google Developer Group. Peer-to-peer learning to build solutions for local communities.",
         bg: "bg-red-500/10"
     },
-    {
-        name: "GitHub Club",
+    "GitHub Club": {
         slug: "github",
         logo: "/assets/logo/github.png",
-        desc: "Promotes open-source contribution and technical skills. A community for developers.",
         bg: "bg-white/10"
     },
-    {
-        name: "PiXelance",
+    "Pixelance": {
         slug: "pixelance",
         logo: "/assets/logo/pixelance_logo.png",
-        desc: "For photography/videography enthusiasts to share passion and explore new subjects.",
         bg: "bg-pink-500/10"
+    },
+    "Technova Main": {
+        slug: "technova-main",
+        logo: "/assets/logo/technova_logo.png",
+        bg: "bg-blue-500/10"
     }
-]
+}
 
-export default function ClubsPage() {
+export const dynamic = 'force-dynamic' // Ensure we fetch fresh data
+
+export default async function ClubsPage() {
+    const dbClubs = await getClubs()
+
     return (
         <div className="min-h-screen bg-black text-white">
             <section className="relative pt-32 pb-12 overflow-hidden">
@@ -80,27 +73,34 @@ export default function ClubsPage() {
             <section className="pb-24">
                 <div className="container mx-auto px-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {clubs.map((club) => (
-                            <Link key={club.slug} href={`/clubs/${club.slug}`} className="group bg-white/[0.03] backdrop-blur-xl border border-white/10 p-10 rounded-3xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 flex flex-col items-center text-center shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(59,130,246,0.12)] hover:-translate-y-1">
-                                <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500 shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-hover:shadow-[0_12px_40px_rgba(59,130,246,0.2)]">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                        src={club.logo}
-                                        alt={club.name}
-                                        className="w-24 h-24 object-contain"
-                                    />
-                                </div>
+                        {dbClubs.map((club: any) => {
+                            const assets = CLUB_ASSETS[club.name]
 
-                                <h3 className="text-3xl font-bold mb-4">{club.name}</h3>
-                                <p className="text-gray-400 leading-relaxed mb-8">
-                                    {club.desc}
-                                </p>
+                            // Skip if no assets found (and not Technova Main, though that usually isn't in 'clubs' list for cards)
+                            if (!assets) return null
 
-                                <span className="mt-auto flex items-center gap-2 text-blue-500 font-bold uppercase tracking-wider group-hover:text-blue-400">
-                                    View Details <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                </span>
-                            </Link>
-                        ))}
+                            return (
+                                <Link key={club.id} href={`/clubs/${assets.slug}`} className={`group bg-white/[0.03] backdrop-blur-xl border border-white/10 p-10 rounded-3xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 flex flex-col items-center text-center shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(59,130,246,0.12)] hover:-translate-y-1 ${assets.bg}`}>
+                                    <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500 shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-hover:shadow-[0_12px_40px_rgba(59,130,246,0.2)]">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={assets.logo}
+                                            alt={club.name}
+                                            className="w-24 h-24 object-contain"
+                                        />
+                                    </div>
+
+                                    <h3 className="text-3xl font-bold mb-4">{club.name}</h3>
+                                    <p className="text-gray-400 leading-relaxed mb-8">
+                                        {club.description}
+                                    </p>
+
+                                    <span className="mt-auto flex items-center gap-2 text-blue-500 font-bold uppercase tracking-wider group-hover:text-blue-400">
+                                        View Details <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </span>
+                                </Link>
+                            )
+                        })}
                     </div>
                 </div>
             </section>

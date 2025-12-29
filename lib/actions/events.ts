@@ -53,6 +53,9 @@ export async function createEvent(formData: FormData) {
     const meeting_link = formData.get("meeting_link") as string || null
     const banner_position = formData.get("banner_position") as string || "center"
     let club_id = formData.get("club_id") as string || null
+    const poc_name = formData.get("poc_name") as string || null
+    const event_type = formData.get("event_type") as string || "workshop"
+    const difficulty_level = formData.get("difficulty_level") as string || "easy"
 
     // Multi-day scheduling
     const is_multi_day = formData.get("is_multi_day") === "true"
@@ -109,7 +112,10 @@ export async function createEvent(formData: FormData) {
         banner_position,
         is_multi_day,
         daily_start_time,
-        daily_end_time
+        daily_end_time,
+        event_type,
+        difficulty_level,
+        poc_name
     })
 
     if (error) {
@@ -162,6 +168,9 @@ export async function updateEvent(formData: FormData) {
     const registration_fields = formData.get("registration_fields") as string || "[]"
     const is_virtual = formData.get("is_virtual") === "true"
     const meeting_link = formData.get("meeting_link") as string || null
+    const event_type = formData.get("event_type") as string || "workshop"
+    const difficulty_level = formData.get("difficulty_level") as string || "easy"
+    const poc_name = formData.get("poc_name") as string || null
 
     // Multi-day scheduling
     const is_multi_day = formData.get("is_multi_day") === "true"
@@ -202,7 +211,10 @@ export async function updateEvent(formData: FormData) {
         meeting_link,
         is_multi_day,
         daily_start_time,
-        daily_end_time
+        daily_end_time,
+        event_type,
+        difficulty_level,
+        poc_name
     }).eq('id', id)
 
     if (error) {
@@ -325,8 +337,25 @@ export async function getEventById(id: string) {
         .select('*', { count: 'exact', head: true })
         .eq('event_id', id)
 
+    // Fetch POC details if available
+    let pocDetails = null
+    if (event.poc_name && event.club_id) {
+        const { data: member } = await supabase
+            .from('club_members')
+            .select('email, phone')
+            .eq('club_id', event.club_id)
+            .eq('name', event.poc_name)
+            .single()
+
+        if (member) {
+            pocDetails = member
+        }
+    }
+
     return {
         ...event,
-        registered_count: count || 0
+        registered_count: count || 0,
+        poc_email: pocDetails?.email || null,
+        poc_phone: pocDetails?.phone || null
     }
 }
