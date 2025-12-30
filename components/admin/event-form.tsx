@@ -5,6 +5,7 @@ import { getClubMembers } from "@/lib/actions/clubs"
 import { createEvent, updateEvent } from "@/lib/actions/events"
 import { FormBuilder, RegistrationField } from "./form-builder"
 import { Loader2, Move, CalendarDays } from "lucide-react"
+import { Toast, useToast } from "@/components/ui/toast"
 
 interface EventFormProps {
     clubs: any[]
@@ -18,6 +19,7 @@ export function EventForm({ clubs, event }: EventFormProps) {
     const [selectedClubId, setSelectedClubId] = useState<string>(event?.club_id || "")
     const [pocMembers, setPocMembers] = useState<any[]>([])
     const [loadingMembers, setLoadingMembers] = useState(false)
+    const { toast, showToast, hideToast } = useToast()
 
     useEffect(() => {
         if (!selectedClubId) {
@@ -66,9 +68,20 @@ export function EventForm({ clubs, event }: EventFormProps) {
             } else {
                 await createEvent(formData)
             }
-        } catch (error) {
-            console.error(error)
-            alert("Something went wrong")
+            // If we reach here without redirect, show success
+            showToast(event ? "Event updated successfully!" : "Event saved successfully!", "success")
+        } catch (error: any) {
+            // Next.js redirect throws a special error - this means success + redirect
+            // Check if it's a redirect error (which is actually success)
+            if (error?.digest?.startsWith('NEXT_REDIRECT')) {
+                // This is a redirect, meaning the action succeeded
+                // The page will redirect, so we don't need to do anything
+                return
+            }
+
+            console.error("Event form error:", error)
+            const errorMessage = error?.message || "Something went wrong. Please try again."
+            showToast(errorMessage, "error")
             setLoading(false)
         }
     }
@@ -318,6 +331,15 @@ export function EventForm({ clubs, event }: EventFormProps) {
                     {event ? "Update Event" : "Create Event"}
                 </button>
             </div>
+
+            {/* Toast Notification */}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={hideToast}
+                />
+            )}
         </form>
     )
 }

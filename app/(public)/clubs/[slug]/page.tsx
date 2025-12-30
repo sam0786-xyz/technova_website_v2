@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { Users, User, Shield, Target, Calendar, ArrowRight, Github, Globe, Linkedin, Mail, ImageIcon, Home, ChevronRight, Sparkles, Trophy, Rocket, Zap, Phone, ExternalLink, Code, Cpu, Cloud, Database, Gamepad2, Camera, Lock, Server, Brain, Palette } from "lucide-react"
 import { getPastEvents } from "@/lib/actions/club-events"
 import { getClubMembersByName, getClubWithMembers } from "@/lib/actions/clubs"
+import { getMemberPhotoPath } from "@/lib/constants/team-photos"
 import Link from "next/link"
 import { use, useEffect, useState } from "react"
 import { motion } from "framer-motion"
@@ -409,7 +410,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                             email: m.email,
                             phone: m.phone,
                             linkedin: m.linkedin_id,
-                            photo: undefined
+                            photo: getMemberPhotoPath(m.name)
                         }))
                         setTeamMembers(mappedMembers)
                     }
@@ -618,7 +619,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                         <h2 className="text-4xl font-bold mt-2">Meet the Team</h2>
                     </motion.div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {teamMembers.map((member, idx) => (
                             <motion.div
                                 key={member.name}
@@ -626,42 +627,74 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: idx * 0.05 }}
-                                className={`group p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:${colors.border} transition-all duration-300 hover:-translate-y-1`}
+                                className={`group bg-white/[0.03] backdrop-blur-xl border border-white/10 p-8 rounded-3xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 hover:-translate-y-1 overflow-hidden relative shadow-[0_8px_32px_rgba(0,0,0,0.3)]`}
+                                style={{
+                                    boxShadow: `0 8px 32px rgba(0,0,0,0.3)`,
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.boxShadow = `0 8px 40px ${colors.glow.replace('0.4', '0.12')}`
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.boxShadow = `0 8px 32px rgba(0,0,0,0.3)`
+                                }}
                             >
-                                {/* Avatar */}
-                                <div className={`w-16 h-16 rounded-full ${colors.bg} flex items-center justify-center mx-auto mb-4 ${colors.text} group-hover:scale-110 transition-transform`}>
-                                    {member.photo ? (
-                                        /* eslint-disable-next-line @next/next/no-img-element */
-                                        <img src={member.photo} alt={member.name} className="w-full h-full rounded-full object-cover" />
-                                    ) : (
-                                        <User className="w-8 h-8" />
-                                    )}
+                                <div className="flex justify-between items-start mb-6 relative z-10">
+                                    {/* Large Photo with Club Color Background */}
+                                    <div className={`w-32 h-32 ${colors.bg} ${colors.text} backdrop-blur-xl rounded-2xl flex items-center justify-center text-current group-hover:scale-110 transition-transform duration-500 overflow-hidden relative border border-white/10`}>
+                                        {member.photo ? (
+                                            /* eslint-disable-next-line @next/next/no-img-element */
+                                            <img
+                                                src={member.photo}
+                                                alt={member.name}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name) + "&background=random"
+                                                }}
+                                            />
+                                        ) : (
+                                            <User className="w-12 h-12" />
+                                        )}
+                                    </div>
+
+                                    {/* Social Links - Appear on Hover */}
+                                    <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        {member.linkedin && (
+                                            <a
+                                                href={ensureAbsoluteUrl(member.linkedin)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-blue-400 transition-colors"
+                                                title="LinkedIn"
+                                            >
+                                                <Linkedin className="w-5 h-5" />
+                                            </a>
+                                        )}
+                                        {member.phone && (
+                                            <a
+                                                href={`tel:+91${member.phone}`}
+                                                className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-green-400 transition-colors"
+                                                title="Call"
+                                            >
+                                                <Phone className="w-5 h-5" />
+                                            </a>
+                                        )}
+                                        {member.email && (
+                                            <a
+                                                href={`mailto:${member.email}`}
+                                                className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-red-400 transition-colors"
+                                                title="Email"
+                                            >
+                                                <Mail className="w-5 h-5" />
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
 
-                                {/* Details */}
-                                <div className="text-center mb-4">
-                                    <h3 className="font-bold">{member.name}</h3>
-                                    <p className={`text-sm ${colors.text}`}>{member.role}</p>
-                                </div>
-
-                                {/* Contact Icons */}
-                                <div className="flex justify-center gap-2">
-                                    {member.phone && (
-                                        <a href={`tel:+91${member.phone}`} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-green-400 hover:bg-green-500/10 transition-all">
-                                            <Phone className="w-4 h-4" />
-                                        </a>
-                                    )}
-                                    {member.email && (
-                                        <a href={`mailto:${member.email}`} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all">
-                                            <Mail className="w-4 h-4" />
-                                        </a>
-                                    )}
-                                    {member.linkedin && (
-                                        <a href={ensureAbsoluteUrl(member.linkedin)} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-600/10 transition-all">
-                                            <Linkedin className="w-4 h-4" />
-                                        </a>
-                                    )}
-                                </div>
+                                {/* Name & Role */}
+                                <h3 className="text-xl font-bold mb-1 relative z-10">{member.name}</h3>
+                                <p className={`text-sm font-bold uppercase tracking-wider ${colors.text} relative z-10`}>
+                                    {member.role}
+                                </p>
                             </motion.div>
                         ))}
                     </div>
