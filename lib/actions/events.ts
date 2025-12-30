@@ -126,7 +126,8 @@ export async function createEvent(formData: FormData) {
 
     revalidatePath("/events")
     revalidatePath("/admin/events")
-    redirect("/admin/events")
+
+    return { success: true, message: "Event created successfully!" }
 }
 
 export async function updateEvent(formData: FormData) {
@@ -226,7 +227,8 @@ export async function updateEvent(formData: FormData) {
     revalidatePath("/events")
     revalidatePath("/admin/events")
     revalidatePath(`/events/${id}`)
-    redirect("/admin/events")
+
+    return { success: true, message: "Event updated successfully!" }
 }
 
 export async function deleteEvent(id: string) {
