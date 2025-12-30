@@ -5,6 +5,8 @@ import Link from "next/link"
 import { ArrowLeft, Download, Search, CheckCircle, XCircle, Clock, Loader2, X } from "lucide-react"
 import { Toast, useToast } from "@/components/ui/toast"
 import { togglePastEvent } from "@/lib/actions/events"
+import { formatDate } from "@/lib/utils"
+import { FeedbackFormManager } from "@/components/admin/FeedbackFormManager"
 
 export function AdminEventClient({ event, registrations }: { event: any, registrations: any[] }) {
     const [search, setSearch] = useState("")
@@ -114,7 +116,7 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                     <div>
                         <h1 className="text-2xl font-bold">{event.title}</h1>
                         <div className="flex gap-4 text-sm text-gray-500 mt-1">
-                            <span>{new Date(event.start_time).toLocaleDateString()}</span>
+                            <span>{formatDate(event.start_time)}</span>
                             <span>•</span>
                             <span className={event.status === 'live' ? 'text-green-600 font-medium' : 'text-gray-600'}>
                                 {event.status.toUpperCase()}
@@ -242,7 +244,7 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="p-4 text-gray-500">{new Date(reg.created_at).toLocaleDateString()}</td>
+                                        <td className="p-4 text-gray-500">{formatDate(reg.created_at)}</td>
 
                                         {/* Custom Answers Cells */}
                                         {customFields.map((field: any) => {
@@ -278,6 +280,16 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                 </div>
             </div>
 
+            {/* Feedback Management Section */}
+            <div className="bg-white p-6 rounded-xl border shadow-sm">
+                <FeedbackFormManager
+                    eventId={event.id}
+                    isMultiDay={event.is_multi_day || false}
+                    isVirtual={event.is_virtual || false}
+                    requiresFeedback={event.requires_feedback_for_attendance || false}
+                />
+            </div>
+
             {/* Confirmation Modal */}
             {showConfirmModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -301,8 +313,8 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                             <button
                                 onClick={handleTogglePastEvent}
                                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${isPastEvent
-                                        ? 'bg-red-600 text-white hover:bg-red-700'
-                                        : 'bg-purple-600 text-white hover:bg-purple-700'
+                                    ? 'bg-red-600 text-white hover:bg-red-700'
+                                    : 'bg-purple-600 text-white hover:bg-purple-700'
                                     }`}
                             >
                                 Confirm

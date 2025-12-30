@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Plus, Calendar, Trash2, Edit, Eye, ExternalLink } from "lucide-react"
 import { getEvents, deleteEvent } from "@/lib/actions/events"
+import { formatDateShort } from "@/lib/utils"
 
 export default async function AdminEventsPage() {
     const events = await getEvents()
@@ -65,11 +66,7 @@ export default async function AdminEventsPage() {
                                                 </Link>
                                             </td>
                                             <td className="p-4 text-gray-400">
-                                                {new Date(event.start_time).toLocaleDateString('en-IN', {
-                                                    day: 'numeric',
-                                                    month: 'short',
-                                                    year: 'numeric'
-                                                })}
+                                                {formatDateShort(event.start_time)}
                                             </td>
                                             <td className="p-4">
                                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${event.status === 'live'

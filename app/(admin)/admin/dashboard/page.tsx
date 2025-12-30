@@ -1,6 +1,7 @@
 import { createClient as createServerClient } from "@supabase/supabase-js"
 import { Calendar, Users, DollarSign, Shield, TrendingUp, Activity } from "lucide-react"
 import { ADMIN_EMAILS } from "@/lib/auth/role-utils"
+import { formatDate } from "@/lib/utils"
 
 async function getAdminStats() {
     const supabase = createServerClient(
@@ -102,7 +103,7 @@ export default async function AdminDashboardPage() {
                                     <div key={event.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
                                         <div>
                                             <p className="font-medium text-white">{event.title}</p>
-                                            <p className="text-sm text-gray-500">{new Date(event.start_time).toLocaleDateString()}</p>
+                                            <p className="text-sm text-gray-500">{formatDate(event.start_time)}</p>
                                         </div>
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${event.status === 'live'
                                             ? 'bg-green-500/20 text-green-400 border border-green-500/30'

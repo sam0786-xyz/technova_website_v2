@@ -65,7 +65,7 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
         })
         return { status: 'payment_required', order }
     } else {
-        // Free Event - Generate QR and Register
+        // Free Event - Generate QR (for in-person events only) and Register
         // Fetch full user details for QR
         const { data: userProfile } = await supabase.schema('next_auth').from('users').select('*').eq('id', session.user.id).single()
 
@@ -78,7 +78,12 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
             email: session.user.email || ''
         }
 
-        const { token, qrDataUrl } = await generateQRToken(session.user.id!, eventId, userData)
+        // Only generate QR token for in-person events
+        let token = null
+        if (!event.is_virtual) {
+            const qrResult = await generateQRToken(session.user.id!, eventId, userData)
+            token = qrResult.token
+        }
 
         const { error } = await supabase.from('registrations').insert({
             user_id: session.user.id,
@@ -90,42 +95,49 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
 
         if (error) throw new Error(error.message)
 
-        // Send Email
+        // Send Email - with QR only for in-person events
         try {
-            // Convert base64 QR to buffer for attachment
-            const qrBase64 = qrDataUrl.split(',')[1]
-            const qrBuffer = Buffer.from(qrBase64, 'base64')
+            if (!event.is_virtual && token) {
+                // Generate QR for email attachment (in-person events)
+                const { qrDataUrl } = await generateQRToken(session.user.id!, eventId, userData, token)
+                const qrBase64 = qrDataUrl.split(',')[1]
+                const qrBuffer = Buffer.from(qrBase64, 'base64')
 
-            const emailHtml = await render(TicketEmail({
-                eventName: event.title,
-                userName: session.user.name || 'Student',
-                eventDate: new Date(event.start_time).toLocaleString(),
-                venue: event.venue,
-                qrDataUrl: 'cid:qrcode', // Use CID reference for inline attachment
-                ticketId: token
-            }))
+                const emailHtml = await render(TicketEmail({
+                    eventName: event.title,
+                    userName: session.user.name || 'Student',
+                    eventDate: new Date(event.start_time).toLocaleString(),
+                    venue: event.venue,
+                    qrDataUrl: 'cid:qrcode', // Use CID reference for inline attachment
+                    ticketId: token
+                }))
 
-            const { data, error: emailError } = await resend.emails.send({
-                from: 'Technova <noreply@technovashardauniversity.in>',
-                to: session.user.email!,
-                subject: `🎫 Your Ticket for ${event.title}`,
-                html: emailHtml,
-                attachments: [
-                    {
-                        filename: 'qr-code.png',
-                        content: qrBuffer,
-                        contentType: 'image/png',
-                        contentId: 'qrcode'
-                    }
-                ]
-            })
+                const { data, error: emailError } = await resend.emails.send({
+                    from: 'Technova <noreply@technovashardauniversity.in>',
+                    to: session.user.email!,
+                    subject: `🎫 Your Ticket for ${event.title}`,
+                    html: emailHtml,
+                    attachments: [
+                        {
+                            filename: 'qr-code.png',
+                            content: qrBuffer,
+                            contentType: 'image/png',
+                            contentId: 'qrcode'
+                        }
+                    ]
+                })
 
-            if (emailError) {
-                console.error("Resend API Error:", emailError)
+                if (emailError) {
+                    console.error("Resend API Error:", emailError)
+                } else {
+                    console.log("Email sent successfully!")
+                    console.log("Email ID:", data?.id)
+                    console.log("Sent to:", session.user.email)
+                }
             } else {
-                console.log("Email sent successfully!")
-                console.log("Email ID:", data?.id)
-                console.log("Sent to:", session.user.email)
+                // Virtual event - send simple confirmation email
+                // TODO: Create a separate email template for virtual events
+                console.log("Virtual event registration - skipping QR email")
             }
         } catch (emailError) {
             console.error("Failed to send email:", emailError)
@@ -133,7 +145,7 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
         }
 
         revalidatePath(`/events/${eventId}`)
-        return { status: 'success', qrDataUrl }
+        return { status: 'success', isVirtual: event.is_virtual }
     }
 }
 

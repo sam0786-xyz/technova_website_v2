@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useRef, MouseEvent } from "react"
+import { useState, useRef, MouseEvent, useEffect } from "react"
+import { getClubMembers } from "@/lib/actions/clubs"
 import { createEvent, updateEvent } from "@/lib/actions/events"
 import { FormBuilder, RegistrationField } from "./form-builder"
-import { Loader2, Move } from "lucide-react"
+import { Loader2, Move, CalendarDays } from "lucide-react"
 
 interface EventFormProps {
     clubs: any[]
@@ -13,6 +14,30 @@ interface EventFormProps {
 export function EventForm({ clubs, event }: EventFormProps) {
     const [loading, setLoading] = useState(false)
     const [isVirtual, setIsVirtual] = useState(event?.is_virtual || false)
+    const [isMultiDay, setIsMultiDay] = useState(event?.is_multi_day || false)
+    const [selectedClubId, setSelectedClubId] = useState<string>(event?.club_id || "")
+    const [pocMembers, setPocMembers] = useState<any[]>([])
+    const [loadingMembers, setLoadingMembers] = useState(false)
+
+    useEffect(() => {
+        if (!selectedClubId) {
+            setPocMembers([])
+            return
+        }
+
+        const fetchMembers = async () => {
+            setLoadingMembers(true)
+            try {
+                const members = await getClubMembers(selectedClubId)
+                setPocMembers(members)
+            } catch (error) {
+                console.error("Failed to fetch members", error)
+            } finally {
+                setLoadingMembers(false)
+            }
+        }
+        fetchMembers()
+    }, [selectedClubId])
 
     // Banner position state
     const initialPos = event?.banner_position || "center"
@@ -92,7 +117,7 @@ export function EventForm({ clubs, event }: EventFormProps) {
                 <div className="grid grid-cols-2 gap-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">Hosting Club</label>
-                        <select name="club_id" required defaultValue={event?.club_id || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+                        <select name="club_id" required defaultValue={event?.club_id || ""} onChange={(e) => setSelectedClubId(e.target.value)} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none">
                             <option value="" disabled>Select Club</option>
                             {clubs.map((club: any) => (
                                 <option key={club.id} value={club.id}>{club.name}</option>
@@ -108,6 +133,19 @@ export function EventForm({ clubs, event }: EventFormProps) {
                             ))}
                         </select>
                     </div>
+                </div>
+
+                {/* Point of Contact (POC) */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Point of Contact (POC)</label>
+                    <select name="poc_name" defaultValue={event?.poc_name || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" disabled={!selectedClubId || loadingMembers}>
+                        <option value="">
+                            {loadingMembers ? 'Loading members...' : (!selectedClubId ? 'Select hosting club first' : 'Select POC')}
+                        </option>
+                        {pocMembers.map((m: any) => (
+                            <option key={m.id} value={m.name}>{m.name}</option>
+                        ))}
+                    </select>
                 </div>
 
                 <div>
@@ -168,16 +206,53 @@ export function EventForm({ clubs, event }: EventFormProps) {
                     </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Start Time</label>
-                        <input name="start_time" required type="datetime-local" defaultValue={event?.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">End Time</label>
-                        <input name="end_time" required type="datetime-local" defaultValue={event?.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
-                    </div>
+                {/* Multi-Day Event Toggle */}
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <input type="checkbox" name="is_multi_day" value="true" id="is_multi_day" defaultChecked={event?.is_multi_day} onChange={(e) => setIsMultiDay(e.target.checked)} className="w-5 h-5 rounded border-white/20 bg-black text-purple-600 focus:ring-purple-500/50" />
+                    <label htmlFor="is_multi_day" className="font-medium text-white cursor-pointer flex items-center gap-2">
+                        <CalendarDays className="w-4 h-4 text-purple-400" />
+                        Multi-Day Event (same daily timing)
+                    </label>
                 </div>
+
+                {isMultiDay ? (
+                    /* Multi-Day Event: Date Range + Daily Times */
+                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
+                                <input name="start_date" required type="date" defaultValue={event?.start_time ? new Date(event.start_time).toISOString().slice(0, 10) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">End Date</label>
+                                <input name="end_date" required type="date" defaultValue={event?.end_time ? new Date(event.end_time).toISOString().slice(0, 10) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Daily Start Time</label>
+                                <input name="daily_start_time" required type="time" defaultValue={event?.daily_start_time?.slice(0, 5) || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Daily End Time</label>
+                                <input name="daily_end_time" required type="time" defaultValue={event?.daily_end_time?.slice(0, 5) || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-400">The event will occur daily from the daily start time to the daily end time, between the start and end dates.</p>
+                    </div>
+                ) : (
+                    /* Single-Day Event: Standard datetime inputs */
+                    <div className="grid grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Start Time</label>
+                            <input name="start_time" required type="datetime-local" defaultValue={event?.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">End Time</label>
+                            <input name="end_time" required type="datetime-local" defaultValue={event?.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                        </div>
+                    </div>
+                )}
 
                 <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Venue {isVirtual ? "(Physical Location for Hybrid)" : ""}</label>
@@ -201,6 +276,33 @@ export function EventForm({ clubs, event }: EventFormProps) {
                         <option value="draft">Draft</option>
                         <option value="live">Live (Public)</option>
                     </select>
+                </div>
+
+                {/* XP System Fields */}
+                <div className="grid grid-cols-2 gap-6 p-4 rounded-xl bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/20">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Event Type <span className="text-purple-400 text-xs">(XP Reward)</span>
+                        </label>
+                        <select name="event_type" className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-purple-500 focus:outline-none" defaultValue={event?.event_type || "workshop"}>
+                            <option value="talk_seminar">Talk / Seminar (50 XP)</option>
+                            <option value="workshop">Workshop (80 XP)</option>
+                            <option value="competition">Competition (100 XP)</option>
+                            <option value="hackathon">Hackathon (150 XP)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Difficulty Level <span className="text-purple-400 text-xs">(Multiplier)</span>
+                        </label>
+                        <select name="difficulty_level" className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-purple-500 focus:outline-none" defaultValue={event?.difficulty_level || "easy"}>
+                            <option value="easy">Easy (×1.0) - No prerequisite</option>
+                            <option value="moderate">Moderate (×1.3) - Basic prerequisite</option>
+                            <option value="hard">Hard (×1.6) - Strong prerequisite</option>
+                            <option value="elite">Elite (×2.0) - Advanced</option>
+                        </select>
+                    </div>
+                    <p className="col-span-2 text-xs text-gray-400">XP = Base XP × Duration Multiplier × Difficulty Multiplier</p>
                 </div>
             </div>
 

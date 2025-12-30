@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { awardXPForAttendance } from '@/lib/xp'
+import { hasSubmittedEventFeedback } from '@/lib/actions/feedback'
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,7 +36,31 @@ export async function POST(req: NextRequest) {
 
         // 2. Check if already marked
         if (registration.attended) {
-            return NextResponse.json({ success: false, message: 'Already checked in' }, { status: 400 })
+            // Get user name for display
+            const { data: existingUser } = await supabase
+                .schema('next_auth' as unknown as 'public')
+                .from('users')
+                .select('name')
+                .eq('id', userId)
+                .single()
+
+            return NextResponse.json({
+                success: false,
+                message: 'Already checked in',
+                userName: existingUser?.name || 'Attendee'
+            }, { status: 400 })
+        }
+
+        // 2.5. For online events requiring feedback, check if feedback submitted
+        if (registration.events?.is_virtual && registration.events?.requires_feedback_for_attendance) {
+            const feedbackSubmitted = await hasSubmittedEventFeedback(userId, eventId)
+            if (!feedbackSubmitted) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'Please submit event feedback before checking in',
+                    requiresFeedback: true
+                }, { status: 400 })
+            }
         }
 
         // 3. Mark as attended
@@ -43,11 +69,21 @@ export async function POST(req: NextRequest) {
             .update({ attended: true })
             .eq('id', registration.id)
 
+
         if (updateError) {
             return NextResponse.json({ success: false, message: 'Failed to update' }, { status: 500 })
         }
 
-        // 4. Get User Name from next_auth schema
+        // 4. Award XP for attendance
+        const xpResult = await awardXPForAttendance(userId, eventId, {
+            event_type: registration.events?.event_type,
+            difficulty_level: registration.events?.difficulty_level,
+            start_time: registration.events?.start_time,
+            end_time: registration.events?.end_time,
+            is_multi_day: registration.events?.is_multi_day
+        })
+
+        // 5. Get User Name from next_auth schema
         const { data: user } = await supabase
             .schema('next_auth' as unknown as 'public')
             .from('users')
@@ -58,7 +94,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             message: 'Check-in successful',
-            userName: user?.name || 'Attendee'
+            userName: user?.name || 'Attendee',
+            xpAwarded: xpResult.xpAwarded,
+            xpMessage: xpResult.message
         })
 
     } catch (err) {
