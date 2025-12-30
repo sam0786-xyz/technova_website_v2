@@ -9,6 +9,11 @@
 </p>
 
 <p align="center">
+  <em>Technova Website V2 — The official repository for the Technova 2025/2026 college website.<br>
+  Serving as the central hub for event information, student leadership, user registration, and administrative management.</em>
+</p>
+
+<p align="center">
   <a href="#about">About</a> •
   <a href="#features">Features</a> •
   <a href="#tech-stack">Tech Stack</a> •
