@@ -6,6 +6,7 @@ import { ArrowLeft, Download, Search, CheckCircle, XCircle, Clock, Loader2, X } 
 import { Toast, useToast } from "@/components/ui/toast"
 import { togglePastEvent } from "@/lib/actions/events"
 import { formatDate } from "@/lib/utils"
+import { FeedbackFormManager } from "@/components/admin/FeedbackFormManager"
 
 export function AdminEventClient({ event, registrations }: { event: any, registrations: any[] }) {
     const [search, setSearch] = useState("")
@@ -277,6 +278,16 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                 <div className="p-4 border-t text-xs text-gray-400 text-center">
                     Showing {filtered.length} of {registrations.length} registrations
                 </div>
+            </div>
+
+            {/* Feedback Management Section */}
+            <div className="bg-white p-6 rounded-xl border shadow-sm">
+                <FeedbackFormManager
+                    eventId={event.id}
+                    isMultiDay={event.is_multi_day || false}
+                    isVirtual={event.is_virtual || false}
+                    requiresFeedback={event.requires_feedback_for_attendance || false}
+                />
             </div>
 
             {/* Confirmation Modal */}
