@@ -62,9 +62,9 @@ export const config = {
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string
-        session.user.role = token.role as 'student' | 'admin' | 'super_admin'
+      if (session.user && token) {
+        session.user.id = (token.id ?? token.sub) as string
+        session.user.role = (token.role ?? 'student') as 'student' | 'admin' | 'super_admin'
         session.user.system_id = token.system_id as string | undefined
       }
       return session
