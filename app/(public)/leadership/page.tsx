@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Mail, Linkedin, Github, User, Award, TrendingUp, Users, Target, BookOpen, Star, Sparkles, Phone } from "lucide-react"
 import Image from "next/image"
 import { getClubMembersByName } from "@/lib/actions/clubs"
+import { getMemberPhotoPath } from "@/lib/constants/team-photos"
 
 const MENTORS = [
     {
@@ -48,14 +49,14 @@ const TEAM_METADATA: Record<string, any> = {
         color: "text-blue-500",
         bg: "bg-blue-500/10",
         icon: Award,
-        imagePath: "/assets/team/mohammad_sameer.png"
+        imagePath: "/assets/team/technova_main/mohammad_sameer.png"
     },
     "Masood Aslam": {
         bio: "Driving operational excellence and team coordination.",
         color: "text-purple-500",
         bg: "bg-purple-500/10",
         icon: TrendingUp,
-        imagePath: "/assets/team/masood_aslam.png"
+        imagePath: "/assets/team/technova_main/masood_aslam.png"
     },
     "Khushi Narang": {
         bio: "Managing administrative efficiency and documentation.",
@@ -120,7 +121,9 @@ export default function LeadershipPage() {
                         }
                         return {
                             ...m,
-                            ...meta
+                            ...meta,
+                            // Use metadata imagePath if defined, otherwise try getMemberPhotoPath
+                            imagePath: meta.imagePath || getMemberPhotoPath(m.name)
                         }
                     })
                     setTeamMembers(merged)
