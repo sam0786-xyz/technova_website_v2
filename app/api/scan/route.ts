@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { awardXPForAttendance } from '@/lib/xp'
+import { hasSubmittedEventFeedback } from '@/lib/actions/feedback'
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -50,11 +51,24 @@ export async function POST(req: NextRequest) {
             }, { status: 400 })
         }
 
+        // 2.5. For online events requiring feedback, check if feedback submitted
+        if (registration.events?.is_virtual && registration.events?.requires_feedback_for_attendance) {
+            const feedbackSubmitted = await hasSubmittedEventFeedback(userId, eventId)
+            if (!feedbackSubmitted) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'Please submit event feedback before checking in',
+                    requiresFeedback: true
+                }, { status: 400 })
+            }
+        }
+
         // 3. Mark as attended
         const { error: updateError } = await supabase
             .from('registrations')
             .update({ attended: true })
             .eq('id', registration.id)
+
 
         if (updateError) {
             return NextResponse.json({ success: false, message: 'Failed to update' }, { status: 500 })

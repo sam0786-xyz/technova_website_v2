@@ -5,6 +5,7 @@ import { getEventById } from "@/lib/actions/events"
 import { checkRegistration } from "@/lib/actions/registrations"
 import { EventRegistrationCard } from "@/components/events/registration-card"
 import { POCCard } from "@/components/events/poc-card"
+import { EventFeedbackSection } from "@/components/events/EventFeedbackSection"
 import { notFound } from "next/navigation"
 import { generateQRToken } from "@/lib/qr/generate"
 import { createClient } from "@supabase/supabase-js"
@@ -25,29 +26,31 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
     let qrCode = null
 
     if (existingRegistration && session?.user?.id) {
-        // Generate QR Code for display
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
-        const { data: userProfile } = await supabase.schema('next_auth').from('users').select('*').eq('id', session.user.id).single()
+        // Generate QR Code for display - only for in-person events with a token
+        if (!event.is_virtual && existingRegistration.qr_token_id) {
+            const supabase = createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.SUPABASE_SERVICE_ROLE_KEY!
+            )
+            const { data: userProfile } = await supabase.schema('next_auth').from('users').select('*').eq('id', session.user.id).single()
 
-        const userData = {
-            name: userProfile?.name || session.user.name || '',
-            system_id: userProfile?.system_id || '',
-            year: userProfile?.year?.toString() || '',
-            course: userProfile?.course || '',
-            section: userProfile?.section || '',
-            email: session.user.email || ''
+            const userData = {
+                name: userProfile?.name || session.user.name || '',
+                system_id: userProfile?.system_id || '',
+                year: userProfile?.year?.toString() || '',
+                course: userProfile?.course || '',
+                section: userProfile?.section || '',
+                email: session.user.email || ''
+            }
+
+            const { qrDataUrl } = await generateQRToken(
+                session.user.id,
+                id,
+                userData,
+                existingRegistration.qr_token_id
+            )
+            qrCode = qrDataUrl
         }
-
-        const { qrDataUrl } = await generateQRToken(
-            session.user.id,
-            id,
-            userData,
-            existingRegistration.qr_token_id
-        )
-        qrCode = qrDataUrl
     }
 
     return (
@@ -150,6 +153,14 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                                 <h2 className="text-2xl font-bold mb-4">About this Event</h2>
                                 <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{event.description}</p>
                             </div>
+
+                            {/* Feedback Section */}
+                            <EventFeedbackSection
+                                eventId={event.id}
+                                userId={session?.user?.id}
+                                isRegistered={!!existingRegistration}
+                                eventEnded={new Date(event.end_time) < new Date()}
+                            />
                         </div>
                         <div className="md:sticky md:top-24">
                             <div className="bg-white rounded-xl shadow-xl p-6">
