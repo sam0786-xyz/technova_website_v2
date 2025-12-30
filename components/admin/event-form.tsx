@@ -62,23 +62,23 @@ export function EventForm({ clubs, event }: EventFormProps) {
         setLoading(true)
         try {
             formData.set('registration_fields', JSON.stringify(questions))
+            let result
             if (event) {
                 formData.set('id', event.id)
-                await updateEvent(formData)
+                result = await updateEvent(formData)
             } else {
-                await createEvent(formData)
-            }
-            // If we reach here without redirect, show success
-            showToast(event ? "Event updated successfully!" : "Event saved successfully!", "success")
-        } catch (error: any) {
-            // Next.js redirect throws a special error - this means success + redirect
-            // Check if it's a redirect error (which is actually success)
-            if (error?.digest?.startsWith('NEXT_REDIRECT')) {
-                // This is a redirect, meaning the action succeeded
-                // The page will redirect, so we don't need to do anything
-                return
+                result = await createEvent(formData)
             }
 
+            // Show success toast
+            if (result?.success) {
+                showToast(result.message, "success")
+                // Redirect after a short delay so user can see the toast
+                setTimeout(() => {
+                    window.location.href = "/admin/events"
+                }, 1500)
+            }
+        } catch (error: any) {
             console.error("Event form error:", error)
             const errorMessage = error?.message || "Something went wrong. Please try again."
             showToast(errorMessage, "error")
