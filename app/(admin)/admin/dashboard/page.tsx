@@ -1,7 +1,8 @@
 import { createClient as createServerClient } from "@supabase/supabase-js"
-import { Calendar, Users, DollarSign, Shield, TrendingUp, Activity } from "lucide-react"
+import { Calendar, Users, DollarSign, Shield, TrendingUp, Activity, Crown, Star, Sparkles } from "lucide-react"
 import { ADMIN_EMAILS } from "@/lib/auth/role-utils"
 import { formatDate } from "@/lib/utils"
+import Link from "next/link"
 
 async function getAdminStats() {
     const supabase = createServerClient(
@@ -11,6 +12,7 @@ async function getAdminStats() {
 
     const { count: eventsCount } = await supabase.from('events').select('*', { count: 'exact', head: true })
     const { count: registrationsCount } = await supabase.from('registrations').select('*', { count: 'exact', head: true })
+    const { count: clubsCount } = await supabase.from('clubs').select('*', { count: 'exact', head: true })
 
     // Calculate Revenue from Sponsorships
     let totalRevenue = 0
@@ -34,6 +36,7 @@ async function getAdminStats() {
         registrations: registrationsCount || 0,
         revenue: totalRevenue,
         scanners: adminsCount,
+        clubs: clubsCount || 0,
         recentEvents: recentEvents || []
     }
 }
@@ -42,10 +45,10 @@ export default async function AdminDashboardPage() {
     const stats = await getAdminStats()
 
     const statCards = [
-        { label: "Total Events", value: stats.events, icon: Calendar, color: "blue", gradient: "from-blue-600/20 to-blue-500/10" },
-        { label: "Registrations", value: stats.registrations, icon: Users, color: "green", gradient: "from-green-600/20 to-green-500/10" },
-        { label: "Revenue", value: `₹${stats.revenue.toLocaleString()}`, icon: DollarSign, color: "yellow", gradient: "from-yellow-600/20 to-yellow-500/10" },
-        { label: "Team / Admins", value: stats.scanners, icon: Shield, color: "purple", gradient: "from-purple-600/20 to-purple-500/10" },
+        { label: "Total Events", value: stats.events, icon: Calendar, color: "blue", gradient: "from-blue-600/20 to-blue-500/10", borderColor: "border-blue-500/30" },
+        { label: "Registrations", value: stats.registrations, icon: Users, color: "green", gradient: "from-green-600/20 to-green-500/10", borderColor: "border-green-500/30" },
+        { label: "Revenue", value: `₹${stats.revenue.toLocaleString()}`, icon: DollarSign, color: "amber", gradient: "from-amber-600/20 to-amber-500/10", borderColor: "border-amber-500/30" },
+        { label: "Team / Admins", value: stats.scanners, icon: Shield, color: "purple", gradient: "from-purple-600/20 to-purple-500/10", borderColor: "border-purple-500/30" },
     ]
 
     return (
@@ -56,28 +59,37 @@ export default async function AdminDashboardPage() {
                 <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[120px]" />
             </div>
 
-            <div className="relative space-y-8">
+            <div className="relative space-y-8 max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">Admin Overview</h1>
-                        <p className="text-gray-400 mt-1">Monitor your Technova platform statistics</p>
+                        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                            <Crown className="w-8 h-8 text-amber-400" />
+                            Admin Dashboard
+                        </h1>
+                        <p className="text-gray-400 mt-1">Monitor your Technova platform at a glance</p>
                     </div>
-                    <div className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300">
-                        Season 2025-2026
+                    <div className="flex items-center gap-3">
+                        <div className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-sm text-amber-300 font-medium">
+                            <Sparkles className="w-4 h-4 inline-block mr-2" />
+                            Season 2025-2026
+                        </div>
                     </div>
                 </div>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {statCards.map((stat, i) => (
-                        <div key={i} className={`p-6 rounded-2xl bg-gradient-to-br ${stat.gradient} border border-white/10 backdrop-blur-xl`}>
+                        <div
+                            key={i}
+                            className={`p-6 rounded-2xl bg-gradient-to-br ${stat.gradient} border ${stat.borderColor} backdrop-blur-xl hover:scale-[1.02] transition-transform duration-300`}
+                        >
                             <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-xl bg-${stat.color}-600/30 flex items-center justify-center`}>
-                                    <stat.icon className={`w-6 h-6 text-${stat.color}-400`} />
+                                <div className={`w-14 h-14 rounded-2xl bg-${stat.color}-600/30 flex items-center justify-center shadow-lg`}>
+                                    <stat.icon className={`w-7 h-7 text-${stat.color}-400`} />
                                 </div>
                                 <div>
-                                    <p className="text-gray-400 text-sm">{stat.label}</p>
+                                    <p className="text-gray-400 text-sm font-medium">{stat.label}</p>
                                     <p className="text-3xl font-bold text-white mt-1">{stat.value}</p>
                                 </div>
                             </div>
@@ -85,7 +97,39 @@ export default async function AdminDashboardPage() {
                     ))}
                 </div>
 
-                {/* Recent Activity & Quick Stats */}
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Link
+                        href="/admin/events/new"
+                        className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 transition-all text-center group"
+                    >
+                        <Calendar className="w-6 h-6 text-blue-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-sm text-white font-medium">New Event</span>
+                    </Link>
+                    <Link
+                        href="/admin/events"
+                        className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 hover:border-green-500/40 transition-all text-center group"
+                    >
+                        <Users className="w-6 h-6 text-green-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-sm text-white font-medium">Manage Events</span>
+                    </Link>
+                    <Link
+                        href="/admin/registrations"
+                        className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 transition-all text-center group"
+                    >
+                        <Star className="w-6 h-6 text-purple-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-sm text-white font-medium">Registrations</span>
+                    </Link>
+                    <Link
+                        href="/admin/settings"
+                        className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all text-center group"
+                    >
+                        <DollarSign className="w-6 h-6 text-amber-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-sm text-white font-medium">Finances</span>
+                    </Link>
+                </div>
+
+                {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Recent Events */}
                     <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
@@ -94,24 +138,39 @@ export default async function AdminDashboardPage() {
                                 <Calendar className="w-5 h-5 text-blue-400" />
                                 Recent Events
                             </h2>
+                            <Link href="/admin/events" className="text-sm text-blue-400 hover:text-blue-300">
+                                View All →
+                            </Link>
                         </div>
                         <div className="space-y-3">
                             {stats.recentEvents.length === 0 ? (
-                                <p className="text-gray-500 text-center py-8">No events yet</p>
+                                <div className="text-center py-12">
+                                    <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                                    <p className="text-gray-500">No events yet</p>
+                                    <Link href="/admin/events/new" className="text-sm text-blue-400 hover:text-blue-300 mt-2 inline-block">
+                                        Create your first event →
+                                    </Link>
+                                </div>
                             ) : (
                                 stats.recentEvents.map((event: any) => (
-                                    <div key={event.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
+                                    <Link
+                                        key={event.id}
+                                        href={`/admin/events/${event.id}`}
+                                        className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all group"
+                                    >
                                         <div>
-                                            <p className="font-medium text-white">{event.title}</p>
+                                            <p className="font-medium text-white group-hover:text-blue-400 transition-colors">{event.title}</p>
                                             <p className="text-sm text-gray-500">{formatDate(event.start_time)}</p>
                                         </div>
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${event.status === 'live'
                                             ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                            : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                                            : event.status === 'draft'
+                                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                                : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                                             }`}>
                                             {event.status}
                                         </span>
-                                    </div>
+                                    </Link>
                                 ))
                             )}
                         </div>
@@ -128,25 +187,47 @@ export default async function AdminDashboardPage() {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between p-4 rounded-xl bg-green-500/10 border border-green-500/20">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
                                     <span className="text-green-400 font-medium">All Systems Operational</span>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="p-4 rounded-xl bg-white/5 border border-white/5">
                                     <p className="text-gray-500 text-xs uppercase tracking-wide">Database</p>
-                                    <p className="text-white font-medium mt-1">Connected</p>
+                                    <p className="text-white font-medium mt-1 flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                                        Connected
+                                    </p>
                                 </div>
                                 <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                                    <p className="text-gray-500 text-xs uppercase tracking-wide">Auth</p>
-                                    <p className="text-white font-medium mt-1">Active</p>
+                                    <p className="text-gray-500 text-xs uppercase tracking-wide">Authentication</p>
+                                    <p className="text-white font-medium mt-1 flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                                        Active
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5">
                                 <TrendingUp className="w-5 h-5 text-blue-400" />
                                 <div>
                                     <p className="text-white font-medium">Platform Performance</p>
-                                    <p className="text-gray-500 text-sm">99.9% uptime this month</p>
+                                    <p className="text-gray-500 text-sm">99.9% uptime this season</p>
+                                </div>
+                            </div>
+
+                            {/* Club Stats */}
+                            <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Crown className="w-5 h-5 text-purple-400" />
+                                        <div>
+                                            <p className="text-white font-medium">Active Clubs</p>
+                                            <p className="text-gray-500 text-sm">{stats.clubs} clubs registered</p>
+                                        </div>
+                                    </div>
+                                    <Link href="/leadership" className="text-sm text-purple-400 hover:text-purple-300">
+                                        View Team →
+                                    </Link>
                                 </div>
                             </div>
                         </div>

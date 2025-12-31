@@ -174,7 +174,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Join a community of security enthusiasts. Participate in CTF competitions, learn from industry experts, and build skills that matter in today's digital world.",
         logo: "/assets/logo/cyberpirates.png",
         stats: { members: "80+", ctfs: "12+", workshops: "8+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Lock, title: "Ethical Hacking", desc: "Learn penetration testing & security auditing" },
             { icon: Shield, title: "CTF Challenges", desc: "Compete in capture-the-flag competitions" },
@@ -189,7 +189,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Get hands-on with cutting-edge AI/ML projects, build robots, participate in hackathons, and collaborate with passionate innovators.",
         logo: "/assets/logo/AI_&_Robotics_logo.png",
         stats: { members: "120+", projects: "15+", hackathons: "10+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Brain, title: "Machine Learning", desc: "Build and train intelligent models" },
             { icon: Cpu, title: "Robotics Projects", desc: "Create autonomous machines & drones" },
@@ -204,7 +204,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Get hands-on with AWS services, prepare for certifications, and learn from industry professionals. Cloud skills are in high demand!",
         logo: "/assets/logo/awscc.png",
         stats: { members: "100+", certified: "25+", workshops: "12+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Cloud, title: "Cloud Architecture", desc: "Design scalable cloud solutions" },
             { icon: Server, title: "Serverless", desc: "Build with Lambda & API Gateway" },
@@ -219,7 +219,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Learn from data science practitioners, work on real datasets, compete on Kaggle, and build a portfolio that stands out.",
         logo: "/assets/logo/datapool.png",
         stats: { members: "90+", kaggle: "8+", workshops: "6+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Database, title: "Data Analysis", desc: "Master SQL & data manipulation" },
             { icon: Sparkles, title: "ML Models", desc: "Build predictive algorithms" },
@@ -234,7 +234,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Compete in tournaments, learn game development, or simply connect with fellow gamers. Whether you play or create, you belong here.",
         logo: "/assets/logo/Game Drifters.png",
         stats: { members: "150+", tournaments: "20+", games: "10+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Gamepad2, title: "Esports", desc: "Compete in gaming tournaments" },
             { icon: Code, title: "Game Dev", desc: "Build games with Unity & Unreal" },
@@ -249,7 +249,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Contribute to open-source, improve your Git skills, collaborate on projects, and connect with a thriving developer community.",
         logo: "/assets/logo/github.png",
         stats: { members: "200+", repos: "50+", contributions: "500+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Github, title: "Open Source", desc: "Contribute to real projects" },
             { icon: Code, title: "Coding", desc: "Learn modern development practices" },
@@ -264,7 +264,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Access Google's cutting-edge technologies, participate in DevFests, build solutions for local communities, and connect with a global developer network.",
         logo: "/assets/logo/gdg_on_campus.jpg",
         stats: { members: "300+", events: "30+", solutions: "10+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Globe, title: "Google Tech", desc: "Learn Firebase, Flutter, Cloud & more" },
             { icon: Rocket, title: "Solution Challenge", desc: "Build solutions for local problems" },
@@ -279,7 +279,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Attend photo walks, learn editing in Lightroom & Photoshop, participate in competitions, and build a portfolio of stunning work.",
         logo: "/assets/logo/pixelance_logo.png",
         stats: { members: "70+", photowalks: "15+", exhibitions: "5+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Camera, title: "Photo Walks", desc: "Explore photography outdoors" },
             { icon: Palette, title: "Editing", desc: "Master Lightroom & Photoshop" },

@@ -66,7 +66,7 @@ function sortMembersByRole(members: any[]) {
         // Club Leads
         if (r.includes('lead') && !r.includes('co-') && !r.includes('vice')) return 7
         if (r.includes('captain')) return 7
-        if (r.includes('organizer')) return 7
+        if (r.includes('organizer') || r.includes('organiser')) return 7
         if (r.includes('head') && !r.includes('pr')) return 7
 
         // Second in Command
