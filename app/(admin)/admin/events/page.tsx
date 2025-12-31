@@ -1,10 +1,13 @@
 import Link from "next/link"
-import { Plus, Calendar, Trash2, Edit, Eye, ExternalLink } from "lucide-react"
+import { Plus, Calendar, Trash2, Edit, Eye, ExternalLink, History } from "lucide-react"
 import { getEvents, deleteEvent } from "@/lib/actions/events"
 import { formatDateShort } from "@/lib/utils"
+import { auth } from "@/lib/auth"
 
 export default async function AdminEventsPage() {
     const events = await getEvents()
+    const session = await auth()
+    const isSuperAdmin = session?.user?.role === 'super_admin'
 
     return (
         <div className="min-h-screen bg-black p-6 md:p-8">
@@ -24,13 +27,24 @@ export default async function AdminEventsPage() {
                         </h1>
                         <p className="text-gray-400 mt-1">{events.length} events in total</p>
                     </div>
-                    <Link
-                        href="/admin/events/new"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-medium transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Create Event
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        {isSuperAdmin && (
+                            <Link
+                                href="/admin/events/past/new"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-xl font-medium transition-all shadow-[0_0_20px_rgba(147,51,234,0.3)] hover:shadow-[0_0_30px_rgba(147,51,234,0.5)]"
+                            >
+                                <History className="w-5 h-5" />
+                                Add Past Event
+                            </Link>
+                        )}
+                        <Link
+                            href="/admin/events/new"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-medium transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Create Event
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Events Table */}
