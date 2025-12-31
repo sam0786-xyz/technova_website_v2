@@ -33,7 +33,10 @@ export async function getPastEvents(slug: string) {
     // 2. Get Past Events for this Club (or Co-Hosted)
     // Only show events that are EXPLICITLY marked as past by admins via is_past_event flag
     const { data: events } = await supabase.from('events')
-        .select('*')
+        .select(`
+            *,
+            club:clubs!events_club_id_fkey(name, logo_url)
+        `)
         .or(`club_id.eq.${club.id},co_host_club_id.eq.${club.id}`)
         .eq('status', 'live') // Only public events
         .eq('is_past_event', true) // Only events explicitly marked as past

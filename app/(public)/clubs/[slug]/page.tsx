@@ -340,6 +340,18 @@ function PastEventsSection({ slug, theme }: { slug: string; theme: typeof CLUB_T
                                 className={`block group rounded-2xl overflow-hidden bg-white/[0.02] border border-white/10 hover:${colors.border} transition-all duration-500 hover:-translate-y-1`}
                             >
                                 <div className="aspect-video relative overflow-hidden">
+                                    {/* Organizing Club Badge */}
+                                    {event.club && (
+                                        <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 z-10 shadow-lg">
+                                            {event.club.logo_url && (
+                                                /* eslint-disable-next-line @next/next/no-img-element */
+                                                <img src={event.club.logo_url} alt={event.club.name} className="w-4 h-4 object-contain rounded-full" />
+                                            )}
+                                            <span className="text-xs font-medium text-white max-w-[100px] truncate">
+                                                {event.club.name}
+                                            </span>
+                                        </div>
+                                    )}
                                     {event.banner ? (
                                         /* eslint-disable-next-line @next/next/no-img-element */
                                         <img src={event.banner} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
