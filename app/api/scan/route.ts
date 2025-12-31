@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { awardXPForAttendance } from '@/lib/xp'
 import { hasSubmittedEventFeedback } from '@/lib/actions/feedback'
+import { auth } from '@/lib/auth'
+import { checkRateLimit, getClientIdentifier } from '@/lib/rate-limit'
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,6 +11,24 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
+    // Security: Verify only admins can mark attendance
+    const session = await auth()
+    if (!session || !session.user || !['admin', 'super_admin'].includes(session.user.role)) {
+        return NextResponse.json({ success: false, message: 'Unauthorized - Admin access required' }, { status: 401 })
+    }
+
+    // Rate limiting: 30 scans per minute per user
+    const rateLimit = checkRateLimit(
+        getClientIdentifier(req, session.user.id),
+        { limit: 30, windowSeconds: 60 }
+    )
+    if (!rateLimit.success) {
+        return NextResponse.json({
+            success: false,
+            message: 'Too many requests. Please slow down.'
+        }, { status: 429 })
+    }
+
     try {
         const body = await req.json()
 
