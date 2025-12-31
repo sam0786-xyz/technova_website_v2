@@ -9,7 +9,9 @@ export const ADMIN_EMAILS = [
     'clubcyberpirates.technova@gmail.com',
     'awscloudclub.sharda.university@gmail.com',
     'dsc.sharda.uni@gmail.com',
-    'clubtechpreneur.technova@gmail.com'
+    'clubtechpreneur.technova@gmail.com',
+    'piyush.sharma.code@gmail.com',
+    'rani.astya@sharda.ac.in',
 ];
 
 // Helper to determine role from email
