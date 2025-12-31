@@ -29,7 +29,7 @@ export function BuddyCard({ buddy }: { buddy: BuddyProfile }) {
     return (
         <Card className="overflow-hidden bg-white/[0.03] backdrop-blur-xl border border-white/10 hover:border-purple-500/30 transition-all duration-500 hover:-translate-y-1 shadow-[0_8px_32px_rgba(0,0,0,0.3)] group">
             <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                <Link href={`/profile/${buddy.id}`} className="shrink-0">
+                <Link href={`/user/${buddy.id}`} className="shrink-0">
                     <Avatar className="h-16 w-16 ring-2 ring-purple-500/20 group-hover:ring-purple-500/40 transition-all">
                         <AvatarImage src={buddy.image || ""} />
                         <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-white font-bold">
@@ -38,7 +38,7 @@ export function BuddyCard({ buddy }: { buddy: BuddyProfile }) {
                     </Avatar>
                 </Link>
                 <div className="flex-1 overflow-hidden min-w-0">
-                    <Link href={`/profile/${buddy.id}`} className="block group/name">
+                    <Link href={`/user/${buddy.id}`} className="block group/name">
                         <h3 className="text-lg font-bold truncate text-white group-hover/name:text-purple-400 transition-colors">
                             {displayName}
                         </h3>
@@ -111,7 +111,7 @@ export function BuddyCard({ buddy }: { buddy: BuddyProfile }) {
                 </div>
 
                 {/* View Profile Button */}
-                <Link href={`/profile/${buddy.id}`} className="block mt-4">
+                <Link href={`/user/${buddy.id}`} className="block mt-4">
                     <Button variant="ghost" className="w-full justify-between text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 group/btn">
                         View Profile
                         <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
