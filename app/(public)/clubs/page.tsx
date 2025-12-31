@@ -1,102 +1,208 @@
+'use client'
+
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { motion } from "framer-motion"
+import { ArrowRight, Home, ChevronRight, Sparkles, Users } from "lucide-react"
 import { getClubs } from "@/lib/actions/clubs"
+import { AnimatedBackground } from "@/components/ui/animated-background"
+import { RevealOnScroll, StaggerContainer, StaggerItem } from "@/components/ui/reveal-on-scroll"
+import { GlowCard } from "@/components/ui/glow-card"
+import { AnimatedCounter } from "@/components/ui/animated-counter"
+import { useEffect, useState } from "react"
 
 // Static assets mapping since these aren't in DB yet
-const CLUB_ASSETS: Record<string, { slug: string, logo: string, bg: string }> = {
+const CLUB_ASSETS: Record<string, { slug: string, logo: string, color: string, glowColor: string }> = {
     "AI & Robotics": {
         slug: "ai-robotics",
         logo: "/assets/logo/AI_&_Robotics_logo.png",
-        bg: "bg-indigo-500/10"
+        color: "indigo",
+        glowColor: "rgba(99, 102, 241, 0.4)"
     },
     "AWS Cloud": {
         slug: "aws-cloud",
         logo: "/assets/logo/awscc.png",
-        bg: "bg-orange-500/10"
+        color: "orange",
+        glowColor: "rgba(249, 115, 22, 0.4)"
     },
     "CyberPirates": {
         slug: "cyber-pirates",
         logo: "/assets/logo/cyberpirates.png",
-        bg: "bg-green-500/10"
+        color: "emerald",
+        glowColor: "rgba(16, 185, 129, 0.4)"
     },
     "Datapool": {
         slug: "datapool",
         logo: "/assets/logo/datapool.png",
-        bg: "bg-blue-500/10"
+        color: "blue",
+        glowColor: "rgba(59, 130, 246, 0.4)"
     },
     "Game Drifters": {
         slug: "game-drifters",
         logo: "/assets/logo/Game Drifters.png",
-        bg: "bg-purple-500/10"
+        color: "purple",
+        glowColor: "rgba(147, 51, 234, 0.4)"
     },
     "GDG on Campus": {
         slug: "gdg",
         logo: "/assets/logo/gdg_on_campus.jpg",
-        bg: "bg-red-500/10"
+        color: "red",
+        glowColor: "rgba(239, 68, 68, 0.4)"
     },
     "GitHub Club": {
         slug: "github",
         logo: "/assets/logo/github.png",
-        bg: "bg-white/10"
+        color: "gray",
+        glowColor: "rgba(156, 163, 175, 0.4)"
     },
     "Pixelance": {
         slug: "pixelance",
         logo: "/assets/logo/pixelance_logo.png",
-        bg: "bg-pink-500/10"
+        color: "pink",
+        glowColor: "rgba(236, 72, 153, 0.4)"
     }
 }
 
-export const dynamic = 'force-dynamic' // Ensure we fetch fresh data
+export default function ClubsPage() {
+    const [dbClubs, setDbClubs] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
 
-export default async function ClubsPage() {
-    const dbClubs = await getClubs()
+    useEffect(() => {
+        async function fetchClubs() {
+            const clubs = await getClubs()
+            setDbClubs(clubs)
+            setLoading(false)
+        }
+        fetchClubs()
+    }, [])
+
+    const clubCount = Object.keys(CLUB_ASSETS).length
 
     return (
-        <div className="min-h-screen bg-black text-white">
-            <section className="relative pt-32 pb-12 overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black" />
-                <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] animate-float" />
-                <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-blue-600/15 rounded-full blur-[80px] animate-float-slow" />
-                <div className="container mx-auto px-4 relative z-10 text-center">
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6">Our Clubs</h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                        Specialized communities to help you master your craft, connect with peers, and build the future.
-                    </p>
+        <div className="min-h-screen bg-black text-white overflow-hidden">
+            <AnimatedBackground variant="purple" intensity="low" />
+
+            {/* Hero Section */}
+            <section className="relative pt-28 pb-16 overflow-hidden">
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_70%)]" />
+
+                <div className="container mx-auto px-4 relative z-10">
+                    {/* Breadcrumb */}
+                    <motion.nav
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-2 text-sm mb-8"
+                    >
+                        <Link href="/" className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors">
+                            <Home className="w-4 h-4" /> Home
+                        </Link>
+                        <ChevronRight className="w-4 h-4 text-gray-600" />
+                        <span className="text-purple-400 font-medium">Clubs</span>
+                    </motion.nav>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center max-w-3xl mx-auto"
+                    >
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 backdrop-blur-xl mb-6">
+                            <Users className="w-4 h-4 text-purple-400" />
+                            <span className="text-purple-400 font-medium text-sm">Specialized Communities</span>
+                        </div>
+                        <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
+                            Explore Our Clubs
+                        </h1>
+                        <p className="text-gray-400 text-lg mb-10">
+                            Join specialized communities to master your craft, connect with peers, and build the future together.
+                        </p>
+
+                        {/* Stats */}
+                        <div className="flex justify-center gap-12">
+                            <AnimatedCounter value={clubCount} suffix="+" label="Active Clubs" className="text-purple-400" />
+                            <AnimatedCounter value={2500} suffix="+" label="Total Members" className="text-blue-400" />
+                            <AnimatedCounter value={50} suffix="+" label="Events/Year" className="text-emerald-400" />
+                        </div>
+                    </motion.div>
                 </div>
             </section>
 
-            <section className="pb-24">
+            {/* Clubs Grid */}
+            <section className="pb-24 relative z-10">
                 <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {dbClubs.map((club: any) => {
-                            const assets = CLUB_ASSETS[club.name]
+                    {loading ? (
+                        <div className="text-center py-20">
+                            <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                            <p className="text-gray-400">Loading clubs...</p>
+                        </div>
+                    ) : (
+                        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {dbClubs.map((club: any, idx: number) => {
+                                const assets = CLUB_ASSETS[club.name]
+                                if (!assets) return null
 
-                            // Skip if no assets found (and not Technova Main, though that usually isn't in 'clubs' list for cards)
-                            if (!assets) return null
+                                return (
+                                    <StaggerItem key={club.id}>
+                                        <Link href={`/clubs/${assets.slug}`} className="block h-full">
+                                            <GlowCard
+                                                className="h-full"
+                                                glowColor={assets.glowColor}
+                                            >
+                                                <div className="p-8 flex flex-col items-center text-center h-full">
+                                                    {/* Logo */}
+                                                    <motion.div
+                                                        className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+                                                        whileHover={{ scale: 1.1, rotate: 3 }}
+                                                        transition={{ type: "spring", stiffness: 300 }}
+                                                    >
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img
+                                                            src={assets.logo}
+                                                            alt={club.name}
+                                                            className="w-20 h-20 object-contain"
+                                                        />
+                                                    </motion.div>
 
-                            return (
-                                <Link key={club.id} href={`/clubs/${assets.slug}`} className={`group bg-white/[0.03] backdrop-blur-xl border border-white/10 p-10 rounded-3xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 flex flex-col items-center text-center shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(59,130,246,0.12)] hover:-translate-y-1 ${assets.bg}`}>
-                                    <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500 shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-hover:shadow-[0_12px_40px_rgba(59,130,246,0.2)]">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
-                                            src={assets.logo}
-                                            alt={club.name}
-                                            className="w-24 h-24 object-contain"
-                                        />
-                                    </div>
+                                                    {/* Content */}
+                                                    <h3 className="text-2xl font-bold mb-3">{club.name}</h3>
+                                                    <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-1">
+                                                        {club.description}
+                                                    </p>
 
-                                    <h3 className="text-3xl font-bold mb-4">{club.name}</h3>
-                                    <p className="text-gray-400 leading-relaxed mb-8">
-                                        {club.description}
-                                    </p>
+                                                    {/* CTA */}
+                                                    <span className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-blue-400 group-hover:text-blue-300">
+                                                        Explore Club
+                                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                                    </span>
+                                                </div>
+                                            </GlowCard>
+                                        </Link>
+                                    </StaggerItem>
+                                )
+                            })}
+                        </StaggerContainer>
+                    )}
+                </div>
+            </section>
 
-                                    <span className="mt-auto flex items-center gap-2 text-blue-500 font-bold uppercase tracking-wider group-hover:text-blue-400">
-                                        View Details <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                    </span>
-                                </Link>
-                            )
-                        })}
-                    </div>
+            {/* Join CTA */}
+            <section className="py-20 relative">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-950/10 to-transparent" />
+                <div className="container mx-auto px-4 relative z-10">
+                    <RevealOnScroll>
+                        <div className="text-center max-w-2xl mx-auto">
+                            <Sparkles className="w-10 h-10 text-purple-400 mx-auto mb-4" />
+                            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Join?</h2>
+                            <p className="text-gray-400 mb-8">
+                                Pick a club that matches your interests and start your journey towards becoming a tech leader.
+                            </p>
+                            <Link
+                                href="/events"
+                                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 rounded-xl font-bold hover:from-purple-500 hover:to-blue-500 transition-all shadow-[0_0_30px_rgba(147,51,234,0.3)] hover:shadow-[0_0_40px_rgba(147,51,234,0.5)]"
+                            >
+                                Browse Upcoming Events
+                                <ArrowRight className="w-5 h-5" />
+                            </Link>
+                        </div>
+                    </RevealOnScroll>
                 </div>
             </section>
         </div>
