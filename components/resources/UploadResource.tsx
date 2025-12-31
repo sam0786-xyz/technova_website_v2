@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { createResource } from "@/lib/actions/resources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,7 @@ function SubmitButton() {
 
 export function UploadResource() {
     const [open, setOpen] = useState(false);
-    const [state, formAction] = useFormState(createResource, null);
+    const [state, formAction] = useActionState(createResource, null);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
