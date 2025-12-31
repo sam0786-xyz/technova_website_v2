@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { auth } from '@/lib/auth'
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -7,6 +8,12 @@ const supabase = createClient(
 )
 
 export async function GET(req: NextRequest) {
+    // Require authentication to fetch feedback questions
+    const session = await auth()
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     try {
         const { searchParams } = new URL(req.url)
         const formId = searchParams.get('formId')

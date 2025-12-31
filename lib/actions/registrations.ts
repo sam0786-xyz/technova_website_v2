@@ -129,15 +129,9 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
 
                 if (emailError) {
                     console.error("Resend API Error:", emailError)
-                } else {
-                    console.log("Email sent successfully!")
-                    console.log("Email ID:", data?.id)
-                    console.log("Sent to:", session.user.email)
                 }
             } else {
-                // Virtual event - send simple confirmation email
-                // TODO: Create a separate email template for virtual events
-                console.log("Virtual event registration - skipping QR email")
+                // Virtual event - skip QR email
             }
         } catch (emailError) {
             console.error("Failed to send email:", emailError)
