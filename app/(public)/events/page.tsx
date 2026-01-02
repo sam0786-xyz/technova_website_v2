@@ -23,8 +23,14 @@ export default function PublicEventsPage() {
     }, [])
 
     const now = new Date()
-    const upcomingEvents = allEvents.filter((event: any) => new Date(event.start_time) > now).sort((a: any, b: any) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
-    const pastEvents = allEvents.filter((event: any) => new Date(event.start_time) <= now).sort((a: any, b: any) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
+    // Filter events: past if is_past_event=true OR status='completed' OR start_time has passed
+    const upcomingEvents = allEvents.filter((event: any) =>
+        !event.is_past_event && event.status !== 'completed' && new Date(event.start_time) > now
+    ).sort((a: any, b: any) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+
+    const pastEvents = allEvents.filter((event: any) =>
+        event.is_past_event || event.status === 'completed' || new Date(event.start_time) <= now
+    ).sort((a: any, b: any) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
 
     return (
         <div className="min-h-screen bg-black text-white overflow-hidden">

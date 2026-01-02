@@ -303,12 +303,13 @@ export async function togglePastEvent(eventId: string) {
 
 export async function getPublicEvents() {
     const supabase = await getSupabase()
+    // Include both live events AND past events (status='completed' or is_past_event=true)
     const { data, error } = await supabase.from('events')
         .select(`
             *,
             club:clubs!events_club_id_fkey(name, logo_url)
         `)
-        .eq('status', 'live')
+        .in('status', ['live', 'completed']) // Include both live and completed events
         .order('created_at', { ascending: false })
 
     return data || []

@@ -31,15 +31,17 @@ export async function getPastEvents(slug: string) {
     if (!club) return []
 
     // 2. Get Past Events for this Club (or Co-Hosted)
-    // Only show events that are EXPLICITLY marked as past by admins via is_past_event flag
+    // Show events that:
+    // - Are explicitly marked as past by admins via is_past_event flag
+    // - Have show_on_club_page enabled (or null for backward compatibility)
     const { data: events } = await supabase.from('events')
         .select(`
             *,
             club:clubs!events_club_id_fkey(name, logo_url)
         `)
         .or(`club_id.eq.${club.id},co_host_club_id.eq.${club.id}`)
-        .eq('status', 'live') // Only public events
         .eq('is_past_event', true) // Only events explicitly marked as past
+        .or('show_on_club_page.eq.true,show_on_club_page.is.null') // Only if enabled or not set (backward compat)
         .order('end_time', { ascending: false })
 
     return events || []

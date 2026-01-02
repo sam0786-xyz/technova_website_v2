@@ -168,6 +168,25 @@ export function PastEventForm({ clubs }: PastEventFormProps) {
                 />
             </div>
 
+            {/* Show on Club Page Toggle */}
+            <div className="flex items-start gap-3 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                <input
+                    type="checkbox"
+                    name="show_on_club_page"
+                    id="show_on_club_page"
+                    defaultChecked={true}
+                    className="mt-1 w-5 h-5 rounded border-white/20 bg-white/5 text-purple-600 focus:ring-purple-500/50 cursor-pointer"
+                />
+                <div>
+                    <label htmlFor="show_on_club_page" className="block text-sm font-medium text-white cursor-pointer">
+                        Show on Club Page
+                    </label>
+                    <p className="text-xs text-gray-400 mt-1">
+                        When enabled, this event will appear in the "Past Events" section on the club's public page.
+                    </p>
+                </div>
+            </div>
+
             {/* Submit Button */}
             <div className="flex justify-end pt-4">
                 <button
