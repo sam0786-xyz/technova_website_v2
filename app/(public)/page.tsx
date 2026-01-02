@@ -11,6 +11,7 @@ import { RevealOnScroll, StaggerContainer, StaggerItem } from "@/components/ui/r
 import { TypewriterText, TextRotate } from "@/components/ui/typewriter-text"
 import { MagneticButton } from "@/components/ui/magnetic-button"
 import { Spotlight } from "@/components/ui/spotlight"
+import { TechfestTeaser } from "@/components/home/techfest-teaser"
 
 export default function LandingPage() {
   return (
@@ -119,6 +120,9 @@ export default function LandingPage() {
           </div>
         </motion.div>
       </section>
+
+      {/* TECHFEST 2026 TEASER - Coming Soon Hype */}
+      <TechfestTeaser />
 
       {/* VISION & MISSION - Bento Style */}
       <section className="py-24 relative">

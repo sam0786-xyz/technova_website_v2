@@ -53,6 +53,8 @@ export async function POST(req: NextRequest) {
 
         // Create past event with simplified data
         const eventDate = new Date(event_date)
+        const showOnClubPage = formData.get('show_on_club_page') === 'on'
+
         const { data: event, error } = await supabase
             .from('events')
             .insert({
@@ -66,7 +68,8 @@ export async function POST(req: NextRequest) {
                 capacity: attendance_count,
                 status: 'completed',
                 is_past_event: true,
-                is_virtual: false
+                is_virtual: false,
+                show_on_club_page: showOnClubPage
             })
             .select()
             .single()

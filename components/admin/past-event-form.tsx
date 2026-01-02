@@ -8,13 +8,16 @@ import Image from "next/image"
 
 interface PastEventFormProps {
     clubs: { id: string; name: string }[]
+    event?: any // Optional event for editing
 }
 
-export function PastEventForm({ clubs }: PastEventFormProps) {
+export function PastEventForm({ clubs, event }: PastEventFormProps) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const [previewUrl, setPreviewUrl] = useState<string | null>(event?.banner || null)
     const { toast, showToast, hideToast } = useToast()
+
+    const isEditing = !!event
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -30,18 +33,22 @@ export function PastEventForm({ clubs }: PastEventFormProps) {
         try {
             const formData = new FormData(e.currentTarget)
 
-            const response = await fetch('/api/events/past', {
-                method: 'POST',
+            // Determine endpoint and method based on editing mode
+            const url = isEditing ? `/api/events/past/${event.id}` : '/api/events/past'
+            const method = isEditing ? 'PUT' : 'POST'
+
+            const response = await fetch(url, {
+                method,
                 body: formData
             })
 
             const result = await response.json()
 
             if (!response.ok) {
-                throw new Error(result.error || 'Failed to create past event')
+                throw new Error(result.error || `Failed to ${isEditing ? 'update' : 'create'} past event`)
             }
 
-            showToast("Past event created successfully!", "success")
+            showToast(`Past event ${isEditing ? 'updated' : 'created'} successfully!`, "success")
             setTimeout(() => {
                 router.push('/admin/events')
                 router.refresh()
@@ -51,6 +58,13 @@ export function PastEventForm({ clubs }: PastEventFormProps) {
             showToast(error.message || "Something went wrong", "error")
             setLoading(false)
         }
+    }
+
+    // Format date for input (YYYY-MM-DD)
+    const formatDateForInput = (dateString: string) => {
+        if (!dateString) return ''
+        const date = new Date(dateString)
+        return date.toISOString().split('T')[0]
     }
 
     return (
@@ -64,6 +78,7 @@ export function PastEventForm({ clubs }: PastEventFormProps) {
                     type="text"
                     name="title"
                     required
+                    defaultValue={event?.title || ''}
                     placeholder="e.g., Hackathon 2024"
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 />
@@ -77,6 +92,7 @@ export function PastEventForm({ clubs }: PastEventFormProps) {
                 <select
                     name="club_id"
                     required
+                    defaultValue={event?.club_id || ''}
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 >
                     <option value="">Select a club</option>
@@ -95,6 +111,7 @@ export function PastEventForm({ clubs }: PastEventFormProps) {
                     type="date"
                     name="event_date"
                     required
+                    defaultValue={event?.start_time ? formatDateForInput(event.start_time) : ''}
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 />
             </div>
@@ -109,6 +126,7 @@ export function PastEventForm({ clubs }: PastEventFormProps) {
                     name="attendance_count"
                     min="1"
                     required
+                    defaultValue={event?.capacity || ''}
                     placeholder="Number of attendees"
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 />
@@ -153,6 +171,8 @@ export function PastEventForm({ clubs }: PastEventFormProps) {
                         </label>
                     )}
                 </div>
+                {/* Hidden field to preserve existing banner URL if not uploading new */}
+                {event?.banner && <input type="hidden" name="existing_banner" value={event.banner} />}
             </div>
 
             {/* Description (Optional) */}
@@ -163,9 +183,29 @@ export function PastEventForm({ clubs }: PastEventFormProps) {
                 <textarea
                     name="description"
                     rows={3}
+                    defaultValue={event?.description || ''}
                     placeholder="Brief description of the event..."
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none"
                 />
+            </div>
+
+            {/* Show on Club Page Toggle */}
+            <div className="flex items-start gap-3 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                <input
+                    type="checkbox"
+                    name="show_on_club_page"
+                    id="show_on_club_page"
+                    defaultChecked={event?.show_on_club_page ?? true}
+                    className="mt-1 w-5 h-5 rounded border-white/20 bg-white/5 text-purple-600 focus:ring-purple-500/50 cursor-pointer"
+                />
+                <div>
+                    <label htmlFor="show_on_club_page" className="block text-sm font-medium text-white cursor-pointer">
+                        Show on Club Page
+                    </label>
+                    <p className="text-xs text-gray-400 mt-1">
+                        When enabled, this event will appear in the "Past Events" section on the club's public page.
+                    </p>
+                </div>
             </div>
 
             {/* Submit Button */}
@@ -178,12 +218,12 @@ export function PastEventForm({ clubs }: PastEventFormProps) {
                     {loading ? (
                         <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Creating...
+                            {isEditing ? 'Updating...' : 'Creating...'}
                         </>
                     ) : (
                         <>
                             <History className="w-4 h-4" />
-                            Add Past Event
+                            {isEditing ? 'Update Past Event' : 'Add Past Event'}
                         </>
                     )}
                 </button>
@@ -200,3 +240,4 @@ export function PastEventForm({ clubs }: PastEventFormProps) {
         </form>
     )
 }
+

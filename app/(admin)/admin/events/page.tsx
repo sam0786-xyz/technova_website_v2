@@ -5,9 +5,13 @@ import { formatDateShort } from "@/lib/utils"
 import { auth } from "@/lib/auth"
 
 export default async function AdminEventsPage() {
-    const events = await getEvents()
+    const allEvents = await getEvents()
     const session = await auth()
     const isSuperAdmin = session?.user?.role === 'super_admin'
+
+    // Separate regular events from past events
+    const events = allEvents.filter((e: any) => !e.is_past_event && e.status !== 'completed')
+    const pastEvents = allEvents.filter((e: any) => e.is_past_event || e.status === 'completed')
 
     return (
         <div className="min-h-screen bg-black p-6 md:p-8">
@@ -25,7 +29,7 @@ export default async function AdminEventsPage() {
                             <Calendar className="w-8 h-8 text-blue-400" />
                             Events Management
                         </h1>
-                        <p className="text-gray-400 mt-1">{events.length} events in total</p>
+                        <p className="text-gray-400 mt-1">{events.length} active events{pastEvents.length > 0 ? ` • ${pastEvents.length} past` : ''}</p>
                     </div>
                     <div className="flex items-center gap-3">
                         {isSuperAdmin && (
@@ -135,6 +139,77 @@ export default async function AdminEventsPage() {
                         </table>
                     </div>
                 </div>
+
+                {/* Past Events Section */}
+                {pastEvents.length > 0 && (
+                    <div className="mt-8">
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
+                            <History className="w-5 h-5 text-purple-400" />
+                            Past Events
+                            <span className="text-sm font-normal text-gray-500">({pastEvents.length} events)</span>
+                        </h2>
+                        <div className="rounded-2xl bg-white/[0.03] border border-purple-500/20 backdrop-blur-xl overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-purple-500/10 border-b border-purple-500/20">
+                                        <tr>
+                                            <th className="p-4 font-medium text-gray-400 text-sm uppercase tracking-wide">Event Name</th>
+                                            <th className="p-4 font-medium text-gray-400 text-sm uppercase tracking-wide">Date</th>
+                                            <th className="p-4 font-medium text-gray-400 text-sm uppercase tracking-wide">Attendees</th>
+                                            <th className="p-4 font-medium text-gray-400 text-sm uppercase tracking-wide text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {pastEvents.map((event: any) => (
+                                            <tr key={event.id} className="hover:bg-purple-500/5 transition-colors group">
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-medium text-white">{event.title}</span>
+                                                        <span className="px-2 py-0.5 rounded-full text-xs bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                                                            past
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-gray-400">
+                                                    {formatDateShort(event.start_time)}
+                                                </td>
+                                                <td className="p-4 text-gray-400">{event.capacity}</td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Link
+                                                            href={`/events/${event.id}`}
+                                                            target="_blank"
+                                                            className="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors"
+                                                            title="View Public Page"
+                                                        >
+                                                            <ExternalLink className="w-4 h-4" />
+                                                        </Link>
+                                                        <Link
+                                                            href={`/admin/events/${event.id}/edit`}
+                                                            className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
+                                                            title="Edit"
+                                                        >
+                                                            <Edit className="w-4 h-4" />
+                                                        </Link>
+                                                        <form action={deleteEvent.bind(null, event.id)}>
+                                                            <button
+                                                                type="submit"
+                                                                className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )
