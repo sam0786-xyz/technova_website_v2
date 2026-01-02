@@ -12,6 +12,7 @@ const COURSES = [
     { value: "CSE-DS", label: "CSE (Data Science)" },
     { value: "CSE-IOT", label: "CSE (Internet of Things)" },
     { value: "CSE-CS", label: "CSE (Cyber Security)" },
+    { value: "CSE-ARVR", label: "CSE (Augmented & VR)" },
     { value: "IT", label: "Information Technology" },
     { value: "ECE", label: "Electronics & Communication" },
     { value: "EE", label: "Electrical Engineering" },
