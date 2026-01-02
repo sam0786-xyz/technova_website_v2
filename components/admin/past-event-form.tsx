@@ -95,9 +95,9 @@ export function PastEventForm({ clubs, event }: PastEventFormProps) {
                     defaultValue={event?.club_id || ''}
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 >
-                    <option value="">Select a club</option>
+                    <option value="" className="bg-neutral-900 text-white">Select a club</option>
                     {clubs.map(club => (
-                        <option key={club.id} value={club.id}>{club.name}</option>
+                        <option key={club.id} value={club.id} className="bg-neutral-900 text-white">{club.name}</option>
                     ))}
                 </select>
             </div>

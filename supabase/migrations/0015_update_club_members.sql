@@ -11,7 +11,7 @@ BEGIN
     SELECT id INTO game_drifters_id FROM clubs WHERE name = 'Game Drifters';
     
     -- Get Pixelance club ID  
-    SELECT id INTO pixelance_id FROM clubs WHERE name = 'Pixelance';
+    SELECT id INTO pixelance_id FROM clubs WHERE name = 'PiXelance';
 
     -- =============================================
     -- GAME DRIFTERS CLUB MEMBERS

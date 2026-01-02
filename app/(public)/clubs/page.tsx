@@ -54,7 +54,7 @@ const CLUB_ASSETS: Record<string, { slug: string, logo: string, color: string, g
         color: "gray",
         glowColor: "rgba(156, 163, 175, 0.4)"
     },
-    "Pixelance": {
+    "PiXelance": {
         slug: "pixelance",
         logo: "/assets/logo/pixelance_logo.png",
         color: "pink",

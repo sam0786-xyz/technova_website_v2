@@ -17,7 +17,7 @@ const SLUG_TO_DB_NAME: Record<string, string> = {
     "game-drifters": "Game Drifters",
     "gdg": "GDG on Campus",
     "github": "GitHub Club",
-    "pixelance": "Pixelance"
+    "pixelance": "PiXelance"
 }
 
 export async function getPastEvents(slug: string) {
