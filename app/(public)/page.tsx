@@ -134,34 +134,69 @@ export default function LandingPage() {
             </div>
           </RevealOnScroll>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            <RevealOnScroll direction="left">
-              <Spotlight className="h-full">
-                <div className="p-8 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/10 hover:border-blue-500/30 transition-all duration-500 h-full group">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <Target className="w-7 h-7 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4">Our Vision</h3>
-                  <p className="text-gray-400 leading-relaxed">
-                    To become a front-runner in preparing graduates to be efficient problem solvers, researchers, innovators and entrepreneurs, making them competent professionals ready to take on any challenge in the IT industry.
-                  </p>
-                </div>
-              </Spotlight>
-            </RevealOnScroll>
+          <div className="relative max-w-5xl mx-auto">
+            {/* Connecting Line (Desktop) */}
+            <div className="absolute left-1/2 top-4 bottom-4 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-pink-500 -translate-x-1/2 hidden md:block rounded-full opacity-30" />
 
-            <RevealOnScroll direction="right">
-              <Spotlight className="h-full">
-                <div className="p-8 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/10 hover:border-purple-500/30 transition-all duration-500 h-full group">
-                  <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <Rocket className="w-7 h-7 text-white" />
+            {/* Vision Item - Left Side */}
+            <div className="relative z-10 mb-12 md:mb-0 md:w-1/2 md:pr-12">
+              {/* Connector Dot */}
+              <div className="absolute -right-3 top-8 hidden md:flex items-center justify-center w-6 h-6 rounded-full bg-black border-2 border-blue-500 z-20 shadow-[0_0_15px_rgba(59,130,246,0.6)]">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+              </div>
+
+              <RevealOnScroll direction="left" className="h-full">
+                <Spotlight className="h-full">
+                  <div className="p-8 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/10 hover:border-blue-500/30 transition-all duration-500 h-full group flex flex-col relative overflow-hidden">
+                    {/* Background Gradient Blob */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 transition-opacity group-hover:opacity-100 opacity-50" />
+
+                    <div className="relative z-10">
+                      <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-blue-900/20">
+                        <Target className="w-7 h-7 text-white" />
+                      </div>
+                      <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Our Vision</span>
+                        <div className="h-px bg-white/10 flex-grow" />
+                      </h3>
+                      <p className="text-gray-400 leading-relaxed">
+                        To become a front-runner in preparing graduates to be efficient problem solvers, researchers, innovators and entrepreneurs, making them competent professionals ready to take on any challenge in the IT industry.
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-2xl font-bold mb-4">Our Mission</h3>
-                  <p className="text-gray-400 leading-relaxed">
-                    Elevating technical skillsets to match industry standards through interactions, sessions, and propelling students to pursue their passion with support from our alumni network.
-                  </p>
-                </div>
-              </Spotlight>
-            </RevealOnScroll>
+                </Spotlight>
+              </RevealOnScroll>
+            </div>
+
+            {/* Mission Item - Right Side */}
+            <div className="relative z-10 md:w-1/2 md:ml-auto md:pl-12 md:-mt-8">
+              {/* Connector Dot */}
+              <div className="absolute -left-3 top-8 hidden md:flex items-center justify-center w-6 h-6 rounded-full bg-black border-2 border-purple-500 z-20 shadow-[0_0_15px_rgba(168,85,247,0.6)]">
+                <div className="w-2 h-2 rounded-full bg-purple-500" />
+              </div>
+
+              <RevealOnScroll direction="right" className="h-full">
+                <Spotlight className="h-full">
+                  <div className="p-8 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/10 hover:border-purple-500/30 transition-all duration-500 h-full group flex flex-col relative overflow-hidden">
+                    {/* Background Gradient Blob */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-16 -mt-16 transition-opacity group-hover:opacity-100 opacity-50" />
+
+                    <div className="relative z-10">
+                      <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-purple-900/20">
+                        <Rocket className="w-7 h-7 text-white" />
+                      </div>
+                      <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Our Mission</span>
+                        <div className="h-px bg-white/10 flex-grow" />
+                      </h3>
+                      <p className="text-gray-400 leading-relaxed">
+                        Elevating technical skillsets to match industry standards through interactions, sessions, and propelling students to pursue their passion with support from our alumni network.
+                      </p>
+                    </div>
+                  </div>
+                </Spotlight>
+              </RevealOnScroll>
+            </div>
           </div>
         </div>
       </section>
