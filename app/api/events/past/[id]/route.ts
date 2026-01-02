@@ -61,6 +61,9 @@ export async function PUT(
         const eventDate = new Date(event_date)
         const showOnClubPage = formData.get('show_on_club_page') === 'on'
 
+        const isPaid = formData.get('is_paid') === 'true'
+        const ticketPrice = isPaid ? parseFloat(formData.get('ticket_price') as string) : null
+
         const { data: event, error } = await supabase
             .from('events')
             .update({
@@ -71,6 +74,8 @@ export async function PUT(
                 start_time: eventDate.toISOString(),
                 end_time: eventDate.toISOString(),
                 capacity: attendance_count,
+                is_paid: isPaid,
+                ticket_price: ticketPrice,
                 show_on_club_page: showOnClubPage,
                 updated_at: new Date().toISOString()
             })

@@ -55,6 +55,9 @@ export async function POST(req: NextRequest) {
         const eventDate = new Date(event_date)
         const showOnClubPage = formData.get('show_on_club_page') === 'on'
 
+        const isPaid = formData.get('is_paid') === 'true'
+        const ticketPrice = isPaid ? parseFloat(formData.get('ticket_price') as string) : null
+
         const { data: event, error } = await supabase
             .from('events')
             .insert({
@@ -69,6 +72,8 @@ export async function POST(req: NextRequest) {
                 status: 'completed',
                 is_past_event: true,
                 is_virtual: false,
+                is_paid: isPaid,
+                ticket_price: ticketPrice,
                 show_on_club_page: showOnClubPage
             })
             .select()

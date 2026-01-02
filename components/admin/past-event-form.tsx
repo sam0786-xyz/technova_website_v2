@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, History, Upload, X } from "lucide-react"
 import { Toast, useToast } from "@/components/ui/toast"
+import { motion } from "framer-motion"
 import Image from "next/image"
 
 interface PastEventFormProps {
@@ -14,6 +15,8 @@ interface PastEventFormProps {
 export function PastEventForm({ clubs, event }: PastEventFormProps) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    const [isPaid, setIsPaid] = useState(event?.is_paid ?? false)
     const [previewUrl, setPreviewUrl] = useState<string | null>(event?.banner || null)
     const { toast, showToast, hideToast } = useToast()
 
@@ -22,6 +25,7 @@ export function PastEventForm({ clubs, event }: PastEventFormProps) {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
+            setSelectedFile(file)
             setPreviewUrl(URL.createObjectURL(file))
         }
     }
@@ -32,6 +36,11 @@ export function PastEventForm({ clubs, event }: PastEventFormProps) {
 
         try {
             const formData = new FormData(e.currentTarget)
+
+            // Manually append the file if selected because the input might be removed from DOM
+            if (selectedFile) {
+                formData.set('banner', selectedFile) // Use set to overwrite if exists or add
+            }
 
             // Determine endpoint and method based on editing mode
             const url = isEditing ? `/api/events/past/${event.id}` : '/api/events/past'
@@ -60,11 +69,14 @@ export function PastEventForm({ clubs, event }: PastEventFormProps) {
         }
     }
 
-    // Format date for input (YYYY-MM-DD)
+    // Format date for input (YYYY-MM-DDTHH:mm)
     const formatDateForInput = (dateString: string) => {
         if (!dateString) return ''
         const date = new Date(dateString)
-        return date.toISOString().split('T')[0]
+        // Convert to local ISO string for datetime-local input
+        const offset = date.getTimezoneOffset()
+        const localDate = new Date(date.getTime() - (offset * 60 * 1000))
+        return localDate.toISOString().slice(0, 16)
     }
 
     return (
@@ -102,13 +114,13 @@ export function PastEventForm({ clubs, event }: PastEventFormProps) {
                 </select>
             </div>
 
-            {/* Event Date */}
+            {/* Event Date & Time */}
             <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Event Date *
+                    Event Date & Time *
                 </label>
                 <input
-                    type="date"
+                    type="datetime-local"
                     name="event_date"
                     required
                     defaultValue={event?.start_time ? formatDateForInput(event.start_time) : ''}
@@ -133,6 +145,46 @@ export function PastEventForm({ clubs, event }: PastEventFormProps) {
                 <p className="text-sm text-gray-500 mt-1">Used for statistics and capacity tracking</p>
             </div>
 
+            {/* Pricing Type */}
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Event Type *
+                    </label>
+                    <select
+                        name="is_paid"
+                        value={isPaid ? "true" : "false"}
+                        onChange={(e) => setIsPaid(e.target.value === "true")}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    >
+                        <option value="false" className="bg-neutral-900 text-white">Free</option>
+                        <option value="true" className="bg-neutral-900 text-white">Paid</option>
+                    </select>
+                </div>
+
+                {isPaid && (
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Ticket Price (₹) *
+                        </label>
+                        <input
+                            type="number"
+                            name="ticket_price"
+                            min="0"
+                            step="0.01"
+                            required={isPaid}
+                            defaultValue={event?.ticket_price || ''}
+                            placeholder="e.g. 499"
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                        />
+                    </motion.div>
+                )}
+            </div>
+
             {/* Banner Upload */}
             <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -150,7 +202,10 @@ export function PastEventForm({ clubs, event }: PastEventFormProps) {
                             />
                             <button
                                 type="button"
-                                onClick={() => setPreviewUrl(null)}
+                                onClick={() => {
+                                    setPreviewUrl(null)
+                                    setSelectedFile(null)
+                                }}
                                 className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white hover:bg-black/70"
                             >
                                 <X className="w-4 h-4" />
