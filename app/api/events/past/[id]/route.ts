@@ -85,7 +85,7 @@ export async function PUT(
 
         if (error) {
             console.error('Update past event error:', error)
-            return NextResponse.json({ error: 'Failed to update past event' }, { status: 500 })
+            return NextResponse.json({ error: error.message || 'Failed to update past event' }, { status: 500 })
         }
 
         return NextResponse.json({
