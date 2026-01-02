@@ -17,7 +17,7 @@ const SLUG_TO_DB_NAME: Record<string, string> = {
     "game-drifters": "Game Drifters",
     "gdg": "GDG on Campus",
     "github": "GitHub Club",
-    "pixelance": "PiXelance"
+    "pixelance": "Pixelance"
 }
 
 export async function getPastEvents(slug: string) {
@@ -34,15 +34,22 @@ export async function getPastEvents(slug: string) {
     // Show events that:
     // - Are explicitly marked as past by admins via is_past_event flag
     // - Have show_on_club_page enabled (or null for backward compatibility)
-    const { data: events } = await supabase.from('events')
+    // - Belong to this club or co-hosted by this club
+    const { data: events, error } = await supabase.from('events')
         .select(`
             *,
             club:clubs!events_club_id_fkey(name, logo_url)
         `)
         .or(`club_id.eq.${club.id},co_host_club_id.eq.${club.id}`)
-        .eq('is_past_event', true) // Only events explicitly marked as past
-        .or('show_on_club_page.eq.true,show_on_club_page.is.null') // Only if enabled or not set (backward compat)
+        .eq('is_past_event', true)
+        .neq('show_on_club_page', false) // Show if true OR null (backward compat)
         .order('end_time', { ascending: false })
+
+    if (error) {
+        console.error('Error fetching past events for club:', error)
+        return []
+    }
 
     return events || []
 }
+
