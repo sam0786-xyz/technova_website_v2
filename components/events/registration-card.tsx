@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Download, XCircle, Loader2 } from "lucide-react"
 import { RegistrationModal } from "./registration-modal"
 import { RegistrationField } from "@/components/admin/form-builder"
+import { Toast, useToast } from "@/components/ui/toast"
 
 declare global {
     interface Window {
@@ -63,6 +64,7 @@ export function EventRegistrationCard({
     const [showModal, setShowModal] = useState(false)
     const [showCancelConfirm, setShowCancelConfirm] = useState(false)
     const router = useRouter()
+    const { toast, showToast, hideToast } = useToast()
 
     const registrationFields: RegistrationField[] = typeof event.registration_fields === 'string'
         ? JSON.parse(event.registration_fields)
@@ -89,7 +91,7 @@ export function EventRegistrationCard({
             const result = await registerForEvent(event.id, answers)
 
             if (result.status === 'success') {
-                alert("Registration Successful!")
+                showToast("Registration successful! QR code sent to your email", 'success')
                 router.refresh()
             } else if (result.status === 'payment_required' && result.order) {
                 const options: RazorpayOptions = {
@@ -100,7 +102,7 @@ export function EventRegistrationCard({
                     description: event.title,
                     order_id: result.order.id,
                     handler: function () {
-                        alert("Payment Successful! (Webhook needs to verify)")
+                        showToast("Payment successful! Your registration is being processed", 'success')
                         router.refresh()
                     },
                     prefill: {
@@ -117,7 +119,7 @@ export function EventRegistrationCard({
             }
         } catch (err: unknown) {
             const error = err as Error
-            alert(error.message)
+            showToast(error.message, 'error')
         } finally {
             setLoading(false)
         }
@@ -128,11 +130,11 @@ export function EventRegistrationCard({
         setCanceling(true)
         try {
             await cancelRegistration(existingRegistration.id)
-            alert("Registration cancelled successfully!")
+            showToast("Registration cancelled successfully!", 'success')
             router.refresh()
         } catch (err: unknown) {
             const error = err as Error
-            alert(error.message)
+            showToast(error.message, 'error')
         } finally {
             setCanceling(false)
             setShowCancelConfirm(false)
@@ -284,6 +286,7 @@ export function EventRegistrationCard({
                     loading={loading}
                 />
             )}
+            {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
         </div>
     )
 }

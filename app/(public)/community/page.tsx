@@ -4,12 +4,12 @@ import { getPosts } from "@/lib/actions/community";
 import { CreatePost } from "@/components/community/CreatePost";
 import { PostList } from "@/components/community/PostList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { auth } from "@/lib/auth";
+import { getSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Home, ChevronRight, Users, Rocket, HelpCircle, Lightbulb, MessageSquare } from "lucide-react";
+import { Home, ChevronRight, Users, Rocket, HelpCircle, Lightbulb, MessageSquare, PenSquare } from "lucide-react";
 import { motion } from "framer-motion";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function CommunityPage() {
     const [posts, setPosts] = useState<any[]>([]);
@@ -18,8 +18,12 @@ export default function CommunityPage() {
 
     useEffect(() => {
         async function fetchData() {
-            const fetchedPosts = await getPosts();
+            const [fetchedPosts, fetchedSession] = await Promise.all([
+                getPosts(),
+                getSession()
+            ]);
             setPosts(fetchedPosts);
+            setSession(fetchedSession);
             setLoading(false);
         }
         fetchData();
@@ -128,20 +132,31 @@ export default function CommunityPage() {
                             className="lg:col-span-1"
                         >
                             <div className="sticky top-32">
-                                <div className="p-6 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-                                    <div className="w-12 h-12 rounded-xl bg-blue-600/20 flex items-center justify-center text-blue-400 mb-4">
-                                        <MessageSquare className="w-6 h-6" />
+                                {/* Show CreatePost if logged in, otherwise show login prompt */}
+                                {session?.user ? (
+                                    <div className="p-6 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+                                        <div className="w-12 h-12 rounded-xl bg-green-600/20 flex items-center justify-center text-green-400 mb-4">
+                                            <PenSquare className="w-6 h-6" />
+                                        </div>
+                                        <h3 className="font-bold text-xl mb-4">Start a Discussion</h3>
+                                        <CreatePost />
                                     </div>
-                                    <h3 className="font-bold text-xl mb-2">Join the Conversation</h3>
-                                    <p className="text-sm text-gray-400 mb-6">
-                                        Log in to post questions, share projects, and connect with peers.
-                                    </p>
-                                    <Link href="/login">
-                                        <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                                            Login to Post
-                                        </Button>
-                                    </Link>
-                                </div>
+                                ) : (
+                                    <div className="p-6 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+                                        <div className="w-12 h-12 rounded-xl bg-blue-600/20 flex items-center justify-center text-blue-400 mb-4">
+                                            <MessageSquare className="w-6 h-6" />
+                                        </div>
+                                        <h3 className="font-bold text-xl mb-2">Join the Conversation</h3>
+                                        <p className="text-sm text-gray-400 mb-6">
+                                            Log in to post questions, share projects, and connect with peers.
+                                        </p>
+                                        <Link href="/login">
+                                            <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                                                Login to Post
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                )}
 
                                 {/* Quick Stats */}
                                 <div className="mt-6 p-6 rounded-2xl bg-white/[0.02] border border-white/10">

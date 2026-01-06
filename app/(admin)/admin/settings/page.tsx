@@ -1,5 +1,5 @@
 import { addSponsorship, getSponsorships, deleteSponsorship } from "@/lib/actions/sponsorships";
-import { Trash2, DollarSign, Settings, Plus, Building2, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Trash2, IndianRupee, Settings, Plus, Building2, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export default async function SettingsPage() {
     const sponsorships = await getSponsorships();
@@ -59,7 +59,7 @@ export default async function SettingsPage() {
                     <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-600/20 to-blue-500/10 border border-blue-500/30 backdrop-blur-xl">
                         <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-2xl bg-blue-600/30 flex items-center justify-center">
-                                <DollarSign className="w-7 h-7 text-blue-400" />
+                                <IndianRupee className="w-7 h-7 text-blue-400" />
                             </div>
                             <div>
                                 <p className="text-blue-400/80 text-sm font-medium">Net Balance</p>
@@ -207,7 +207,7 @@ export default async function SettingsPage() {
                                 {sponsorships.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="px-6 py-12 text-center">
-                                            <DollarSign className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                                            <IndianRupee className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                                             <p className="text-gray-400">No transactions recorded yet</p>
                                         </td>
                                     </tr>
