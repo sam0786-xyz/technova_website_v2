@@ -6,6 +6,7 @@ import { unstable_cache } from 'next/cache'
 export interface PublicProfileData {
     id: string
     name: string
+    email?: string | null
     image?: string | null
     xp_points: number
     role?: string
@@ -40,7 +41,7 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
     const { data: user, error: userError } = await supabase
         .schema('next_auth')
         .from('users')
-        .select('id, name, image, xp_points, role, year, branch')
+        .select('id, name, email, image, xp_points, role, year, branch')
         .eq('id', userId)
         .single()
 

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getPublicProfile } from '@/lib/actions/public-profile'
 import Link from 'next/link'
-import { Home, ChevronRight, Trophy, TrendingUp, Calendar, Award, ArrowLeft } from 'lucide-react'
+import { Home, ChevronRight, Trophy, TrendingUp, Calendar, Award, ArrowLeft, Mail } from 'lucide-react'
 import { PublicProfileChart } from './chart'
 
 interface PageProps {
@@ -76,7 +76,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
                         {/* Info */}
                         <div className="flex-1 text-center md:text-left">
-                            <h1 className="text-3xl font-bold text-white mb-2">{profile.name}</h1>
+                            <h1 className="text-3xl font-bold text-white mb-1">{profile.name}</h1>
+                            {profile.email && (
+                                <p className="text-gray-400 text-sm flex items-center justify-center md:justify-start gap-1.5 mb-3">
+                                    <Mail className="w-4 h-4" />
+                                    {profile.email}
+                                </p>
+                            )}
                             <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
                                 {profile.role && (
                                     <span className="px-3 py-1 bg-blue-600/20 border border-blue-500/30 rounded-full text-sm text-blue-300 capitalize">

@@ -1,5 +1,5 @@
 import { createClient as createServerClient } from "@supabase/supabase-js"
-import { Calendar, Users, DollarSign, Shield, TrendingUp, Activity, Crown, Star, Sparkles } from "lucide-react"
+import { Calendar, Users, IndianRupee, Shield, TrendingUp, Activity, Crown, Star, Sparkles } from "lucide-react"
 import { ADMIN_EMAILS } from "@/lib/auth/role-utils"
 import { formatDate } from "@/lib/utils"
 import Link from "next/link"
@@ -47,7 +47,7 @@ export default async function AdminDashboardPage() {
     const statCards = [
         { label: "Total Events", value: stats.events, icon: Calendar, color: "blue", gradient: "from-blue-600/20 to-blue-500/10", borderColor: "border-blue-500/30" },
         { label: "Registrations", value: stats.registrations, icon: Users, color: "green", gradient: "from-green-600/20 to-green-500/10", borderColor: "border-green-500/30" },
-        { label: "Revenue", value: `₹${stats.revenue.toLocaleString()}`, icon: DollarSign, color: "amber", gradient: "from-amber-600/20 to-amber-500/10", borderColor: "border-amber-500/30" },
+        { label: "Revenue", value: `₹${stats.revenue.toLocaleString()}`, icon: IndianRupee, color: "amber", gradient: "from-amber-600/20 to-amber-500/10", borderColor: "border-amber-500/30" },
         { label: "Team / Admins", value: stats.scanners, icon: Shield, color: "purple", gradient: "from-purple-600/20 to-purple-500/10", borderColor: "border-purple-500/30" },
     ]
 
@@ -124,7 +124,7 @@ export default async function AdminDashboardPage() {
                         href="/admin/settings"
                         className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all text-center group"
                     >
-                        <DollarSign className="w-6 h-6 text-amber-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                        <IndianRupee className="w-6 h-6 text-amber-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
                         <span className="text-sm text-white font-medium">Finances</span>
                     </Link>
                 </div>

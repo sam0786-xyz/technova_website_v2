@@ -170,6 +170,7 @@ export async function updateEvent(formData: FormData) {
     const registration_fields = formData.get("registration_fields") as string || "[]"
     const is_virtual = formData.get("is_virtual") === "true"
     const meeting_link = formData.get("meeting_link") as string || null
+    const banner_position = formData.get("banner_position") as string || "center"
     const event_type = formData.get("event_type") as string || "workshop"
     const difficulty_level = formData.get("difficulty_level") as string || "easy"
     const poc_name = formData.get("poc_name") as string || null
@@ -206,6 +207,7 @@ export async function updateEvent(formData: FormData) {
         price,
         status,
         banner,
+        banner_position,
         co_host_club_id: co_host_club_id === 'none' ? null : co_host_club_id,
         updated_at: new Date().toISOString(),
         registration_fields,

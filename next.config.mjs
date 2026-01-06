@@ -4,6 +4,11 @@ const nextConfig = {
         // Ignore build errors from @auth/core package (upstream issue with CSS custom properties)
         ignoreBuildErrors: true,
     },
+    experimental: {
+        serverActions: {
+            bodySizeLimit: '5mb',
+        },
+    },
     images: {
         remotePatterns: [
             {
