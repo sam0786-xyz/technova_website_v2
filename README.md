@@ -90,6 +90,15 @@ This digital platform serves as the central hub for:
 | **Email Notifications** | Automated confirmations, reminders, and updates via Resend |
 | **Payment Integration** | Razorpay support for paid workshop registrations |
 
+### 🚀 Performance & SEO
+| Feature | Description |
+|---------|-------------|
+| **SEO Optimization** | Enhanced metadata, Open Graph tags, and JSON-LD structured data for better search visibility |
+| **Dynamic Sitemap** | Auto-generated sitemap including all static pages and dynamic event pages |
+| **Smart Indexing** | Configured robots.txt for optimal search engine crawling and indexing |
+| **Referral System** | Robust referral tracking with unique codes, automatic XP rewards, and leaderboard integration |
+| **Data Integrity** | Admin tools for ensuring accurate referral tracking and leaderboard updates |
+
 ---
 
 ## Tech Stack
