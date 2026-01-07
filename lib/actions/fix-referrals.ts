@@ -56,21 +56,37 @@ export async function processMissedReferrals(): Promise<{
             continue
         }
 
-        // Find the referrer
-        const { data: referrers } = await supabase
+        console.log(`Looking for user with ID starting with: ${userIdPrefix}`)
+
+        // Find the referrer - get all users and filter by prefix
+        let referrerId: string = ''
+
+        // First, get all users and filter (more reliable across schemas)
+        const { data: allUsers, error: usersError } = await supabase
             .schema('next_auth' as any)
             .from('users')
             .select('id')
-            .like('id', `${userIdPrefix}%`)
-            .limit(1)
 
-        if (!referrers || referrers.length === 0) {
+        if (usersError) {
+            console.error('Error fetching users:', usersError)
+            errors.push(`Error fetching users: ${usersError.message}`)
+            details.push({ registrationId: reg.id, referrerId: 'error', status: 'db_error' })
+            continue
+        }
+
+        // Find user whose ID starts with the prefix
+        const matchingUser = allUsers?.find(u => u.id.toLowerCase().startsWith(userIdPrefix.toLowerCase()))
+
+        if (!matchingUser) {
+            console.log(`No user found with ID prefix: ${userIdPrefix}`)
+            console.log('Available user IDs:', allUsers?.map(u => u.id.substring(0, 10)).join(', '))
             errors.push(`Referrer not found for code: ${referralCode}`)
             details.push({ registrationId: reg.id, referrerId: 'not_found', status: 'referrer_not_found' })
             continue
         }
 
-        const referrerId = referrers[0].id
+        referrerId = matchingUser.id
+        console.log(`Found referrer: ${referrerId}`)
 
         // Skip self-referrals
         if (referrerId === refereeId) {
