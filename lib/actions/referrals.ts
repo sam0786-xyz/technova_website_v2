@@ -2,6 +2,7 @@
 
 import { createClient as createServerClient } from "@supabase/supabase-js"
 import { auth } from "@/lib/auth"
+import { revalidatePath, revalidateTag } from "next/cache"
 
 // XP awarded per successful referral
 const REFERRAL_XP_REWARD = 10
@@ -153,6 +154,12 @@ export async function processReferral(
         console.error('XP update error:', updateError)
         // Don't fail the referral tracking, just log the error
     }
+
+    // INVALIDATE CACHE
+    revalidateTag('leaderboard')
+    revalidatePath('/leaderboard')
+    revalidatePath('/events')
+    revalidatePath('/dashboard')
 
     return {
         success: true,
