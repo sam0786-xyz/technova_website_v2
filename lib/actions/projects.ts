@@ -7,6 +7,14 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 
+/**
+ * Get current user ID - for use in client components
+ */
+export async function getCurrentUserId(): Promise<string | undefined> {
+    const session = await auth();
+    return session?.user?.id;
+}
+
 const createProjectSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters"),
     description: z.string().min(10, "Description must be at least 10 characters"),

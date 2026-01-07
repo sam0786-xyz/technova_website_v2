@@ -1,18 +1,18 @@
 'use client'
 
 import { getProjects } from "@/lib/actions/projects";
+import { getCurrentUserId } from "@/lib/actions/projects";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus, Home, ChevronRight, Code, Rocket, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 
 export default function ShowcasePage() {
-    const { data: session } = useSession();
     const [projects, setProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
 
     const fetchProjects = async () => {
         const results = await getProjects();
@@ -22,6 +22,8 @@ export default function ShowcasePage() {
 
     useEffect(() => {
         fetchProjects();
+        // Fetch current user ID
+        getCurrentUserId().then(setCurrentUserId);
     }, []);
 
     return (
@@ -125,7 +127,7 @@ export default function ShowcasePage() {
                                 >
                                     <ProjectCard
                                         project={project}
-                                        currentUserId={session?.user?.id}
+                                        currentUserId={currentUserId}
                                         onDelete={fetchProjects}
                                     />
                                 </motion.div>
