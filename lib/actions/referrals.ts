@@ -2,6 +2,7 @@
 
 import { createClient as createServerClient } from "@supabase/supabase-js"
 import { auth } from "@/lib/auth"
+import { revalidatePath } from "next/cache"
 
 // XP awarded per successful referral
 const REFERRAL_XP_REWARD = 10
@@ -74,35 +75,48 @@ export async function processReferral(
     eventId: string,
     refereeId: string
 ): Promise<{ success: boolean; message: string }> {
+    console.log('=== REFERRAL PROCESSING START ===')
+    console.log('Referral Code:', referralCode)
+    console.log('Event ID:', eventId)
+    console.log('Referee ID:', refereeId)
+
     const supabase = await getSupabase()
 
     // 1. Find the referrer by matching the code pattern (first 8 chars = user ID prefix)
     const userIdPrefix = referralCode.split('-')[0]
+    console.log('User ID Prefix:', userIdPrefix)
+
     if (!userIdPrefix || userIdPrefix.length !== 8) {
+        console.log('ERROR: Invalid referral code format')
         return { success: false, message: 'Invalid referral code format' }
     }
 
     // Find users whose ID starts with this prefix
-    const { data: referrers } = await supabase
+    const { data: referrers, error: referrerError } = await supabase
         .schema('next_auth' as unknown as 'public')
         .from('users')
         .select('id')
         .like('id', `${userIdPrefix}%`)
         .limit(1)
 
+    console.log('Referrer lookup result:', { referrers, error: referrerError })
+
     if (!referrers || referrers.length === 0) {
+        console.log('ERROR: Referrer not found')
         return { success: false, message: 'Referrer not found' }
     }
 
     const referrerId = referrers[0].id
+    console.log('Referrer ID found:', referrerId)
 
     // 2. Prevent self-referral
     if (referrerId === refereeId) {
+        console.log('ERROR: Self-referral attempted')
         return { success: false, message: 'Cannot refer yourself' }
     }
 
     // 3. Check if this referral already exists (prevent duplicate XP)
-    const { data: existingReferral } = await supabase
+    const { data: existingReferral, error: existingError } = await supabase
         .from('referrals')
         .select('id')
         .eq('referrer_id', referrerId)
@@ -110,11 +124,21 @@ export async function processReferral(
         .eq('event_id', eventId)
         .maybeSingle()
 
+    console.log('Existing referral check:', { existingReferral, error: existingError })
+
+    if (existingError) {
+        // If the table doesn't exist, log it clearly
+        console.error('ERROR checking existing referral (table may not exist):', existingError)
+        return { success: false, message: `Database error: ${existingError.message}` }
+    }
+
     if (existingReferral) {
+        console.log('ERROR: Referral already processed')
         return { success: false, message: 'Referral already processed' }
     }
 
     // 4. Record the referral
+    console.log('Inserting referral record...')
     const { error: insertError } = await supabase
         .from('referrals')
         .insert({
@@ -127,20 +151,25 @@ export async function processReferral(
 
     if (insertError) {
         console.error('Referral insert error:', insertError)
-        return { success: false, message: 'Failed to record referral' }
+        return { success: false, message: `Failed to record referral: ${insertError.message}` }
     }
+
+    console.log('Referral inserted successfully!')
 
     // 5. Award XP to the referrer
     // Get current XP
-    const { data: referrer } = await supabase
+    const { data: referrer, error: xpFetchError } = await supabase
         .schema('next_auth' as unknown as 'public')
         .from('users')
         .select('xp_points')
         .eq('id', referrerId)
         .single()
 
+    console.log('Current XP fetch:', { xp_points: referrer?.xp_points, error: xpFetchError })
+
     const currentXP = referrer?.xp_points || 0
     const newXP = currentXP + REFERRAL_XP_REWARD
+    console.log('Updating XP:', currentXP, '->', newXP)
 
     // Update XP
     const { error: updateError } = await supabase
@@ -152,8 +181,16 @@ export async function processReferral(
     if (updateError) {
         console.error('XP update error:', updateError)
         // Don't fail the referral tracking, just log the error
+    } else {
+        console.log('XP updated successfully!')
     }
 
+    // INVALIDATE CACHE
+    revalidatePath('/leaderboard')
+    revalidatePath('/events')
+    revalidatePath('/dashboard')
+
+    console.log('=== REFERRAL PROCESSING COMPLETE ===')
     return {
         success: true,
         message: `Successfully awarded ${REFERRAL_XP_REWARD} XP to referrer`
