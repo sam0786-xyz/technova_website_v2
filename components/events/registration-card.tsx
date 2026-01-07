@@ -7,6 +7,7 @@ import { Download, XCircle, Loader2 } from "lucide-react"
 import { RegistrationModal } from "./registration-modal"
 import { RegistrationField } from "@/components/admin/form-builder"
 import { Toast, useToast } from "@/components/ui/toast"
+import { ReferralShare } from "./referral-share"
 
 declare global {
     interface Window {
@@ -52,12 +53,14 @@ export function EventRegistrationCard({
     event,
     user,
     existingRegistration,
-    qrCode
+    qrCode,
+    referralCode
 }: {
     event: EventData
     user: UserData | null
     existingRegistration: RegistrationData | null
     qrCode?: string | null
+    referralCode?: string | null
 }) {
     const [loading, setLoading] = useState(false)
     const [canceling, setCanceling] = useState(false)
@@ -88,7 +91,7 @@ export function EventRegistrationCard({
         setShowModal(false)
 
         try {
-            const result = await registerForEvent(event.id, answers)
+            const result = await registerForEvent(event.id, answers, referralCode || undefined)
 
             if (result.status === 'success') {
                 showToast("Registration successful! QR code sent to your email", 'success')
@@ -170,6 +173,16 @@ export function EventRegistrationCard({
                             <Download className="w-4 h-4" />
                             Download QR
                         </button>
+                    </div>
+                )}
+
+                {/* Share & Earn XP */}
+                {user && (
+                    <div className="mt-4 pt-4 border-t border-green-200">
+                        <p className="text-green-700 text-sm mb-3 text-center">Invite friends and earn XP!</p>
+                        <div className="flex justify-center">
+                            <ReferralShare eventSlugOrId={event.id} eventTitle={event.title} />
+                        </div>
                     </div>
                 )}
 

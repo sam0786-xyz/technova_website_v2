@@ -8,6 +8,7 @@ import { generateQRToken } from "@/lib/qr/generate"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
 import { TicketEmail } from "@/emails/ticket-email"
+import { processReferral } from "@/lib/actions/referrals"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -33,7 +34,7 @@ export async function checkRegistration(eventId: string) {
     return data
 }
 
-export async function registerForEvent(eventId: string, answers?: Record<string, any>) {
+export async function registerForEvent(eventId: string, answers?: Record<string, any>, referralCode?: string) {
     const session = await auth()
     if (!session) throw new Error("Unauthorized")
 
@@ -61,7 +62,8 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
             event_id: eventId,
             payment_status: 'pending',
             qr_token_id: order.id,
-            answers: answers || {}
+            answers: answers || {},
+            referred_by: referralCode || null
         })
         return { status: 'payment_required', order }
     } else {
@@ -90,10 +92,21 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
             event_id: eventId,
             payment_status: 'free',
             qr_token_id: token,
-            answers: answers || {}
+            answers: answers || {},
+            referred_by: referralCode || null
         })
 
         if (error) throw new Error(error.message)
+
+        // Process referral if provided
+        if (referralCode && session.user.id) {
+            try {
+                await processReferral(referralCode, eventId, session.user.id)
+            } catch (refError) {
+                console.error('Referral processing error:', refError)
+                // Don't block registration on referral error
+            }
+        }
 
         // Send Email - with QR only for in-person events
         try {

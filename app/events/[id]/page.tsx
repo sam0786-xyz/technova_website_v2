@@ -11,8 +11,15 @@ import { generateQRToken } from "@/lib/qr/generate"
 import { createClient } from "@supabase/supabase-js"
 import { formatDate, formatDateRange, formatTime } from "@/lib/utils"
 
-export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EventPage({
+    params,
+    searchParams
+}: {
+    params: Promise<{ id: string }>
+    searchParams: Promise<{ ref?: string }>
+}) {
     const { id } = await params
+    const { ref: referralCode } = await searchParams
     const event = await getEventBySlugOrId(id)
     const session = await auth()
 
@@ -20,7 +27,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         notFound()
     }
 
-    const existingRegistration = await checkRegistration(id)
+    const existingRegistration = await checkRegistration(event.id)
 
     const user = session?.user || null
     let qrCode = null
@@ -169,6 +176,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                                     user={user}
                                     existingRegistration={existingRegistration}
                                     qrCode={qrCode}
+                                    referralCode={referralCode}
                                 />
                                 <POCCard
                                     name={event.poc_name}
