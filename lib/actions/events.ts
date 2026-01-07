@@ -4,6 +4,7 @@ import { createClient as createServerClient } from "@supabase/supabase-js"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
+import { generateEventSlug } from "@/lib/utils/slugify"
 
 // Helper to get authenticated client or admin client
 async function getSupabase() {
@@ -94,7 +95,7 @@ export async function createEvent(formData: FormData) {
     }
 
     // 2. Create Event
-    const { error } = await supabase.from('events').insert({
+    const { data: newEvent, error } = await supabase.from('events').insert({
         club_id,
         title,
         description,
@@ -117,17 +118,21 @@ export async function createEvent(formData: FormData) {
         event_type,
         difficulty_level,
         poc_name
-    })
+    }).select('id').single()
 
-    if (error) {
+    if (error || !newEvent) {
         console.error("Create Event Error:", error)
         throw new Error("Failed to create event")
     }
 
+    // Generate and update slug after insert (needs the ID for uniqueness)
+    const slug = generateEventSlug(title, newEvent.id)
+    await supabase.from('events').update({ slug }).eq('id', newEvent.id)
+
     revalidatePath("/events")
     revalidatePath("/admin/events")
 
-    return { success: true, message: "Event created successfully!" }
+    return { success: true, message: "Event created successfully!", eventId: newEvent.id, slug }
 }
 
 export async function updateEvent(formData: FormData) {
@@ -208,6 +213,7 @@ export async function updateEvent(formData: FormData) {
         status,
         banner,
         banner_position,
+        slug: generateEventSlug(title, id), // Regenerate slug on title change
         co_host_club_id: co_host_club_id === 'none' ? null : co_host_club_id,
         updated_at: new Date().toISOString(),
         registration_fields,
@@ -226,11 +232,13 @@ export async function updateEvent(formData: FormData) {
         throw new Error("Failed to update event")
     }
 
+    const slug = generateEventSlug(title, id)
     revalidatePath("/events")
     revalidatePath("/admin/events")
     revalidatePath(`/events/${id}`)
+    revalidatePath(`/events/${slug}`)
 
-    return { success: true, message: "Event updated successfully!" }
+    return { success: true, message: "Event updated successfully!", slug }
 }
 
 export async function deleteEvent(id: string) {
@@ -365,3 +373,63 @@ export async function getEventById(id: string) {
         poc_phone: pocDetails?.phone || null
     }
 }
+
+/**
+ * Get event by slug or ID (for backwards compatibility)
+ * Tries slug first, then falls back to UUID lookup
+ */
+export async function getEventBySlugOrId(slugOrId: string) {
+    const supabase = await getSupabase()
+
+    // Try slug first
+    let { data: event, error } = await supabase.from('events')
+        .select(`
+            *,
+            club:clubs!events_club_id_fkey(name, logo_url)
+        `)
+        .eq('slug', slugOrId)
+        .single()
+
+    // If not found by slug, try by ID (backwards compatibility)
+    if (error || !event) {
+        const { data: eventById, error: errorById } = await supabase.from('events')
+            .select(`
+                *,
+                club:clubs!events_club_id_fkey(name, logo_url)
+            `)
+            .eq('id', slugOrId)
+            .single()
+
+        if (errorById || !eventById) return null
+        event = eventById
+    }
+
+    // Fetch registration count
+    const { count } = await supabase
+        .from('registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', event.id)
+
+    // Fetch POC details if available
+    let pocDetails = null
+    if (event.poc_name && event.club_id) {
+        const { data: member } = await supabase
+            .from('club_members')
+            .select('email, phone')
+            .eq('club_id', event.club_id)
+            .eq('name', event.poc_name)
+            .single()
+
+        if (member) {
+            pocDetails = member
+        }
+    }
+
+    return {
+        ...event,
+        registered_count: count || 0,
+        poc_email: pocDetails?.email || null,
+        poc_phone: pocDetails?.phone || null
+    }
+}
+

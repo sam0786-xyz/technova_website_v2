@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth"
 import { Calendar, MapPin, Clock, Users, Globe, ArrowLeft, Video, CalendarDays } from "lucide-react"
 import Link from "next/link"
-import { getEventById } from "@/lib/actions/events"
+import { getEventBySlugOrId } from "@/lib/actions/events"
 import { checkRegistration } from "@/lib/actions/registrations"
 import { EventRegistrationCard } from "@/components/events/registration-card"
 import { POCCard } from "@/components/events/poc-card"
@@ -13,7 +13,7 @@ import { formatDate, formatDateRange, formatTime } from "@/lib/utils"
 
 export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    const event = await getEventById(id)
+    const event = await getEventBySlugOrId(id)
     const session = await auth()
 
     if (!event) {
