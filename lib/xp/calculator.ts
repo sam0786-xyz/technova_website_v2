@@ -137,6 +137,34 @@ export function getDurationLabel(
     }
 }
 
+/**
+ * Calculate the number of days for an event
+ * Used for daily XP distribution
+ */
+export function getEventDayCount(
+    startTime: string,
+    endTime: string,
+    isMultiDay?: boolean
+): number {
+    try {
+        const start = new Date(startTime)
+        const end = new Date(endTime)
+
+        // Reset to start of day for accurate day count
+        const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+        const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate())
+
+        // Calculate difference in days
+        const diffMs = endDay.getTime() - startDay.getTime()
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1  // +1 because both start and end day count
+
+        // Minimum 1 day
+        return Math.max(1, diffDays)
+    } catch {
+        return 1  // Default to single day on parse error
+    }
+}
+
 // ==========================================
 // Difficulty Multiplier
 // ==========================================
@@ -169,6 +197,9 @@ export interface XPCalculationResult {
     difficultyMultiplier: number
     finalXP: number
     breakdown: string
+    // Daily XP distribution fields
+    eventDays: number
+    dailyXP: number
 }
 
 /**
@@ -187,15 +218,21 @@ export function calculateEventXP(event: EventXPData): XPCalculationResult {
     // Calculate final XP (rounded to nearest integer)
     const finalXP = Math.round(baseXP * durationMultiplier * difficultyMultiplier)
 
+    // Calculate event days and daily XP for distribution
+    const eventDays = getEventDayCount(event.start_time, event.end_time, event.is_multi_day)
+    const dailyXP = Math.floor(finalXP / eventDays)
+
     // Generate breakdown string for display/logging
-    const breakdown = `${baseXP} × ${durationMultiplier} × ${difficultyMultiplier} = ${finalXP} XP`
+    const breakdown = `${baseXP} × ${durationMultiplier} × ${difficultyMultiplier} = ${finalXP} XP (${dailyXP} XP/day × ${eventDays} days)`
 
     return {
         baseXP,
         durationMultiplier,
         difficultyMultiplier,
         finalXP,
-        breakdown
+        breakdown,
+        eventDays,
+        dailyXP
     }
 }
 

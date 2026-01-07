@@ -187,3 +187,210 @@ export async function getEventXPAwards(eventId: string): Promise<{ userId: strin
         amount: award.xp_amount
     }))
 }
+
+// ==========================================
+// Daily XP Distribution Functions
+// ==========================================
+
+/**
+ * Check if user already checked in for a specific date
+ */
+export async function hasDailyCheckin(
+    userId: string,
+    eventId: string,
+    checkinDate: Date
+): Promise<boolean> {
+    const supabase = getSupabase()
+
+    // Format date as YYYY-MM-DD for database comparison
+    const dateStr = checkinDate.toISOString().split('T')[0]
+
+    const { data } = await supabase
+        .from('daily_checkins')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('event_id', eventId)
+        .eq('checkin_date', dateStr)
+        .single()
+
+    return !!data
+}
+
+/**
+ * Get all daily check-ins for a user and event
+ */
+export async function getUserDailyCheckinsForEvent(
+    userId: string,
+    eventId: string
+): Promise<{ date: string; xpAwarded: number }[]> {
+    const supabase = getSupabase()
+
+    const { data, error } = await supabase
+        .from('daily_checkins')
+        .select('checkin_date, xp_awarded')
+        .eq('user_id', userId)
+        .eq('event_id', eventId)
+        .order('checkin_date', { ascending: true })
+
+    if (error || !data) {
+        return []
+    }
+
+    return data.map(checkin => ({
+        date: checkin.checkin_date,
+        xpAwarded: checkin.xp_awarded
+    }))
+}
+
+/**
+ * Extended result for daily XP award
+ */
+export interface DailyXPAwardResult extends XPAwardResult {
+    dailyXP: number
+    eventDays: number
+    totalXP: number
+    daysCheckedIn: number
+    remainingDays: number
+}
+
+/**
+ * Award daily XP chunk for a specific day's check-in
+ * 
+ * This function:
+ * 1. Calculates total event XP using the standard formula
+ * 2. Divides it by the number of event days
+ * 3. Awards one daily chunk per check-in
+ * 4. Handles remainder XP on the last valid check-in day
+ */
+export async function awardDailyXP(
+    userId: string,
+    eventId: string,
+    eventData: EventXPData,
+    checkinDate: Date = new Date()
+): Promise<DailyXPAwardResult> {
+    const supabase = getSupabase()
+
+    // 1. Validate event data
+    if (!canCalculateXP(eventData)) {
+        return {
+            success: false,
+            xpAwarded: 0,
+            dailyXP: 0,
+            eventDays: 0,
+            totalXP: 0,
+            daysCheckedIn: 0,
+            remainingDays: 0,
+            message: 'Event missing required fields for XP calculation'
+        }
+    }
+
+    // 2. Calculate total XP and daily distribution
+    const { finalXP, dailyXP, eventDays, breakdown } = calculateEventXP(eventData)
+
+    // 3. Format check-in date
+    const dateStr = checkinDate.toISOString().split('T')[0]
+
+    // 4. Check if already checked in today
+    const alreadyCheckedIn = await hasDailyCheckin(userId, eventId, checkinDate)
+    if (alreadyCheckedIn) {
+        const existingCheckins = await getUserDailyCheckinsForEvent(userId, eventId)
+        return {
+            success: false,
+            xpAwarded: 0,
+            dailyXP,
+            eventDays,
+            totalXP: finalXP,
+            daysCheckedIn: existingCheckins.length,
+            remainingDays: eventDays - existingCheckins.length,
+            message: 'Already checked in today'
+        }
+    }
+
+    // 5. Get existing check-ins to determine if this is the last day
+    const existingCheckins = await getUserDailyCheckinsForEvent(userId, eventId)
+    const daysCheckedIn = existingCheckins.length
+    const totalAwarded = existingCheckins.reduce((sum, c) => sum + c.xpAwarded, 0)
+
+    // Calculate XP to award this check-in
+    // On the last possible check-in, award remaining XP to avoid rounding loss
+    let xpToAward = dailyXP
+    const isLastPossibleDay = daysCheckedIn + 1 >= eventDays
+    if (isLastPossibleDay) {
+        // Award all remaining XP on last day
+        xpToAward = finalXP - totalAwarded
+    }
+
+    // 6. Record daily check-in
+    const { error: checkinError } = await supabase
+        .from('daily_checkins')
+        .insert({
+            user_id: userId,
+            event_id: eventId,
+            checkin_date: dateStr,
+            xp_awarded: xpToAward
+        })
+
+    if (checkinError) {
+        // Handle unique constraint violation (race condition)
+        if (checkinError.code === '23505') {
+            return {
+                success: false,
+                xpAwarded: 0,
+                dailyXP,
+                eventDays,
+                totalXP: finalXP,
+                daysCheckedIn,
+                remainingDays: eventDays - daysCheckedIn,
+                message: 'Already checked in today'
+            }
+        }
+        console.error('Daily Check-in Error:', checkinError)
+        return {
+            success: false,
+            xpAwarded: 0,
+            dailyXP,
+            eventDays,
+            totalXP: finalXP,
+            daysCheckedIn,
+            remainingDays: eventDays - daysCheckedIn,
+            message: 'Failed to record daily check-in'
+        }
+    }
+
+    // 7. Update user's total XP points
+    const { data: user } = await supabase
+        .schema('next_auth' as unknown as 'public')
+        .from('users')
+        .select('xp_points')
+        .eq('id', userId)
+        .single()
+
+    const currentXP = user?.xp_points || 0
+    const newXP = currentXP + xpToAward
+
+    const { error: updateError } = await supabase
+        .schema('next_auth' as unknown as 'public')
+        .from('users')
+        .update({ xp_points: newXP })
+        .eq('id', userId)
+
+    if (updateError) {
+        console.error('XP Update Error:', updateError)
+        // Check-in was recorded, so we continue even if user XP update fails
+    }
+
+    const newDaysCheckedIn = daysCheckedIn + 1
+    const remainingDays = Math.max(0, eventDays - newDaysCheckedIn)
+
+    return {
+        success: true,
+        xpAwarded: xpToAward,
+        dailyXP,
+        eventDays,
+        totalXP: finalXP,
+        daysCheckedIn: newDaysCheckedIn,
+        remainingDays,
+        message: `Awarded ${xpToAward} XP (Day ${newDaysCheckedIn}/${eventDays})`,
+        breakdown
+    }
+}

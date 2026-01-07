@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { awardXPForAttendance } from '@/lib/xp'
+import { awardDailyXP } from '@/lib/xp'
 import { hasSubmittedEventFeedback } from '@/lib/actions/feedback'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getClientIdentifier } from '@/lib/rate-limit'
@@ -94,8 +94,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, message: 'Failed to update' }, { status: 500 })
         }
 
-        // 4. Award XP for attendance
-        const xpResult = await awardXPForAttendance(userId, eventId, {
+        // 4. Award daily XP for attendance (distributes XP across event days)
+        const xpResult = await awardDailyXP(userId, eventId, {
             event_type: registration.events?.event_type,
             difficulty_level: registration.events?.difficulty_level,
             start_time: registration.events?.start_time,
@@ -116,7 +116,12 @@ export async function POST(req: NextRequest) {
             message: 'Check-in successful',
             userName: user?.name || 'Attendee',
             xpAwarded: xpResult.xpAwarded,
-            xpMessage: xpResult.message
+            xpMessage: xpResult.message,
+            // Daily XP distribution info
+            dailyXP: xpResult.dailyXP,
+            eventDays: xpResult.eventDays,
+            daysCheckedIn: xpResult.daysCheckedIn,
+            remainingDays: xpResult.remainingDays
         })
 
     } catch (err) {
