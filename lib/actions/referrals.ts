@@ -92,21 +92,30 @@ export async function processReferral(
     }
 
     // Find users whose ID starts with this prefix
-    const { data: referrers, error: referrerError } = await supabase
+    // Note: We fetch all users and filter locally because .like() doesn't work reliably on next_auth schema
+    const { data: allUsers, error: usersError } = await supabase
         .schema('next_auth' as unknown as 'public')
         .from('users')
         .select('id')
-        .like('id', `${userIdPrefix}%`)
-        .limit(1)
 
-    console.log('Referrer lookup result:', { referrers, error: referrerError })
+    if (usersError) {
+        console.error('Error fetching users:', usersError)
+        return { success: false, message: `Database error: ${usersError.message}` }
+    }
 
-    if (!referrers || referrers.length === 0) {
-        console.log('ERROR: Referrer not found')
+    // Find user whose ID starts with the prefix (case-insensitive)
+    const matchingUser = allUsers?.find(u => 
+        u.id.toLowerCase().startsWith(userIdPrefix.toLowerCase())
+    )
+
+    console.log('Referrer lookup result:', { found: !!matchingUser, prefix: userIdPrefix })
+
+    if (!matchingUser) {
+        console.log('ERROR: Referrer not found for prefix:', userIdPrefix)
         return { success: false, message: 'Referrer not found' }
     }
 
-    const referrerId = referrers[0].id
+    const referrerId = matchingUser.id
     console.log('Referrer ID found:', referrerId)
 
     // 2. Prevent self-referral
