@@ -76,7 +76,7 @@ export default async function AdminEventsPage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    events.map((event: { id: string; title: string; start_time: string; status: string; capacity: number }) => (
+                                    events.map((event: { id: string; title: string; start_time: string; status: string; capacity: number; slug?: string }) => (
                                         <tr key={event.id} className="hover:bg-white/5 transition-colors group">
                                             <td className="p-4">
                                                 <Link href={`/admin/events/${event.id}`} className="font-medium text-white hover:text-blue-400 transition-colors">
@@ -100,7 +100,7 @@ export default async function AdminEventsPage() {
                                             <td className="p-4">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <Link
-                                                        href={`/events/${event.id}`}
+                                                        href={`/events/${event.slug || event.id}`}
                                                         target="_blank"
                                                         className="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors"
                                                         title="View Public Page"
@@ -177,7 +177,7 @@ export default async function AdminEventsPage() {
                                                 <td className="p-4">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <Link
-                                                            href={`/events/${event.id}`}
+                                                            href={`/events/${event.slug || event.id}`}
                                                             target="_blank"
                                                             className="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors"
                                                             title="View Public Page"

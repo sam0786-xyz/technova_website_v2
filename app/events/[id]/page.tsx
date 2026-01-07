@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth"
 import { Calendar, MapPin, Clock, Users, Globe, ArrowLeft, Video, CalendarDays } from "lucide-react"
 import Link from "next/link"
-import { getEventById } from "@/lib/actions/events"
+import { getEventBySlugOrId } from "@/lib/actions/events"
 import { checkRegistration } from "@/lib/actions/registrations"
 import { EventRegistrationCard } from "@/components/events/registration-card"
 import { POCCard } from "@/components/events/poc-card"
@@ -11,16 +11,23 @@ import { generateQRToken } from "@/lib/qr/generate"
 import { createClient } from "@supabase/supabase-js"
 import { formatDate, formatDateRange, formatTime } from "@/lib/utils"
 
-export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EventPage({
+    params,
+    searchParams
+}: {
+    params: Promise<{ id: string }>
+    searchParams: Promise<{ ref?: string }>
+}) {
     const { id } = await params
-    const event = await getEventById(id)
+    const { ref: referralCode } = await searchParams
+    const event = await getEventBySlugOrId(id)
     const session = await auth()
 
     if (!event) {
         notFound()
     }
 
-    const existingRegistration = await checkRegistration(id)
+    const existingRegistration = await checkRegistration(event.id)
 
     const user = session?.user || null
     let qrCode = null
@@ -169,6 +176,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                                     user={user}
                                     existingRegistration={existingRegistration}
                                     qrCode={qrCode}
+                                    referralCode={referralCode}
                                 />
                                 <POCCard
                                     name={event.poc_name}

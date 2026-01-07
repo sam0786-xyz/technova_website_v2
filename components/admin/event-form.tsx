@@ -19,6 +19,7 @@ export function EventForm({ clubs, event }: EventFormProps) {
     const [selectedClubId, setSelectedClubId] = useState<string>(event?.club_id || "")
     const [pocMembers, setPocMembers] = useState<any[]>([])
     const [loadingMembers, setLoadingMembers] = useState(false)
+    const [selectedPoc, setSelectedPoc] = useState<string>(event?.poc_name || "")
     const { toast, showToast, hideToast } = useToast()
 
     useEffect(() => {
@@ -32,6 +33,10 @@ export function EventForm({ clubs, event }: EventFormProps) {
             try {
                 const members = await getClubMembers(selectedClubId)
                 setPocMembers(members)
+                // If editing and POC exists in members, keep it selected
+                if (event?.poc_name && members.some((m: any) => m.name === event.poc_name)) {
+                    setSelectedPoc(event.poc_name)
+                }
             } catch (error) {
                 console.error("Failed to fetch members", error)
             } finally {
@@ -39,7 +44,7 @@ export function EventForm({ clubs, event }: EventFormProps) {
             }
         }
         fetchMembers()
-    }, [selectedClubId])
+    }, [selectedClubId, event?.poc_name])
 
     // Banner position state
     const initialPos = event?.banner_position || "center"
@@ -151,7 +156,13 @@ export function EventForm({ clubs, event }: EventFormProps) {
                 {/* Point of Contact (POC) */}
                 <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Point of Contact (POC)</label>
-                    <select name="poc_name" defaultValue={event?.poc_name || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" disabled={!selectedClubId || loadingMembers}>
+                    <select
+                        name="poc_name"
+                        value={selectedPoc}
+                        onChange={(e) => setSelectedPoc(e.target.value)}
+                        className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                        disabled={!selectedClubId || loadingMembers}
+                    >
                         <option value="">
                             {loadingMembers ? 'Loading members...' : (!selectedClubId ? 'Select hosting club first' : 'Select POC')}
                         </option>

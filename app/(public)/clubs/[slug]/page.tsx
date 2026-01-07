@@ -336,7 +336,7 @@ function PastEventsSection({ slug, theme }: { slug: string; theme: typeof CLUB_T
                             transition={{ delay: idx * 0.1 }}
                         >
                             <Link
-                                href={`/events/${event.id}`}
+                                href={`/events/${event.slug || event.id}`}
                                 className={`block group rounded-2xl overflow-hidden bg-white/[0.02] border border-white/10 hover:${colors.border} transition-all duration-500 hover:-translate-y-1`}
                             >
                                 <div className="aspect-video relative overflow-hidden">

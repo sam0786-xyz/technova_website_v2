@@ -196,7 +196,7 @@ export default function PublicEventsPage() {
 
 function EventCard({ event }: { event: any }) {
     return (
-        <Link href={`/events/${event.id}`} className="block h-full">
+        <Link href={`/events/${event.slug || event.id}`} className="block h-full">
             <motion.div
                 className="bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/10 hover:border-blue-500/30 transition-all duration-500 overflow-hidden group relative h-full shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(59,130,246,0.15)]"
                 whileHover={{ y: -4 }}
@@ -279,7 +279,7 @@ function TimelineEventCard({ event, index }: { event: any; index: number }) {
 
             {/* Content */}
             <div className={`w-full md:w-[45%] ${isLeft ? 'md:pr-8 md:text-right' : 'md:pl-8'} pl-12 md:pl-0`}>
-                <Link href={`/events/${event.id}`}>
+                <Link href={`/events/${event.slug || event.id}`}>
                     <motion.div
                         className="bg-white/[0.02] backdrop-blur-xl rounded-xl border border-white/10 hover:border-blue-500/20 p-5 transition-all duration-300 hover:bg-white/[0.04] group"
                         whileHover={{ scale: 1.02 }}
