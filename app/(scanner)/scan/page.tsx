@@ -6,7 +6,7 @@ import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import jsQR from 'jsqr'
 import {
     CheckCircle, XCircle, Camera, Loader2, Upload, RefreshCw, ArrowLeft,
-    Users, UserCheck, Search, ChevronDown, Clock, QrCode, List
+    Users, UserCheck, Search, ChevronDown, Clock, QrCode, List, UserPlus
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -42,6 +42,8 @@ export default function ScannerPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [activeTab, setActiveTab] = useState<'scanner' | 'checkins' | 'registered'>('scanner')
     const [showEventDropdown, setShowEventDropdown] = useState(false)
+    const [checkingInId, setCheckingInId] = useState<string | null>(null)
+    const [statusFilter, setStatusFilter] = useState<'all' | 'checked' | 'pending'>('all')
 
     const scannerRef = useRef<Html5Qrcode | null>(null)
 
@@ -108,7 +110,40 @@ export default function ScannerPage() {
     )
 
     const checkedInAttendees = filteredAttendees.filter(a => a.attended)
-    const registeredAttendees = filteredAttendees
+    const registeredAttendees = filteredAttendees.filter(a => {
+        if (statusFilter === 'checked') return a.attended
+        if (statusFilter === 'pending') return !a.attended
+        return true // 'all'
+    })
+
+    // Manual check-in handler for when QR scanning fails
+    const handleManualCheckIn = async (attendeeId: string) => {
+        if (!selectedEvent || checkingInId) return
+
+        setCheckingInId(attendeeId)
+        try {
+            const response = await fetch(`/api/events/${selectedEvent}/checkin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ registrationId: attendeeId })
+            })
+
+            const result = await response.json()
+
+            if (result.success) {
+                // Refresh the attendee list to show updated status
+                fetchAttendees()
+            } else {
+                console.error('Manual check-in failed:', result.message)
+                alert(result.message || 'Check-in failed. Please try again.')
+            }
+        } catch (error) {
+            console.error('Manual check-in error:', error)
+            alert('Check-in failed. Please try again.')
+        } finally {
+            setCheckingInId(null)
+        }
+    }
 
     const handleScanSuccess = async (decodedText: string) => {
         setIsScanning(true)
@@ -524,6 +559,43 @@ export default function ScannerPage() {
                             />
                         </div>
 
+                        {/* Status Filter */}
+                        <div className="flex gap-2 mb-4">
+                            <button
+                                onClick={() => setStatusFilter('all')}
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${statusFilter === 'all'
+                                    ? 'bg-white/10 text-white'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                All ({filteredAttendees.length})
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('checked')}
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${statusFilter === 'checked'
+                                    ? 'bg-green-600/20 text-green-400 border border-green-500/30'
+                                    : 'text-gray-400 hover:text-green-400 hover:bg-green-500/10'
+                                    }`}
+                            >
+                                <span className="flex items-center justify-center gap-1.5">
+                                    <CheckCircle className="w-4 h-4" />
+                                    Checked ({stats.checkedIn})
+                                </span>
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('pending')}
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${statusFilter === 'pending'
+                                    ? 'bg-amber-600/20 text-amber-400 border border-amber-500/30'
+                                    : 'text-gray-400 hover:text-amber-400 hover:bg-amber-500/10'
+                                    }`}
+                            >
+                                <span className="flex items-center justify-center gap-1.5">
+                                    <Clock className="w-4 h-4" />
+                                    Pending ({stats.pending})
+                                </span>
+                            </button>
+                        </div>
+
                         {/* List */}
                         <div className="space-y-2">
                             {registeredAttendees.length === 0 ? (
@@ -553,7 +625,24 @@ export default function ScannerPage() {
                                         {attendee.attended ? (
                                             <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                                         ) : (
-                                            <Clock className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                                            <button
+                                                onClick={() => handleManualCheckIn(attendee.id)}
+                                                disabled={checkingInId === attendee.id}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex-shrink-0"
+                                                title="Manual Check-in"
+                                            >
+                                                {checkingInId === attendee.id ? (
+                                                    <>
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                        <span className="hidden sm:inline">Checking...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <UserPlus className="w-4 h-4" />
+                                                        <span className="hidden sm:inline">Check In</span>
+                                                    </>
+                                                )}
+                                            </button>
                                         )}
                                     </div>
                                 ))
