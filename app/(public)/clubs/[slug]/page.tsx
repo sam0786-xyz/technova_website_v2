@@ -342,12 +342,16 @@ function PastEventsSection({ slug, theme }: { slug: string; theme: typeof CLUB_T
                                 <div className="aspect-video relative overflow-hidden">
                                     {/* Organizing Club Badge */}
                                     {event.club && (
-                                        <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 z-10 shadow-lg">
+                                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/20 flex items-center gap-2 z-10 shadow-lg">
                                             {event.club.logo_url && (
                                                 /* eslint-disable-next-line @next/next/no-img-element */
-                                                <img src={event.club.logo_url} alt={event.club.name} className="w-4 h-4 object-contain rounded-full" />
+                                                <img
+                                                    src={event.club.logo_url}
+                                                    alt={event.club.name}
+                                                    className="w-5 h-5 object-contain rounded-full drop-shadow-sm"
+                                                />
                                             )}
-                                            <span className="text-xs font-medium text-white max-w-[100px] truncate">
+                                            <span className="text-xs font-semibold text-gray-800 max-w-[100px] truncate">
                                                 {event.club.name}
                                             </span>
                                         </div>
@@ -653,19 +657,15 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                                 <div className="flex justify-between items-start mb-6 relative z-10">
                                     {/* Large Photo with Club Color Background */}
                                     <div className={`w-32 h-32 ${colors.bg} ${colors.text} backdrop-blur-xl rounded-2xl flex items-center justify-center text-current group-hover:scale-110 transition-transform duration-500 overflow-hidden relative border border-white/10`}>
-                                        {member.photo ? (
-                                            /* eslint-disable-next-line @next/next/no-img-element */
-                                            <img
-                                                src={member.photo}
-                                                alt={member.name}
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    e.currentTarget.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name) + "&background=random"
-                                                }}
-                                            />
-                                        ) : (
-                                            <User className="w-12 h-12" />
-                                        )}
+                                        {/* Always use image - either photo or ui-avatars for consistency */}
+                                        <img
+                                            src={member.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=random&size=128`}
+                                            alt={member.name}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=random&size=128`
+                                            }}
+                                        />
                                     </div>
 
                                     {/* Social Links - Appear on Hover */}
@@ -675,25 +675,16 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                                                 href={ensureAbsoluteUrl(member.linkedin)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-blue-400 transition-colors"
+                                                className="p-2.5 bg-white/5 rounded-xl hover:bg-blue-500/20 hover:text-blue-400 transition-all duration-300"
                                                 title="LinkedIn"
                                             >
                                                 <Linkedin className="w-5 h-5" />
                                             </a>
                                         )}
-                                        {member.phone && (
-                                            <a
-                                                href={`tel:+91${member.phone}`}
-                                                className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-green-400 transition-colors"
-                                                title="Call"
-                                            >
-                                                <Phone className="w-5 h-5" />
-                                            </a>
-                                        )}
                                         {member.email && (
                                             <a
                                                 href={`mailto:${member.email}`}
-                                                className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-red-400 transition-colors"
+                                                className="p-2.5 bg-white/5 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-300"
                                                 title="Email"
                                             >
                                                 <Mail className="w-5 h-5" />
@@ -742,7 +733,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                         </a>
                     </motion.div>
                 </div>
-            </section>
-        </div>
+            </section >
+        </div >
     )
 }
