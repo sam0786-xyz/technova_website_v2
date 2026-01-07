@@ -22,6 +22,14 @@ export function EventForm({ clubs, event }: EventFormProps) {
     const [selectedPoc, setSelectedPoc] = useState<string>(event?.poc_name || "")
     const { toast, showToast, hideToast } = useToast()
 
+    // Date/time controlled states for proper syncing
+    const [startTime, setStartTime] = useState(event?.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : "")
+    const [endTime, setEndTime] = useState(event?.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : "")
+    const [startDate, setStartDate] = useState(event?.start_time ? new Date(event.start_time).toISOString().slice(0, 10) : "")
+    const [endDate, setEndDate] = useState(event?.end_time ? new Date(event.end_time).toISOString().slice(0, 10) : "")
+    const [dailyStartTime, setDailyStartTime] = useState(event?.daily_start_time?.slice(0, 5) || "")
+    const [dailyEndTime, setDailyEndTime] = useState(event?.daily_end_time?.slice(0, 5) || "")
+
     useEffect(() => {
         if (!selectedClubId) {
             setPocMembers([])
@@ -245,21 +253,49 @@ export function EventForm({ clubs, event }: EventFormProps) {
                         <div className="grid grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
-                                <input name="start_date" required type="date" defaultValue={event?.start_time ? new Date(event.start_time).toISOString().slice(0, 10) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                                <input
+                                    name="start_date"
+                                    required
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">End Date</label>
-                                <input name="end_date" required type="date" defaultValue={event?.end_time ? new Date(event.end_time).toISOString().slice(0, 10) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                                <input
+                                    name="end_date"
+                                    required
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                                />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Daily Start Time</label>
-                                <input name="daily_start_time" required type="time" defaultValue={event?.daily_start_time?.slice(0, 5) || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                                <input
+                                    name="daily_start_time"
+                                    required
+                                    type="time"
+                                    value={dailyStartTime}
+                                    onChange={(e) => setDailyStartTime(e.target.value)}
+                                    className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Daily End Time</label>
-                                <input name="daily_end_time" required type="time" defaultValue={event?.daily_end_time?.slice(0, 5) || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                                <input
+                                    name="daily_end_time"
+                                    required
+                                    type="time"
+                                    value={dailyEndTime}
+                                    onChange={(e) => setDailyEndTime(e.target.value)}
+                                    className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                                />
                             </div>
                         </div>
                         <p className="text-xs text-gray-400">The event will occur daily from the daily start time to the daily end time, between the start and end dates.</p>
@@ -269,11 +305,25 @@ export function EventForm({ clubs, event }: EventFormProps) {
                     <div className="grid grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">Start Time</label>
-                            <input name="start_time" required type="datetime-local" defaultValue={event?.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            <input
+                                name="start_time"
+                                required
+                                type="datetime-local"
+                                value={startTime}
+                                onChange={(e) => setStartTime(e.target.value)}
+                                className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">End Time</label>
-                            <input name="end_time" required type="datetime-local" defaultValue={event?.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            <input
+                                name="end_time"
+                                required
+                                type="datetime-local"
+                                value={endTime}
+                                onChange={(e) => setEndTime(e.target.value)}
+                                className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                            />
                         </div>
                     </div>
                 )}
