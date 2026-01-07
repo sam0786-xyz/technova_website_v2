@@ -93,3 +93,46 @@ export async function getProjects() {
 
     return projectsWithUsers;
 }
+
+/**
+ * Delete a project - only the owner can delete their project
+ */
+export async function deleteProject(projectId: string): Promise<{ success: boolean; error?: string }> {
+    const session = await auth();
+    const user = session?.user;
+
+    if (!user || !user.id) {
+        return { success: false, error: "You must be logged in to delete a project." };
+    }
+
+    const supabaseAdmin = createAdminClient();
+
+    // First, verify the user owns this project
+    const { data: project, error: fetchError } = await supabaseAdmin
+        .from('projects')
+        .select('user_id')
+        .eq('id', projectId)
+        .single();
+
+    if (fetchError || !project) {
+        return { success: false, error: "Project not found." };
+    }
+
+    if (project.user_id !== user.id) {
+        return { success: false, error: "You can only delete your own projects." };
+    }
+
+    // Delete the project
+    const { error: deleteError } = await supabaseAdmin
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+    if (deleteError) {
+        console.error("Error deleting project:", deleteError);
+        return { success: false, error: "Failed to delete project." };
+    }
+
+    revalidatePath('/showcase');
+    return { success: true };
+}

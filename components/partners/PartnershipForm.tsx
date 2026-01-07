@@ -16,7 +16,7 @@ export function PartnershipForm() {
             className="max-w-xl mx-auto"
         >
             <div className="p-8 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-blue-500/20 transition-all duration-500">
-                <form action="mailto:technova@sharda.ac.in" method="post" encType="text/plain" className="space-y-6">
+                <form action="mailto:technova@sharda.ac.in" method="post" encType="text/plain" autoComplete="on" className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="name" className="text-gray-300 flex items-center gap-2">
@@ -28,6 +28,7 @@ export function PartnershipForm() {
                                 name="name"
                                 placeholder="Your Name"
                                 required
+                                autoComplete="name"
                                 className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20 placeholder:text-gray-600"
                             />
                         </div>
@@ -41,6 +42,7 @@ export function PartnershipForm() {
                                 name="company"
                                 placeholder="Your Company"
                                 required
+                                autoComplete="organization"
                                 className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20 placeholder:text-gray-600"
                             />
                         </div>
@@ -57,6 +59,7 @@ export function PartnershipForm() {
                             type="email"
                             placeholder="you@company.com"
                             required
+                            autoComplete="email"
                             className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20 placeholder:text-gray-600"
                         />
                     </div>

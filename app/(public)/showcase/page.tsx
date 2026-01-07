@@ -7,17 +7,20 @@ import Link from "next/link";
 import { Plus, Home, ChevronRight, Code, Rocket, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 export default function ShowcasePage() {
+    const { data: session } = useSession();
     const [projects, setProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const fetchProjects = async () => {
+        const results = await getProjects();
+        setProjects(results);
+        setLoading(false);
+    };
+
     useEffect(() => {
-        async function fetchProjects() {
-            const results = await getProjects();
-            setProjects(results);
-            setLoading(false);
-        }
         fetchProjects();
     }, []);
 
@@ -120,7 +123,11 @@ export default function ShowcasePage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.05 }}
                                 >
-                                    <ProjectCard project={project} />
+                                    <ProjectCard
+                                        project={project}
+                                        currentUserId={session?.user?.id}
+                                        onDelete={fetchProjects}
+                                    />
                                 </motion.div>
                             ))}
                         </motion.div>
