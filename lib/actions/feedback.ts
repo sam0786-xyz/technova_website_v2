@@ -553,10 +553,10 @@ export async function submitFeedback(formId: string, answers: Record<string, any
 
         if (!attendError) {
             attendanceMarked = true
-            // Award XP for attendance as well
+            // Award XP for attendance as well (using daily XP distribution)
             try {
-                const { awardXPForAttendance } = await import('@/lib/xp/award')
-                await awardXPForAttendance(session.user.id, form.event_id, {
+                const { awardDailyXP } = await import('@/lib/xp/award')
+                await awardDailyXP(session.user.id, form.event_id, {
                     event_type: form.event.event_type || 'workshop',
                     difficulty_level: form.event.difficulty_level || 'easy',
                     start_time: form.event.start_time,

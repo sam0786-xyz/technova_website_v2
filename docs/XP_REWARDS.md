@@ -73,6 +73,33 @@ The following examples illustrate sample XP awards:
 
 ---
 
+## **Daily XP Distribution**
+
+For events spanning multiple days, XP is **distributed daily** rather than awarded all at once. This encourages consistent participation throughout the event.
+
+### **How It Works**
+
+1. **Total XP is calculated** using the standard formula
+2. **Daily XP is computed**: `Daily XP = Total XP ÷ Number of Event Days`
+3. **Participants earn XP each day** they check in to the event
+4. **Missed days = lost XP** — each day's XP chunk is only available on that day
+
+### **Example: 3-Day Hackathon (Elite)**
+
+| Metric        | Value                |
+| ------------- | -------------------- |
+| Total XP      | 900 XP               |
+| Event Days    | 3                    |
+| Daily XP      | 300 XP/day           |
+| Day 1 Check-in | +300 XP             |
+| Day 2 Missed  | 0 XP (lost)          |
+| Day 3 Check-in | +300 XP             |
+| **Total Earned** | **600 XP**       |
+
+> **Note:** On the final check-in day, any remaining XP is awarded to ensure no rounding loss.
+
+---
+
 ## **Earning XP**
 
 Students earn XP through verified participation in events.
