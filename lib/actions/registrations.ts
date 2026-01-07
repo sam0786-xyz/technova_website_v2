@@ -35,8 +35,14 @@ export async function checkRegistration(eventId: string) {
 }
 
 export async function registerForEvent(eventId: string, answers?: Record<string, any>, referralCode?: string) {
+    console.log('=== REGISTER FOR EVENT ===')
+    console.log('Event ID:', eventId)
+    console.log('Referral Code received:', referralCode)
+
     const session = await auth()
     if (!session) throw new Error("Unauthorized")
+
+    console.log('User ID:', session.user.id)
 
     const supabase = await getSupabase()
 
@@ -98,14 +104,21 @@ export async function registerForEvent(eventId: string, answers?: Record<string,
 
         if (error) throw new Error(error.message)
 
+        console.log('Registration successful!')
+        console.log('Should process referral?', referralCode, '&&', session.user.id)
+
         // Process referral if provided
         if (referralCode && session.user.id) {
+            console.log('Calling processReferral...')
             try {
-                await processReferral(referralCode, eventId, session.user.id)
+                const refResult = await processReferral(referralCode, eventId, session.user.id)
+                console.log('processReferral result:', refResult)
             } catch (refError) {
                 console.error('Referral processing error:', refError)
                 // Don't block registration on referral error
             }
+        } else {
+            console.log('Skipping referral processing - no referral code or user ID')
         }
 
         // Send Email - with QR only for in-person events
