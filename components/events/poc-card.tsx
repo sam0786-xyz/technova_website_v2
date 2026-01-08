@@ -4,9 +4,10 @@ interface POCCardProps {
     name: string
     email?: string | null
     phone?: string | null
+    role?: string | null
 }
 
-export function POCCard({ name, email, phone }: POCCardProps) {
+export function POCCard({ name, email, phone, role }: POCCardProps) {
     // Show fallback message if no POC is assigned
     if (!name) {
         return (
@@ -39,6 +40,9 @@ export function POCCard({ name, email, phone }: POCCardProps) {
                     <div>
                         <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-0.5">Point of Contact</p>
                         <p className="font-medium text-gray-900">{name}</p>
+                        {role && (
+                            <p className="text-sm font-bold uppercase tracking-wider text-blue-600 mt-0.5">{role}</p>
+                        )}
                     </div>
                 </div>
 

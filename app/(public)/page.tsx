@@ -378,7 +378,7 @@ export default function LandingPage() {
               </div>
 
               <p className="text-gray-400 text-sm mb-4">
-                Sharda School of Engineering and Technology, Sharda University, Knowledge Park III, Greater Noida, UP - 201310
+                Sharda School of Computing Science and Engineering, Sharda University, Knowledge Park III, Greater Noida, UP - 201310
               </p>
               <div className="flex gap-3">
                 <Link href="https://www.instagram.com/technova_sharda/" target="_blank" className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-pink-600 hover:text-white transition-all duration-300 hover:-translate-y-1">
@@ -408,13 +408,17 @@ export default function LandingPage() {
             <div>
               <h4 className="font-bold text-white mb-4">Contact</h4>
               <ul className="space-y-2">
-                <li className="flex items-start gap-2 text-gray-400 text-sm">
-                  <MapPin className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                  <span>Knowledge Park III, Greater Noida</span>
+                <li>
+                  <Link href="https://maps.app.goo.gl/BpCDyGPHZvGwAoPs8" target="_blank" className="flex items-start gap-2 text-gray-400 text-sm hover:text-blue-400 transition-colors">
+                    <MapPin className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                    <span>Knowledge Park III, Greater Noida</span>
+                  </Link>
                 </li>
-                <li className="flex items-center gap-2 text-gray-400 text-sm">
-                  <Mail className="w-4 h-4 text-blue-500 shrink-0" />
-                  <span>technova@sharda.ac.in</span>
+                <li>
+                  <Link href="mailto:technova@sharda.ac.in" className="flex items-center gap-2 text-gray-400 text-sm hover:text-blue-400 transition-colors">
+                    <Mail className="w-4 h-4 text-blue-500 shrink-0" />
+                    <span>technova@sharda.ac.in</span>
+                  </Link>
                 </li>
               </ul>
             </div>

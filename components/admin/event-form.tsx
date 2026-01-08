@@ -185,10 +185,10 @@ export function EventForm({ clubs, event }: EventFormProps) {
                     <textarea name="description" required defaultValue={event?.description} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white placeholder-gray-500 h-32 focus:border-blue-500 focus:outline-none" placeholder="Event details..." />
                 </div>
 
-                {/* Banner with Draggable Position Picker */}
                 <div className="space-y-4">
                     <label className="block text-sm font-medium text-gray-300">Banner Image</label>
                     <input name="banner_file" type="file" accept="image/*" onChange={handleFileChange} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer" />
+                    <p className="text-xs text-gray-400">Recommended banner size is 1000px × 300px</p>
                     {event?.banner && <input type="hidden" name="banner" value={event.banner} />}
 
                     {previewUrl && (
