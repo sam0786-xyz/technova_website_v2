@@ -1,6 +1,6 @@
 'use client'
 
-import { Trophy, Mail, GraduationCap, Award, Calendar } from 'lucide-react'
+import { Trophy, Mail, GraduationCap, Award, Calendar, Sparkles } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import type { LeaderboardUser } from '@/lib/actions/leaderboard'
@@ -11,6 +11,7 @@ interface ProfileHoverCardProps {
         year?: number
         branch?: string
         eventsAttended?: number
+        skills?: string[]
     }
     rank: number
     children: React.ReactNode
@@ -104,6 +105,28 @@ export function ProfileHoverCard({ user, rank, children }: ProfileHoverCardProps
                     <div className="mt-3 px-3 py-2 bg-white/5 rounded-lg">
                         <p className="text-xs text-gray-500">Department</p>
                         <p className="text-sm text-gray-300">{user.branch}</p>
+                    </div>
+                )}
+
+                {/* Skills (if available) */}
+                {user.skills && user.skills.length > 0 && (
+                    <div className="mt-3">
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mb-2">
+                            <Sparkles className="w-3 h-3" />
+                            Skills
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                            {user.skills.slice(0, 3).map(skill => (
+                                <span key={skill} className="px-2 py-1 bg-blue-600/20 border border-blue-500/30 rounded-full text-xs text-blue-300">
+                                    {skill}
+                                </span>
+                            ))}
+                            {user.skills.length > 3 && (
+                                <span className="px-2 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-gray-500">
+                                    +{user.skills.length - 3}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 )}
 
