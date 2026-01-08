@@ -21,12 +21,24 @@ export async function updateProfile(formData: FormData) {
     const supabase = await getSupabase()
     const userId = session.user.id
 
-    const section = formData.get("section") as string
-    const system_id = formData.get("system_id") as string
-    const year = parseInt(formData.get("year") as string)
-    const course = formData.get("course") as string
-    const mobile = formData.get("mobile") as string
+    const section = (formData.get("section") as string) || null
+    const system_id = (formData.get("system_id") as string) || null
+    const yearStr = formData.get("year") as string
+    const year = yearStr ? parseInt(yearStr) : null
+    const course = (formData.get("course") as string) || null
+    const mobile = (formData.get("mobile") as string) || null
     const skills = (formData.get("skills") as string).split(',').map(s => s.trim()).filter(s => s.length > 0)
+
+    // Social Links
+    const github_url = (formData.get("github_url") as string) || null
+    const linkedin_url = (formData.get("linkedin_url") as string) || null
+    const portfolio_url = (formData.get("portfolio_url") as string) || null
+    const kaggle_url = (formData.get("kaggle_url") as string) || null
+    const leetcode_url = (formData.get("leetcode_url") as string) || null
+    const codeforces_url = (formData.get("codeforces_url") as string) || null
+    const codechef_url = (formData.get("codechef_url") as string) || null
+    const gfg_url = (formData.get("gfg_url") as string) || null
+    const hackerrank_url = (formData.get("hackerrank_url") as string) || null
 
     // 1. Update User Details (next_auth.users)
     const { error: userError } = await supabase.schema('next_auth').from('users').update({
@@ -49,11 +61,29 @@ export async function updateProfile(formData: FormData) {
     if (!profile) {
         await supabase.from('profiles').insert({
             id: userId,
-            skills
+            skills,
+            github_url,
+            linkedin_url,
+            portfolio_url,
+            kaggle_url,
+            leetcode_url,
+            codeforces_url,
+            codechef_url,
+            gfg_url,
+            hackerrank_url
         })
     } else {
         await supabase.from('profiles').update({
-            skills
+            skills,
+            github_url,
+            linkedin_url,
+            portfolio_url,
+            kaggle_url,
+            leetcode_url,
+            codeforces_url,
+            codechef_url,
+            gfg_url,
+            hackerrank_url
         }).eq('id', userId)
     }
 
@@ -77,7 +107,16 @@ export async function getProfileData() {
 
     return {
         ...user,
-        skills: profile?.skills || []
+        skills: profile?.skills || [],
+        github_url: profile?.github_url || null,
+        linkedin_url: profile?.linkedin_url || null,
+        portfolio_url: profile?.portfolio_url || null,
+        kaggle_url: profile?.kaggle_url || null,
+        leetcode_url: profile?.leetcode_url || null,
+        codeforces_url: profile?.codeforces_url || null,
+        codechef_url: profile?.codechef_url || null,
+        gfg_url: profile?.gfg_url || null,
+        hackerrank_url: profile?.hackerrank_url || null
     }
 }
 

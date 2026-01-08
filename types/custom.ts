@@ -7,6 +7,12 @@ export interface Profile {
   github_url: string | null;
   linkedin_url: string | null;
   portfolio_url: string | null;
+  kaggle_url: string | null;
+  leetcode_url: string | null;
+  codeforces_url: string | null;
+  codechef_url: string | null;
+  gfg_url: string | null;
+  hackerrank_url: string | null;
   updated_at: string;
 }
 
@@ -21,12 +27,12 @@ export interface CommunityPost {
   // Joins
   profiles?: Profile;
   users?: {
-      name: string | null;
-      image: string | null;
+    name: string | null;
+    image: string | null;
   };
   community_comments?: CommunityComment[];
   _count?: {
-      community_comments: number;
+    community_comments: number;
   }
 }
 
@@ -39,8 +45,8 @@ export interface CommunityComment {
   // Joins
   profiles?: Profile;
   users?: {
-      name: string | null;
-      image: string | null;
+    name: string | null;
+    image: string | null;
   };
 }
 
@@ -57,8 +63,8 @@ export interface Project {
   created_at: string;
   profiles?: Profile;
   users?: {
-      name: string | null;
-      image: string | null;
+    name: string | null;
+    image: string | null;
   };
 }
 
