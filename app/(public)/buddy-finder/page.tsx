@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Search, Home, ChevronRight, Users, UserPlus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function BuddyFinderPage() {
+function BuddyFinderContent() {
     const searchParams = useSearchParams();
     const query = searchParams.get('q') || '';
     const skill = searchParams.get('skill') || '';
@@ -20,6 +20,7 @@ export default function BuddyFinderPage() {
 
     useEffect(() => {
         async function fetchBuddies() {
+            setLoading(true);
             const results = await searchBuddies(query, skill);
             setBuddies(results);
             setLoading(false);
@@ -98,10 +99,10 @@ export default function BuddyFinderPage() {
                             <div className="relative flex-1">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
                                 <Input
-                                    name="skill"
-                                    placeholder="Search by skill (e.g. React, Python, Machine Learning)..."
+                                    name="q"
+                                    placeholder="Search by name or skill (e.g. John, React, Python)..."
                                     className="pl-12 bg-white/5 border-white/10 focus:border-purple-500/50 h-12 text-white placeholder:text-gray-500"
-                                    defaultValue={skill}
+                                    defaultValue={query || skill}
                                 />
                             </div>
                             <Button type="submit" className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500">
@@ -159,5 +160,26 @@ export default function BuddyFinderPage() {
                 </div>
             </section>
         </div>
+    );
+}
+
+// Loading component for Suspense fallback
+function BuddyFinderLoading() {
+    return (
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+            <div className="text-center">
+                <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-gray-400">Loading Buddy Finder...</p>
+            </div>
+        </div>
+    );
+}
+
+// Default export with Suspense wrapper to prevent hydration mismatch
+export default function BuddyFinderPage() {
+    return (
+        <Suspense fallback={<BuddyFinderLoading />}>
+            <BuddyFinderContent />
+        </Suspense>
     );
 }

@@ -356,7 +356,7 @@ export async function getEventById(id: string) {
     if (event.poc_name && event.club_id) {
         const { data: member } = await supabase
             .from('club_members')
-            .select('email, phone')
+            .select('email, phone, role')
             .eq('club_id', event.club_id)
             .eq('name', event.poc_name)
             .single()
@@ -370,7 +370,8 @@ export async function getEventById(id: string) {
         ...event,
         registered_count: count || 0,
         poc_email: pocDetails?.email || null,
-        poc_phone: pocDetails?.phone || null
+        poc_phone: pocDetails?.phone || null,
+        poc_role: pocDetails?.role || null
     }
 }
 
@@ -415,7 +416,7 @@ export async function getEventBySlugOrId(slugOrId: string) {
     if (event.poc_name && event.club_id) {
         const { data: member } = await supabase
             .from('club_members')
-            .select('email, phone')
+            .select('email, phone, role')
             .eq('club_id', event.club_id)
             .eq('name', event.poc_name)
             .single()
@@ -429,7 +430,8 @@ export async function getEventBySlugOrId(slugOrId: string) {
         ...event,
         registered_count: count || 0,
         poc_email: pocDetails?.email || null,
-        poc_phone: pocDetails?.phone || null
+        poc_phone: pocDetails?.phone || null,
+        poc_role: pocDetails?.role || null
     }
 }
 

@@ -11,6 +11,23 @@ import { generateQRToken } from "@/lib/qr/generate"
 import { createClient } from "@supabase/supabase-js"
 import { formatDate, formatDateRange, formatTime } from "@/lib/utils"
 
+// Map club names to URL slugs
+const CLUB_NAME_TO_SLUG: Record<string, string> = {
+    "Technova Main": "technova-main",
+    "AI & Robotics": "ai-robotics",
+    "AWS Cloud": "aws-cloud",
+    "CyberPirates": "cyber-pirates",
+    "Datapool": "datapool",
+    "Game Drifters": "game-drifters",
+    "GDG on Campus": "gdg",
+    "GitHub Club": "github",
+    "PiXelance": "pixelance"
+}
+
+function getClubSlug(clubName: string): string {
+    return CLUB_NAME_TO_SLUG[clubName] || clubName.toLowerCase().replace(/\s+/g, '-').replace(/[&]/g, '').replace(/--+/g, '-')
+}
+
 export default async function EventPage({
     params,
     searchParams
@@ -103,7 +120,14 @@ export default async function EventPage({
                                     {event.club.logo_url && (
                                         <img src={event.club.logo_url} alt={event.club.name} className="w-6 h-6 object-contain rounded-full" />
                                     )}
-                                    <span className="text-gray-500 font-medium">Organized by <span className="text-blue-600">{event.club.name}</span></span>
+                                    <span className="text-gray-500 font-medium">Organized by{' '}
+                                        <Link
+                                            href={`/clubs/${getClubSlug(event.club.name)}`}
+                                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                        >
+                                            {event.club.name}
+                                        </Link>
+                                    </span>
                                 </div>
                             )}
 
@@ -182,6 +206,7 @@ export default async function EventPage({
                                     name={event.poc_name}
                                     email={event.poc_email}
                                     phone={event.poc_phone}
+                                    role={event.poc_role}
                                 />
                             </div>
                         </div>
