@@ -1,53 +1,80 @@
 import { auth } from "@/lib/auth"
 import { Calendar, MapPin, Clock, Users, Globe, ArrowLeft, Video, CalendarDays } from "lucide-react"
 import Link from "next/link"
-import { getEventById } from "@/lib/actions/events"
+import { getEventBySlugOrId } from "@/lib/actions/events"
 import { checkRegistration } from "@/lib/actions/registrations"
 import { EventRegistrationCard } from "@/components/events/registration-card"
 import { POCCard } from "@/components/events/poc-card"
+import { EventFeedbackSection } from "@/components/events/EventFeedbackSection"
 import { notFound } from "next/navigation"
 import { generateQRToken } from "@/lib/qr/generate"
 import { createClient } from "@supabase/supabase-js"
 import { formatDate, formatDateRange, formatTime } from "@/lib/utils"
 
-export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
+// Map club names to URL slugs
+const CLUB_NAME_TO_SLUG: Record<string, string> = {
+    "Technova Main": "technova-main",
+    "AI & Robotics": "ai-robotics",
+    "AWS Cloud": "aws-cloud",
+    "CyberPirates": "cyber-pirates",
+    "Datapool": "datapool",
+    "Game Drifters": "game-drifters",
+    "GDG on Campus": "gdg",
+    "GitHub Club": "github",
+    "PiXelance": "pixelance"
+}
+
+function getClubSlug(clubName: string): string {
+    return CLUB_NAME_TO_SLUG[clubName] || clubName.toLowerCase().replace(/\s+/g, '-').replace(/[&]/g, '').replace(/--+/g, '-')
+}
+
+export default async function EventPage({
+    params,
+    searchParams
+}: {
+    params: Promise<{ id: string }>
+    searchParams: Promise<{ ref?: string }>
+}) {
     const { id } = await params
-    const event = await getEventById(id)
+    const { ref: referralCode } = await searchParams
+    const event = await getEventBySlugOrId(id)
     const session = await auth()
 
     if (!event) {
         notFound()
     }
 
-    const existingRegistration = await checkRegistration(id)
+    const existingRegistration = await checkRegistration(event.id)
 
     const user = session?.user || null
     let qrCode = null
 
     if (existingRegistration && session?.user?.id) {
-        // Generate QR Code for display
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
-        const { data: userProfile } = await supabase.schema('next_auth').from('users').select('*').eq('id', session.user.id).single()
+        // Generate QR Code for display - only for in-person events with a token
+        if (!event.is_virtual && existingRegistration.qr_token_id) {
+            const supabase = createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.SUPABASE_SERVICE_ROLE_KEY!
+            )
+            const { data: userProfile } = await supabase.schema('next_auth').from('users').select('*').eq('id', session.user.id).single()
 
-        const userData = {
-            name: userProfile?.name || session.user.name || '',
-            system_id: userProfile?.system_id || '',
-            year: userProfile?.year?.toString() || '',
-            course: userProfile?.course || '',
-            section: userProfile?.section || '',
-            email: session.user.email || ''
+            const userData = {
+                name: userProfile?.name || session.user.name || '',
+                system_id: userProfile?.system_id || '',
+                year: userProfile?.year?.toString() || '',
+                course: userProfile?.course || '',
+                section: userProfile?.section || '',
+                email: session.user.email || ''
+            }
+
+            const { qrDataUrl } = await generateQRToken(
+                session.user.id,
+                id,
+                userData,
+                existingRegistration.qr_token_id
+            )
+            qrCode = qrDataUrl
         }
-
-        const { qrDataUrl } = await generateQRToken(
-            session.user.id,
-            id,
-            userData,
-            existingRegistration.qr_token_id
-        )
-        qrCode = qrDataUrl
     }
 
     return (
@@ -93,7 +120,14 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                                     {event.club.logo_url && (
                                         <img src={event.club.logo_url} alt={event.club.name} className="w-6 h-6 object-contain rounded-full" />
                                     )}
-                                    <span className="text-gray-500 font-medium">Organized by <span className="text-blue-600">{event.club.name}</span></span>
+                                    <span className="text-gray-500 font-medium">Organized by{' '}
+                                        <Link
+                                            href={`/clubs/${getClubSlug(event.club.name)}`}
+                                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                        >
+                                            {event.club.name}
+                                        </Link>
+                                    </span>
                                 </div>
                             )}
 
@@ -150,6 +184,14 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                                 <h2 className="text-2xl font-bold mb-4">About this Event</h2>
                                 <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{event.description}</p>
                             </div>
+
+                            {/* Feedback Section */}
+                            <EventFeedbackSection
+                                eventId={event.id}
+                                userId={session?.user?.id}
+                                isRegistered={!!existingRegistration}
+                                eventEnded={new Date(event.end_time) < new Date()}
+                            />
                         </div>
                         <div className="md:sticky md:top-24">
                             <div className="bg-white rounded-xl shadow-xl p-6">
@@ -158,11 +200,13 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                                     user={user}
                                     existingRegistration={existingRegistration}
                                     qrCode={qrCode}
+                                    referralCode={referralCode}
                                 />
                                 <POCCard
                                     name={event.poc_name}
                                     email={event.poc_email}
                                     phone={event.poc_phone}
+                                    role={event.poc_role}
                                 />
                             </div>
                         </div>

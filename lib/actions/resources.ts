@@ -38,7 +38,7 @@ export async function createResource(prevState: any, formData: FormData) {
     });
 
     if (!result.success) {
-        return { error: result.error.errors[0].message };
+        return { error: result.error.issues[0]?.message || "Validation failed" };
     }
 
     const { title, description, file_url, type, semester, subject } = result.data;

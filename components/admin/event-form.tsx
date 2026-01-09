@@ -6,6 +6,7 @@ import { formatDate, formatDateRange, formatTime, toDateTimeLocalString } from "
 import { createEvent, updateEvent } from "@/lib/actions/events"
 import { FormBuilder, RegistrationField } from "./form-builder"
 import { Loader2, Move, CalendarDays } from "lucide-react"
+import { Toast, useToast } from "@/components/ui/toast"
 
 interface EventFormProps {
     clubs: any[]
@@ -20,11 +21,11 @@ export function EventForm({ clubs, event }: EventFormProps) {
     const [pocMembers, setPocMembers] = useState<any[]>([])
     const [loadingMembers, setLoadingMembers] = useState(false)
     const [selectedPoc, setSelectedPoc] = useState<string>(event?.poc_name || "")
-    // const { toast, showToast, hideToast } = useToast()
+    const { toast, showToast, hideToast } = useToast()
 
     // Date/time controlled states for proper syncing
-    const [startTime, setStartTime] = useState(event?.start_time ? toDateTimeLocalString(event.start_time) : "")
-    const [endTime, setEndTime] = useState(event?.end_time ? toDateTimeLocalString(event.end_time) : "")
+    const [startTime, setStartTime] = useState(event?.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : "")
+    const [endTime, setEndTime] = useState(event?.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : "")
     const [startDate, setStartDate] = useState(event?.start_time ? new Date(event.start_time).toISOString().slice(0, 10) : "")
     const [endDate, setEndDate] = useState(event?.end_time ? new Date(event.end_time).toISOString().slice(0, 10) : "")
     const [dailyStartTime, setDailyStartTime] = useState(event?.daily_start_time?.slice(0, 5) || "")
@@ -41,6 +42,10 @@ export function EventForm({ clubs, event }: EventFormProps) {
             try {
                 const members = await getClubMembers(selectedClubId)
                 setPocMembers(members)
+                // If editing and POC exists in members, keep it selected
+                if (event?.poc_name && members.some((m: any) => m.name === event.poc_name)) {
+                    setSelectedPoc(event.poc_name)
+                }
             } catch (error) {
                 console.error("Failed to fetch members", error)
             } finally {
@@ -48,7 +53,7 @@ export function EventForm({ clubs, event }: EventFormProps) {
             }
         }
         fetchMembers()
-    }, [selectedClubId])
+    }, [selectedClubId, event?.poc_name])
 
     // Banner position state
     const initialPos = event?.banner_position || "center"
@@ -71,15 +76,26 @@ export function EventForm({ clubs, event }: EventFormProps) {
         setLoading(true)
         try {
             formData.set('registration_fields', JSON.stringify(questions))
+            let result
             if (event) {
                 formData.set('id', event.id)
-                await updateEvent(formData)
+                result = await updateEvent(formData)
             } else {
-                await createEvent(formData)
+                result = await createEvent(formData)
             }
-        } catch (error) {
-            console.error(error)
-            alert("Something went wrong")
+
+            // Show success toast
+            if (result?.success) {
+                showToast(result.message, "success")
+                // Redirect after a short delay so user can see the toast
+                setTimeout(() => {
+                    window.location.href = "/admin/events"
+                }, 1500)
+            }
+        } catch (error: any) {
+            console.error("Event form error:", error)
+            const errorMessage = error?.message || "Something went wrong. Please try again."
+            showToast(errorMessage, "error")
             setLoading(false)
         }
     }
@@ -149,7 +165,13 @@ export function EventForm({ clubs, event }: EventFormProps) {
                 {/* Point of Contact (POC) */}
                 <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Point of Contact (POC)</label>
-                    <select name="poc_name" defaultValue={event?.poc_name || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" disabled={!selectedClubId || loadingMembers}>
+                    <select
+                        name="poc_name"
+                        value={selectedPoc}
+                        onChange={(e) => setSelectedPoc(e.target.value)}
+                        className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                        disabled={!selectedClubId || loadingMembers}
+                    >
                         <option value="">
                             {loadingMembers ? 'Loading members...' : (!selectedClubId ? 'Select hosting club first' : 'Select POC')}
                         </option>
@@ -164,10 +186,10 @@ export function EventForm({ clubs, event }: EventFormProps) {
                     <textarea name="description" required defaultValue={event?.description} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white placeholder-gray-500 h-32 focus:border-blue-500 focus:outline-none" placeholder="Event details..." />
                 </div>
 
-                {/* Banner with Draggable Position Picker */}
                 <div className="space-y-4">
                     <label className="block text-sm font-medium text-gray-300">Banner Image</label>
                     <input name="banner_file" type="file" accept="image/*" onChange={handleFileChange} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer" />
+                    <p className="text-xs text-gray-400">Recommended banner size is 1000px × 300px</p>
                     {event?.banner && <input type="hidden" name="banner" value={event.banner} />}
 
                     {previewUrl && (
@@ -232,21 +254,49 @@ export function EventForm({ clubs, event }: EventFormProps) {
                         <div className="grid grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
-                                <input name="start_date" required type="date" defaultValue={event?.start_time ? new Date(event.start_time).toISOString().slice(0, 10) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                                <input
+                                    name="start_date"
+                                    required
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">End Date</label>
-                                <input name="end_date" required type="date" defaultValue={event?.end_time ? new Date(event.end_time).toISOString().slice(0, 10) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                                <input
+                                    name="end_date"
+                                    required
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                                />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Daily Start Time</label>
-                                <input name="daily_start_time" required type="time" defaultValue={event?.daily_start_time?.slice(0, 5) || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                                <input
+                                    name="daily_start_time"
+                                    required
+                                    type="time"
+                                    value={dailyStartTime}
+                                    onChange={(e) => setDailyStartTime(e.target.value)}
+                                    className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Daily End Time</label>
-                                <input name="daily_end_time" required type="time" defaultValue={event?.daily_end_time?.slice(0, 5) || ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                                <input
+                                    name="daily_end_time"
+                                    required
+                                    type="time"
+                                    value={dailyEndTime}
+                                    onChange={(e) => setDailyEndTime(e.target.value)}
+                                    className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                                />
                             </div>
                         </div>
                         <p className="text-xs text-gray-400">The event will occur daily from the daily start time to the daily end time, between the start and end dates.</p>
@@ -256,11 +306,25 @@ export function EventForm({ clubs, event }: EventFormProps) {
                     <div className="grid grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">Start Time</label>
-                            <input name="start_time" required type="datetime-local" defaultValue={event?.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            <input
+                                name="start_time"
+                                required
+                                type="datetime-local"
+                                value={startTime}
+                                onChange={(e) => setStartTime(e.target.value)}
+                                className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">End Time</label>
-                            <input name="end_time" required type="datetime-local" defaultValue={event?.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : ""} className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                            <input
+                                name="end_time"
+                                required
+                                type="datetime-local"
+                                value={endTime}
+                                onChange={(e) => setEndTime(e.target.value)}
+                                className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                            />
                         </div>
                     </div>
                 )}
@@ -329,6 +393,15 @@ export function EventForm({ clubs, event }: EventFormProps) {
                     {event ? "Update Event" : "Create Event"}
                 </button>
             </div>
+
+            {/* Toast Notification */}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={hideToast}
+                />
+            )}
         </form>
     )
 }

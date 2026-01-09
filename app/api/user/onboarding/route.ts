@@ -1,5 +1,31 @@
 import { auth } from "@/lib/auth"
 import { createClient as createServerClient } from "@supabase/supabase-js"
+import { z } from "zod"
+
+// Input validation schema
+const onboardingSchema = z.object({
+    system_id: z.string()
+        .min(5, "System ID must be at least 5 characters")
+        .max(20, "System ID must be at most 20 characters")
+        .regex(/^[a-zA-Z0-9_-]+$/, "System ID can only contain letters, numbers, underscores, and hyphens"),
+    year: z.number()
+        .int()
+        .min(1, "Year must be between 1-4")
+        .max(4, "Year must be between 1-4"),
+    course: z.string()
+        .min(2, "Course must be at least 2 characters")
+        .max(50, "Course must be at most 50 characters"),
+    section: z.string()
+        .min(1, "Section is required")
+        .max(10, "Section must be at most 10 characters"),
+    mobile: z.string()
+        .regex(/^[0-9]{10}$/, "Mobile number must be exactly 10 digits")
+        .optional()
+        .nullable(),
+    skills: z.array(z.string().max(50))
+        .max(20, "Maximum 20 skills allowed")
+        .optional(),
+})
 
 const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,12 +45,32 @@ export async function POST(req: Request) {
         return new Response("Unauthorized", { status: 401 })
     }
 
-    const body = await req.json()
-    const { system_id, year, course, section, mobile, skills } = body
-
-    if (!system_id || !year || !course || !section) {
-        return new Response("Missing required fields", { status: 400 })
+    // Rate limiting: 5 onboarding attempts per minute per user
+    const { checkRateLimit, getClientIdentifier } = await import('@/lib/rate-limit')
+    const rateLimit = checkRateLimit(
+        getClientIdentifier(req, session.user.id),
+        { limit: 5, windowSeconds: 60 }
+    )
+    if (!rateLimit.success) {
+        return new Response("Too many requests. Please try again later.", { status: 429 })
     }
+
+    // Parse and validate input with Zod
+    let validatedData
+    try {
+        const body = await req.json()
+        validatedData = onboardingSchema.parse(body)
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return new Response(JSON.stringify({ errors: error.issues }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            })
+        }
+        return new Response("Invalid request body", { status: 400 })
+    }
+
+    const { system_id, year, course, section, mobile, skills } = validatedData
 
     // Check uniqueness of system_id
     const { data: existing } = await supabase

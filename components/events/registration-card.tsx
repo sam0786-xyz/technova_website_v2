@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation"
 import { Download, XCircle, Loader2 } from "lucide-react"
 import { RegistrationModal } from "./registration-modal"
 import { RegistrationField } from "@/components/admin/form-builder"
+import { Toast, useToast } from "@/components/ui/toast"
+import { ReferralShare } from "./referral-share"
 
 declare global {
     interface Window {
@@ -32,6 +34,9 @@ interface EventData {
     capacity: number
     registered_count?: number
     registration_fields?: RegistrationField[] | string
+    is_past_event?: boolean
+    status?: string
+    end_time?: string
 }
 
 interface UserData {
@@ -48,12 +53,14 @@ export function EventRegistrationCard({
     event,
     user,
     existingRegistration,
-    qrCode
+    qrCode,
+    referralCode
 }: {
     event: EventData
     user: UserData | null
     existingRegistration: RegistrationData | null
     qrCode?: string | null
+    referralCode?: string | null
 }) {
     const [loading, setLoading] = useState(false)
     const [canceling, setCanceling] = useState(false)
@@ -61,6 +68,7 @@ export function EventRegistrationCard({
     const [showCancelConfirm, setShowCancelConfirm] = useState(false)
     const [mounted, setMounted] = useState(false)
     const router = useRouter()
+    const { toast, showToast, hideToast } = useToast()
 
 
     const registrationFields: RegistrationField[] = typeof event.registration_fields === 'string'
@@ -85,10 +93,10 @@ export function EventRegistrationCard({
         setShowModal(false)
 
         try {
-            const result = await registerForEvent(event.id, answers)
+            const result = await registerForEvent(event.id, answers, referralCode || undefined)
 
             if (result.status === 'success') {
-                alert("Registration Successful!")
+                showToast("Registration successful! QR code sent to your email", 'success')
                 router.refresh()
             } else if (result.status === 'payment_required' && result.order) {
                 const options: RazorpayOptions = {
@@ -99,7 +107,7 @@ export function EventRegistrationCard({
                     description: event.title,
                     order_id: result.order.id,
                     handler: function () {
-                        alert("Payment Successful! (Webhook needs to verify)")
+                        showToast("Payment successful! Your registration is being processed", 'success')
                         router.refresh()
                     },
                     prefill: {
@@ -116,7 +124,7 @@ export function EventRegistrationCard({
             }
         } catch (err: unknown) {
             const error = err as Error
-            alert(error.message)
+            showToast(error.message, 'error')
         } finally {
             setLoading(false)
         }
@@ -127,11 +135,11 @@ export function EventRegistrationCard({
         setCanceling(true)
         try {
             await cancelRegistration(existingRegistration.id)
-            alert("Registration cancelled successfully!")
+            showToast("Registration cancelled successfully!", 'success')
             router.refresh()
         } catch (err: unknown) {
             const error = err as Error
-            alert(error.message)
+            showToast(error.message, 'error')
         } finally {
             setCanceling(false)
             setShowCancelConfirm(false)
@@ -167,6 +175,16 @@ export function EventRegistrationCard({
                             <Download className="w-4 h-4" />
                             Download QR
                         </button>
+                    </div>
+                )}
+
+                {/* Share & Earn XP */}
+                {user && (
+                    <div className="mt-4 pt-4 border-t border-green-200">
+                        <p className="text-green-700 text-sm mb-3 text-center">Invite friends and earn XP!</p>
+                        <div className="flex justify-center">
+                            <ReferralShare eventSlugOrId={event.id} eventTitle={event.title} />
+                        </div>
                     </div>
                 )}
 
@@ -212,20 +230,11 @@ export function EventRegistrationCard({
     }
 
     // Check if event is past (is_past_event flag, completed status, or end_time has passed)
-    // Initial state only considers server-stable flags
-    const [isPastEvent, setIsPastEvent] = useState(
-        event.is_past_event || event.status === 'completed'
-    )
+    const isPastEvent = event.is_past_event ||
+        event.status === 'completed' ||
+        (event.end_time && new Date(event.end_time) < new Date())
 
-    useEffect(() => {
-        setMounted(true)
-        // Check end_time only on client after mount to avoid hydration mismatch
-        if (!isPastEvent && event.end_time) {
-            setIsPastEvent(new Date(event.end_time) < new Date())
-        }
-    }, [event.end_time])
-
-    if (isPastEvent && mounted) {
+    if (isPastEvent) {
         const attendeeCount = event.registered_count || event.capacity || 0
         return (
             <div className="w-full md:w-80 bg-gray-100 p-6 rounded-xl border border-gray-200">
@@ -292,6 +301,7 @@ export function EventRegistrationCard({
                     loading={loading}
                 />
             )}
+            {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
         </div>
     )
 }

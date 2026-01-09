@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { Users, User, Shield, Target, Calendar, ArrowRight, Github, Globe, Linkedin, Mail, ImageIcon, Home, ChevronRight, Sparkles, Trophy, Rocket, Zap, Phone, ExternalLink, Code, Cpu, Cloud, Database, Gamepad2, Camera, Lock, Server, Brain, Palette } from "lucide-react"
 import { getPastEvents } from "@/lib/actions/club-events"
 import { getClubMembersByName, getClubWithMembers } from "@/lib/actions/clubs"
+import { getMemberPhotoPath } from "@/lib/constants/team-photos"
 import Link from "next/link"
 import { use, useEffect, useState } from "react"
 import { motion } from "framer-motion"
@@ -27,7 +28,7 @@ const SLUG_TO_DB_NAME: Record<string, string> = {
     "game-drifters": "Game Drifters",
     "gdg": "GDG on Campus",
     "github": "GitHub Club",
-    "pixelance": "Pixelance"
+    "pixelance": "PiXelance"
 }
 
 const CLUB_THEMES: Record<string, {
@@ -173,7 +174,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Join a community of security enthusiasts. Participate in CTF competitions, learn from industry experts, and build skills that matter in today's digital world.",
         logo: "/assets/logo/cyberpirates.png",
         stats: { members: "80+", ctfs: "12+", workshops: "8+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Lock, title: "Ethical Hacking", desc: "Learn penetration testing & security auditing" },
             { icon: Shield, title: "CTF Challenges", desc: "Compete in capture-the-flag competitions" },
@@ -188,7 +189,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Get hands-on with cutting-edge AI/ML projects, build robots, participate in hackathons, and collaborate with passionate innovators.",
         logo: "/assets/logo/AI_&_Robotics_logo.png",
         stats: { members: "120+", projects: "15+", hackathons: "10+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Brain, title: "Machine Learning", desc: "Build and train intelligent models" },
             { icon: Cpu, title: "Robotics Projects", desc: "Create autonomous machines & drones" },
@@ -203,7 +204,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Get hands-on with AWS services, prepare for certifications, and learn from industry professionals. Cloud skills are in high demand!",
         logo: "/assets/logo/awscc.png",
         stats: { members: "100+", certified: "25+", workshops: "12+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Cloud, title: "Cloud Architecture", desc: "Design scalable cloud solutions" },
             { icon: Server, title: "Serverless", desc: "Build with Lambda & API Gateway" },
@@ -218,7 +219,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Learn from data science practitioners, work on real datasets, compete on Kaggle, and build a portfolio that stands out.",
         logo: "/assets/logo/datapool.png",
         stats: { members: "90+", kaggle: "8+", workshops: "6+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Database, title: "Data Analysis", desc: "Master SQL & data manipulation" },
             { icon: Sparkles, title: "ML Models", desc: "Build predictive algorithms" },
@@ -233,7 +234,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Compete in tournaments, learn game development, or simply connect with fellow gamers. Whether you play or create, you belong here.",
         logo: "/assets/logo/Game Drifters.png",
         stats: { members: "150+", tournaments: "20+", games: "10+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Gamepad2, title: "Esports", desc: "Compete in gaming tournaments" },
             { icon: Code, title: "Game Dev", desc: "Build games with Unity & Unreal" },
@@ -248,7 +249,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Contribute to open-source, improve your Git skills, collaborate on projects, and connect with a thriving developer community.",
         logo: "/assets/logo/github.png",
         stats: { members: "200+", repos: "50+", contributions: "500+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Github, title: "Open Source", desc: "Contribute to real projects" },
             { icon: Code, title: "Coding", desc: "Learn modern development practices" },
@@ -263,7 +264,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Access Google's cutting-edge technologies, participate in DevFests, build solutions for local communities, and connect with a global developer network.",
         logo: "/assets/logo/gdg_on_campus.jpg",
         stats: { members: "300+", events: "30+", solutions: "10+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Globe, title: "Google Tech", desc: "Learn Firebase, Flutter, Cloud & more" },
             { icon: Rocket, title: "Solution Challenge", desc: "Build solutions for local problems" },
@@ -278,7 +279,7 @@ const CLUBS_DATA: Record<string, {
         whyJoin: "Attend photo walks, learn editing in Lightroom & Photoshop, participate in competitions, and build a portfolio of stunning work.",
         logo: "/assets/logo/pixelance_logo.png",
         stats: { members: "70+", photowalks: "15+", exhibitions: "5+" },
-        joinLink: "https://forms.gle/KbXuf6MCQJ2idz697",
+        joinLink: "https://forms.gle/6xVtZPK1HmKLGUbq6",
         highlights: [
             { icon: Camera, title: "Photo Walks", desc: "Explore photography outdoors" },
             { icon: Palette, title: "Editing", desc: "Master Lightroom & Photoshop" },
@@ -335,10 +336,26 @@ function PastEventsSection({ slug, theme }: { slug: string; theme: typeof CLUB_T
                             transition={{ delay: idx * 0.1 }}
                         >
                             <Link
-                                href={`/events/${event.id}`}
+                                href={`/events/${event.slug || event.id}`}
                                 className={`block group rounded-2xl overflow-hidden bg-white/[0.02] border border-white/10 hover:${colors.border} transition-all duration-500 hover:-translate-y-1`}
                             >
                                 <div className="aspect-video relative overflow-hidden">
+                                    {/* Organizing Club Badge */}
+                                    {event.club && (
+                                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/20 flex items-center gap-2 z-10 shadow-lg">
+                                            {event.club.logo_url && (
+                                                /* eslint-disable-next-line @next/next/no-img-element */
+                                                <img
+                                                    src={event.club.logo_url}
+                                                    alt={event.club.name}
+                                                    className="w-5 h-5 object-contain rounded-full drop-shadow-sm"
+                                                />
+                                            )}
+                                            <span className="text-xs font-semibold text-gray-800 max-w-[100px] truncate">
+                                                {event.club.name}
+                                            </span>
+                                        </div>
+                                    )}
                                     {event.banner ? (
                                         /* eslint-disable-next-line @next/next/no-img-element */
                                         <img src={event.banner} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -409,7 +426,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                             email: m.email,
                             phone: m.phone,
                             linkedin: m.linkedin_id,
-                            photo: undefined
+                            photo: getMemberPhotoPath(m.name)
                         }))
                         setTeamMembers(mappedMembers)
                     }
@@ -618,7 +635,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                         <h2 className="text-4xl font-bold mt-2">Meet the Team</h2>
                     </motion.div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {teamMembers.map((member, idx) => (
                             <motion.div
                                 key={member.name}
@@ -626,42 +643,61 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: idx * 0.05 }}
-                                className={`group p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:${colors.border} transition-all duration-300 hover:-translate-y-1`}
+                                className={`group bg-white/[0.03] backdrop-blur-xl border border-white/10 p-8 rounded-3xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 hover:-translate-y-1 overflow-hidden relative shadow-[0_8px_32px_rgba(0,0,0,0.3)]`}
+                                style={{
+                                    boxShadow: `0 8px 32px rgba(0,0,0,0.3)`,
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.boxShadow = `0 8px 40px ${colors.glow.replace('0.4', '0.12')}`
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.boxShadow = `0 8px 32px rgba(0,0,0,0.3)`
+                                }}
                             >
-                                {/* Avatar */}
-                                <div className={`w-16 h-16 rounded-full ${colors.bg} flex items-center justify-center mx-auto mb-4 ${colors.text} group-hover:scale-110 transition-transform`}>
-                                    {member.photo ? (
-                                        /* eslint-disable-next-line @next/next/no-img-element */
-                                        <img src={member.photo} alt={member.name} className="w-full h-full rounded-full object-cover" />
-                                    ) : (
-                                        <User className="w-8 h-8" />
-                                    )}
+                                <div className="flex justify-between items-start mb-6 relative z-10">
+                                    {/* Large Photo with Club Color Background */}
+                                    <div className={`w-32 h-32 ${colors.bg} ${colors.text} backdrop-blur-xl rounded-2xl flex items-center justify-center text-current group-hover:scale-110 transition-transform duration-500 overflow-hidden relative border border-white/10`}>
+                                        {/* Always use image - either photo or ui-avatars for consistency */}
+                                        <img
+                                            src={member.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=random&size=128`}
+                                            alt={member.name}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=random&size=128`
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Social Links - Appear on Hover */}
+                                    <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        {member.linkedin && (
+                                            <a
+                                                href={ensureAbsoluteUrl(member.linkedin)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-2.5 bg-white/5 rounded-xl hover:bg-blue-500/20 hover:text-blue-400 transition-all duration-300"
+                                                title="LinkedIn"
+                                            >
+                                                <Linkedin className="w-5 h-5" />
+                                            </a>
+                                        )}
+                                        {member.email && (
+                                            <a
+                                                href={`mailto:${member.email}`}
+                                                className="p-2.5 bg-white/5 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-300"
+                                                title="Email"
+                                            >
+                                                <Mail className="w-5 h-5" />
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
 
-                                {/* Details */}
-                                <div className="text-center mb-4">
-                                    <h3 className="font-bold">{member.name}</h3>
-                                    <p className={`text-sm ${colors.text}`}>{member.role}</p>
-                                </div>
-
-                                {/* Contact Icons */}
-                                <div className="flex justify-center gap-2">
-                                    {member.phone && (
-                                        <a href={`tel:+91${member.phone}`} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-green-400 hover:bg-green-500/10 transition-all">
-                                            <Phone className="w-4 h-4" />
-                                        </a>
-                                    )}
-                                    {member.email && (
-                                        <a href={`mailto:${member.email}`} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all">
-                                            <Mail className="w-4 h-4" />
-                                        </a>
-                                    )}
-                                    {member.linkedin && (
-                                        <a href={ensureAbsoluteUrl(member.linkedin)} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-600/10 transition-all">
-                                            <Linkedin className="w-4 h-4" />
-                                        </a>
-                                    )}
-                                </div>
+                                {/* Name & Role */}
+                                <h3 className="text-xl font-bold mb-1 relative z-10">{member.name}</h3>
+                                <p className={`text-sm font-bold uppercase tracking-wider ${colors.text} relative z-10`}>
+                                    {member.role}
+                                </p>
                             </motion.div>
                         ))}
                     </div>
@@ -697,7 +733,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                         </a>
                     </motion.div>
                 </div>
-            </section>
-        </div>
+            </section >
+        </div >
     )
 }

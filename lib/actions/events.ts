@@ -5,7 +5,6 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { generateEventSlug } from "@/lib/utils/slugify"
-import { parseDateTimeLocal } from "@/lib/utils"
 
 // Helper to get authenticated client or admin client
 async function getSupabase() {
@@ -96,7 +95,7 @@ export async function createEvent(formData: FormData) {
     }
 
     // 2. Create Event
-    const { error } = await supabase.from('events').insert({
+    const { data: newEvent, error } = await supabase.from('events').insert({
         club_id,
         title,
         description,
@@ -119,16 +118,21 @@ export async function createEvent(formData: FormData) {
         event_type,
         difficulty_level,
         poc_name
-    })
+    }).select('id').single()
 
-    if (error) {
+    if (error || !newEvent) {
         console.error("Create Event Error:", error)
         throw new Error("Failed to create event")
     }
 
+    // Generate and update slug after insert (needs the ID for uniqueness)
+    const slug = generateEventSlug(title, newEvent.id)
+    await supabase.from('events').update({ slug }).eq('id', newEvent.id)
+
     revalidatePath("/events")
     revalidatePath("/admin/events")
-    redirect("/admin/events")
+
+    return { success: true, message: "Event created successfully!", eventId: newEvent.id, slug }
 }
 
 export async function updateEvent(formData: FormData) {
@@ -171,6 +175,7 @@ export async function updateEvent(formData: FormData) {
     const registration_fields = formData.get("registration_fields") as string || "[]"
     const is_virtual = formData.get("is_virtual") === "true"
     const meeting_link = formData.get("meeting_link") as string || null
+    const banner_position = formData.get("banner_position") as string || "center"
     const event_type = formData.get("event_type") as string || "workshop"
     const difficulty_level = formData.get("difficulty_level") as string || "easy"
     const poc_name = formData.get("poc_name") as string || null
@@ -207,6 +212,8 @@ export async function updateEvent(formData: FormData) {
         price,
         status,
         banner,
+        banner_position,
+        slug: generateEventSlug(title, id), // Regenerate slug on title change
         co_host_club_id: co_host_club_id === 'none' ? null : co_host_club_id,
         updated_at: new Date().toISOString(),
         registration_fields,
@@ -225,10 +232,13 @@ export async function updateEvent(formData: FormData) {
         throw new Error("Failed to update event")
     }
 
+    const slug = generateEventSlug(title, id)
     revalidatePath("/events")
     revalidatePath("/admin/events")
     revalidatePath(`/events/${id}`)
-    redirect("/admin/events")
+    revalidatePath(`/events/${slug}`)
+
+    return { success: true, message: "Event updated successfully!", slug }
 }
 
 export async function deleteEvent(id: string) {
@@ -303,12 +313,13 @@ export async function togglePastEvent(eventId: string) {
 
 export async function getPublicEvents() {
     const supabase = await getSupabase()
+    // Include both live events AND past events (status='completed' or is_past_event=true)
     const { data, error } = await supabase.from('events')
         .select(`
             *,
             club:clubs!events_club_id_fkey(name, logo_url)
         `)
-        .eq('status', 'live')
+        .in('status', ['live', 'completed']) // Include both live and completed events
         .order('created_at', { ascending: false })
 
     return data || []
@@ -345,7 +356,7 @@ export async function getEventById(id: string) {
     if (event.poc_name && event.club_id) {
         const { data: member } = await supabase
             .from('club_members')
-            .select('email, phone')
+            .select('email, phone, role')
             .eq('club_id', event.club_id)
             .eq('name', event.poc_name)
             .single()
@@ -359,7 +370,8 @@ export async function getEventById(id: string) {
         ...event,
         registered_count: count || 0,
         poc_email: pocDetails?.email || null,
-        poc_phone: pocDetails?.phone || null
+        poc_phone: pocDetails?.phone || null,
+        poc_role: pocDetails?.role || null
     }
 }
 
@@ -422,3 +434,4 @@ export async function getEventBySlugOrId(slugOrId: string) {
         poc_role: pocDetails?.role || null
     }
 }
+

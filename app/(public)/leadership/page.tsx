@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Mail, Linkedin, Github, User, Award, TrendingUp, Users, Target, BookOpen, Star, Sparkles, Phone } from "lucide-react"
 import Image from "next/image"
 import { getClubMembersByName } from "@/lib/actions/clubs"
+import { getMemberPhotoPath } from "@/lib/constants/team-photos"
 
 const MENTORS = [
     {
@@ -48,14 +49,14 @@ const TEAM_METADATA: Record<string, any> = {
         color: "text-blue-500",
         bg: "bg-blue-500/10",
         icon: Award,
-        imagePath: "/assets/team/mohammad_sameer.png"
+        imagePath: "/assets/team/technova_main/mohammad_sameer.png"
     },
     "Masood Aslam": {
         bio: "Driving operational excellence and team coordination.",
         color: "text-purple-500",
         bg: "bg-purple-500/10",
         icon: TrendingUp,
-        imagePath: "/assets/team/masood_aslam.png"
+        imagePath: "/assets/team/technova_main/masood_aslam.png"
     },
     "Khushi Narang": {
         bio: "Managing administrative efficiency and documentation.",
@@ -120,7 +121,9 @@ export default function LeadershipPage() {
                         }
                         return {
                             ...m,
-                            ...meta
+                            ...meta,
+                            // Use metadata imagePath if defined, otherwise try getMemberPhotoPath
+                            imagePath: meta.imagePath || getMemberPhotoPath(m.name)
                         }
                     })
                     setTeamMembers(merged)
@@ -270,7 +273,7 @@ export default function LeadershipPage() {
                         Executive Council
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                         {teamMembers.map((member) => (
                             <div key={member.name} className="group bg-white/[0.03] backdrop-blur-xl border border-white/10 p-8 rounded-3xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 hover:-translate-y-1 overflow-hidden relative shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(59,130,246,0.12)]">
                                 <div className="flex justify-between items-start mb-6 relative z-10">
@@ -291,14 +294,14 @@ export default function LeadershipPage() {
                                             <member.icon className="w-12 h-12" />
                                         )}
                                     </div>
-                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                                         {/* @ts-ignore */}
                                         {member.linkedin_id && (
                                             <a
                                                 href={ensureAbsoluteUrl(member.linkedin_id)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-blue-400 transition-colors"
+                                                className="p-2.5 bg-white/5 rounded-xl hover:bg-blue-500/20 hover:text-blue-400 transition-all duration-300"
                                                 title="LinkedIn"
                                             >
                                                 <Linkedin className="w-5 h-5" />
@@ -306,16 +309,8 @@ export default function LeadershipPage() {
                                         )}
                                         <a
                                             // @ts-ignore
-                                            href={`tel:+91${member.phone}`}
-                                            className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-green-400 transition-colors"
-                                            title="Call"
-                                        >
-                                            <Phone className="w-5 h-5" />
-                                        </a>
-                                        <a
-                                            // @ts-ignore
                                             href={`mailto:${member.email}`}
-                                            className="p-2 bg-white/5 rounded-lg hover:bg-white/10 hover:text-red-400 transition-colors"
+                                            className="p-2.5 bg-white/5 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-300"
                                             title="Email"
                                         >
                                             <Mail className="w-5 h-5" />

@@ -10,8 +10,9 @@ import { Separator } from "@/components/ui/separator";
 import { auth } from "@/lib/auth";
 import { DeletePostButton } from "@/components/community/DeleteButtons";
 
-export default async function PostDetailPage({ params }: { params: { id: string } }) {
-    const post = await getPost(params.id);
+export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const post = await getPost(id);
     const session = await auth();
     const userId = session?.user?.id;
 

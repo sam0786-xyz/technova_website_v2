@@ -99,13 +99,10 @@ async function fetchLeaderboardFromDB(
     // For time-filtered views, aggregate from xp_awards table
     const { startDate } = getDateRange(timeFilter)
 
-    // Get aggregated XP from xp_awards within date range, joined with user info
+    // Get aggregated XP from xp_awards within date range
     const { data: awards, error: awardsError } = await supabase
         .from('xp_awards')
-        .select(`
-            user_id,
-            xp_amount
-        `)
+        .select('user_id, xp_amount')
         .gte('awarded_at', startDate!)
 
     if (awardsError) {
@@ -113,11 +110,32 @@ async function fetchLeaderboardFromDB(
         return { users: [], totalCount: 0, page, pageSize, totalPages: 0, timeFilter }
     }
 
+    // Get aggregated XP from referrals within date range
+    const { data: referralAwards, error: referralError } = await supabase
+        .from('referrals')
+        .select('referrer_id, xp_awarded')
+        .gte('created_at', startDate!)
+
+    if (referralError) {
+        console.error('Error fetching referral awards:', referralError)
+        // We continue even if referrals fail, just logging it
+    }
+
     // Aggregate XP by user
     const userXpMap = new Map<string, number>()
+
+    // Add Attendance XP
     awards?.forEach(award => {
         const current = userXpMap.get(award.user_id) || 0
         userXpMap.set(award.user_id, current + award.xp_amount)
+    })
+
+    // Add Referral XP
+    referralAwards?.forEach(ref => {
+        if (ref.referrer_id && ref.xp_awarded) {
+            const current = userXpMap.get(ref.referrer_id) || 0
+            userXpMap.set(ref.referrer_id, current + ref.xp_awarded)
+        }
     })
 
     // Get user details for users with XP in this period
@@ -220,16 +238,36 @@ async function fetchTopThreeFromDB(timeFilter: TimeFilter = 'all-time'): Promise
         .select('user_id, xp_amount')
         .gte('awarded_at', startDate!)
 
-    if (error || !awards) {
+    if (error) {
         console.error('Error fetching top 3 awards:', error)
         return []
     }
 
+    // Get aggregated XP from referrals within date range
+    const { data: referralAwards, error: referralError } = await supabase
+        .from('referrals')
+        .select('referrer_id, xp_awarded')
+        .gte('created_at', startDate!)
+
+    if (referralError) {
+        console.error('Error fetching referral awards for top 3:', referralError)
+    }
+
     // Aggregate and get top 3 user IDs
     const userXpMap = new Map<string, number>()
-    awards.forEach(award => {
+
+    // Add Attendance XP
+    awards?.forEach(award => {
         const current = userXpMap.get(award.user_id) || 0
         userXpMap.set(award.user_id, current + award.xp_amount)
+    })
+
+    // Add Referral XP
+    referralAwards?.forEach(ref => {
+        if (ref.referrer_id && ref.xp_awarded) {
+            const current = userXpMap.get(ref.referrer_id) || 0
+            userXpMap.set(ref.referrer_id, current + ref.xp_awarded)
+        }
     })
 
     const sortedUsers = Array.from(userXpMap.entries())

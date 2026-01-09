@@ -65,7 +65,8 @@ function sortMembersByRole(members: any[]) {
 
         // Club Leads - Organizer first (GDG uses Organizer as primary role)
         if (r.includes('organizer') || r.includes('organiser')) return 7
-        if ((r.includes('lead') && !r.includes('co-') && !r.includes('vice')) || r.includes('captain')) return 8
+        if (r.includes('lead') && !r.includes('co-') && !r.includes('vice')) return 8
+        if (r.includes('captain')) return 8
         if (r.includes('head') && !r.includes('pr')) return 8
 
         // Second in Command

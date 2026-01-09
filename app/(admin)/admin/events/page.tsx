@@ -1,10 +1,17 @@
 import Link from "next/link"
-import { Plus, Calendar, Trash2, Edit, Eye, ExternalLink } from "lucide-react"
+import { Plus, Calendar, Trash2, Edit, Eye, ExternalLink, History } from "lucide-react"
 import { getEvents, deleteEvent } from "@/lib/actions/events"
 import { formatDateShort } from "@/lib/utils"
+import { auth } from "@/lib/auth"
 
 export default async function AdminEventsPage() {
-    const events = await getEvents()
+    const allEvents = await getEvents()
+    const session = await auth()
+    const isSuperAdmin = session?.user?.role === 'super_admin'
+
+    // Separate regular events from past events
+    const events = allEvents.filter((e: any) => !e.is_past_event && e.status !== 'completed')
+    const pastEvents = allEvents.filter((e: any) => e.is_past_event || e.status === 'completed')
 
     return (
         <div className="min-h-screen bg-black p-6 md:p-8">
@@ -22,15 +29,26 @@ export default async function AdminEventsPage() {
                             <Calendar className="w-8 h-8 text-blue-400" />
                             Events Management
                         </h1>
-                        <p className="text-gray-400 mt-1">{events.length} events in total</p>
+                        <p className="text-gray-400 mt-1">{events.length} active events{pastEvents.length > 0 ? ` • ${pastEvents.length} past` : ''}</p>
                     </div>
-                    <Link
-                        href="/admin/events/new"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-medium transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Create Event
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        {isSuperAdmin && (
+                            <Link
+                                href="/admin/events/past/new"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-xl font-medium transition-all shadow-[0_0_20px_rgba(147,51,234,0.3)] hover:shadow-[0_0_30px_rgba(147,51,234,0.5)]"
+                            >
+                                <History className="w-5 h-5" />
+                                Add Past Event
+                            </Link>
+                        )}
+                        <Link
+                            href="/admin/events/new"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-medium transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Create Event
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Events Table */}
@@ -58,7 +76,7 @@ export default async function AdminEventsPage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    events.map((event: { id: string; title: string; start_time: string; status: string; capacity: number }) => (
+                                    events.map((event: { id: string; title: string; start_time: string; status: string; capacity: number; slug?: string }) => (
                                         <tr key={event.id} className="hover:bg-white/5 transition-colors group">
                                             <td className="p-4">
                                                 <Link href={`/admin/events/${event.id}`} className="font-medium text-white hover:text-blue-400 transition-colors">
@@ -82,7 +100,7 @@ export default async function AdminEventsPage() {
                                             <td className="p-4">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <Link
-                                                        href={`/events/${event.id}`}
+                                                        href={`/events/${event.slug || event.id}`}
                                                         target="_blank"
                                                         className="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors"
                                                         title="View Public Page"
@@ -121,6 +139,77 @@ export default async function AdminEventsPage() {
                         </table>
                     </div>
                 </div>
+
+                {/* Past Events Section */}
+                {pastEvents.length > 0 && (
+                    <div className="mt-8">
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
+                            <History className="w-5 h-5 text-purple-400" />
+                            Past Events
+                            <span className="text-sm font-normal text-gray-500">({pastEvents.length} events)</span>
+                        </h2>
+                        <div className="rounded-2xl bg-white/[0.03] border border-purple-500/20 backdrop-blur-xl overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-purple-500/10 border-b border-purple-500/20">
+                                        <tr>
+                                            <th className="p-4 font-medium text-gray-400 text-sm uppercase tracking-wide">Event Name</th>
+                                            <th className="p-4 font-medium text-gray-400 text-sm uppercase tracking-wide">Date</th>
+                                            <th className="p-4 font-medium text-gray-400 text-sm uppercase tracking-wide">Attendees</th>
+                                            <th className="p-4 font-medium text-gray-400 text-sm uppercase tracking-wide text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {pastEvents.map((event: any) => (
+                                            <tr key={event.id} className="hover:bg-purple-500/5 transition-colors group">
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-medium text-white">{event.title}</span>
+                                                        <span className="px-2 py-0.5 rounded-full text-xs bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                                                            past
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-gray-400">
+                                                    {formatDateShort(event.start_time)}
+                                                </td>
+                                                <td className="p-4 text-gray-400">{event.capacity}</td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Link
+                                                            href={`/events/${event.slug || event.id}`}
+                                                            target="_blank"
+                                                            className="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors"
+                                                            title="View Public Page"
+                                                        >
+                                                            <ExternalLink className="w-4 h-4" />
+                                                        </Link>
+                                                        <Link
+                                                            href={`/admin/events/${event.id}/edit`}
+                                                            className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
+                                                            title="Edit"
+                                                        >
+                                                            <Edit className="w-4 h-4" />
+                                                        </Link>
+                                                        <form action={deleteEvent.bind(null, event.id)}>
+                                                            <button
+                                                                type="submit"
+                                                                className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

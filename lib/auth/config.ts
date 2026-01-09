@@ -32,16 +32,13 @@ export const config = {
   ],
   callbacks: {
     async signIn({ user, account }) {
-      console.log("SignIn Attempt:", { userEmail: user.email, provider: account?.provider });
       if (account?.provider === "google") {
         const email = user.email
         if (!email) {
-          console.log("SignIn Error: No email provided");
           return false
         }
 
         const allowed = isEmailAllowed(email)
-        console.log(`SignIn Check: ${email} allowed? ${allowed}`);
         return allowed
       }
       return true
@@ -62,9 +59,9 @@ export const config = {
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string
-        session.user.role = token.role as 'student' | 'admin' | 'super_admin'
+      if (session.user && token) {
+        session.user.id = (token.id ?? token.sub) as string
+        session.user.role = (token.role ?? 'student') as 'student' | 'admin' | 'super_admin'
         session.user.system_id = token.system_id as string | undefined
       }
       return session

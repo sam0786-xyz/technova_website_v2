@@ -12,6 +12,11 @@ export function MainNav({
 
     const routes = [
         {
+            href: "/",
+            label: "Home",
+            active: pathname === "/",
+        },
+        {
             href: "/leaderboard",
             label: "Leaderboard",
             active: pathname.startsWith("/leaderboard"),

@@ -9,7 +9,8 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
     const body = await req.text()
-    const signature = headers().get("x-razorpay-signature")
+    const headersList = await headers()
+    const signature = headersList.get("x-razorpay-signature")
 
     const expectedSignature = crypto
         .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET || "test_secret")
@@ -17,9 +18,8 @@ export async function POST(req: Request) {
         .digest("hex")
 
     if (expectedSignature !== signature) {
-        // In dev, we might relax this or just log
         console.error("Invalid Razorpay Signature")
-        // return new Response("Invalid signature", { status: 400 })
+        return new Response("Invalid signature", { status: 400 })
     }
 
     const event = JSON.parse(body)

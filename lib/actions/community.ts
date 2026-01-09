@@ -31,7 +31,7 @@ export async function createPost(prevState: any, formData: FormData) {
     });
 
     if (!result.success) {
-        return { error: result.error.errors[0].message };
+        return { error: result.error.issues[0]?.message || "Validation failed" };
     }
 
     const { title, content, category } = result.data;
@@ -180,7 +180,7 @@ export async function addComment(prevState: any, formData: FormData) {
     });
 
     if (!result.success) {
-        return { error: result.error.errors[0].message };
+        return { error: result.error.issues[0]?.message || "Validation failed" };
     }
 
     const { content, postId } = result.data;

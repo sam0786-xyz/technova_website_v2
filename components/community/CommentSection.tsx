@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { addComment } from "@/lib/actions/community";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,7 +22,7 @@ function SubmitButton() {
 import { DeleteCommentButton } from "./DeleteButtons";
 
 export function CommentSection({ postId, comments, userId }: { postId: string, comments: CommunityComment[], userId?: string }) {
-    const [state, formAction] = useFormState(addComment, null);
+    const [state, formAction] = useActionState(addComment, null);
 
     return (
         <div className="space-y-6">

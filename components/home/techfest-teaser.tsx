@@ -40,27 +40,15 @@ function GlitchText({ children }: { children: string }) {
 // Subtle letter flash component - hints at TECHFEST without revealing
 function HiddenLetterFlash() {
     const [currentLetter, setCurrentLetter] = useState(-1)
-    const [mounted, setMounted] = useState(false)
-    const [position, setPosition] = useState({ left: 50, top: 50 })
-
-    useEffect(() => {
-        setMounted(true)
-    }, [])
 
     useEffect(() => {
         const interval = setInterval(() => {
             const randomIndex = Math.floor(Math.random() * HIDDEN_LETTERS.length)
             setCurrentLetter(randomIndex)
-            setPosition({
-                left: 20 + Math.random() * 60,
-                top: 10 + Math.random() * 80
-            })
             setTimeout(() => setCurrentLetter(-1), 150)
         }, 2500)
         return () => clearInterval(interval)
     }, [])
-
-    if (!mounted) return null
 
     return (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -72,8 +60,8 @@ function HiddenLetterFlash() {
                     transition={{ duration: 0.15 }}
                     className="absolute text-8xl md:text-[200px] font-black text-purple-400/20 blur-[1px]"
                     style={{
-                        left: `${position.left}%`,
-                        top: `${position.top}%`,
+                        left: `${20 + Math.random() * 60}%`,
+                        top: `${10 + Math.random() * 80}%`,
                         transform: 'translate(-50%, -50%)'
                     }}
                 >
@@ -86,14 +74,6 @@ function HiddenLetterFlash() {
 
 // Matrix-style raining characters
 function MatrixRain() {
-    const [mounted, setMounted] = useState(false)
-
-    useEffect(() => {
-        setMounted(true)
-    }, [])
-
-    if (!mounted) return null
-
     return (
         <div className="absolute inset-0 overflow-hidden opacity-10 pointer-events-none">
             {[...Array(15)].map((_, i) => (
