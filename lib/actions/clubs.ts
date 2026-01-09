@@ -63,21 +63,20 @@ function sortMembersByRole(members: any[]) {
         if (r.includes('pr co-head') || r.includes('pr cohead')) return 5
         if (r.includes('pr editor')) return 6
 
-        // Club Leads
-        if (r.includes('lead') && !r.includes('co-') && !r.includes('vice')) return 7
-        if (r.includes('captain')) return 7
-        if (r.includes('organizer')) return 7
-        if (r.includes('head') && !r.includes('pr')) return 7
+        // Club Leads - Organizer first (GDG uses Organizer as primary role)
+        if (r.includes('organizer') || r.includes('organiser')) return 7
+        if ((r.includes('lead') && !r.includes('co-') && !r.includes('vice')) || r.includes('captain')) return 8
+        if (r.includes('head') && !r.includes('pr')) return 8
 
         // Second in Command
-        if (r.includes('co-lead') || r.includes('colead') || r.includes('vice')) return 8
+        if (r.includes('co-lead') || r.includes('colead') || r.includes('vice')) return 9
 
         // Members
-        if (r.includes('technical')) return 9
-        if (r.includes('pr') || r.includes('marketing')) return 10
-        if (r.includes('design')) return 11
-        if (r.includes('doc') || r.includes('content')) return 12
-        if (r.includes('coordinator') || r.includes('executive')) return 13
+        if (r.includes('technical')) return 10
+        if (r.includes('pr') || r.includes('marketing')) return 11
+        if (r.includes('design')) return 12
+        if (r.includes('doc') || r.includes('content')) return 13
+        if (r.includes('coordinator') || r.includes('executive')) return 14
 
         return 99
     }

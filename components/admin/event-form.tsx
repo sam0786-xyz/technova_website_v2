@@ -2,6 +2,7 @@
 
 import { useState, useRef, MouseEvent, useEffect } from "react"
 import { getClubMembers } from "@/lib/actions/clubs"
+import { formatDate, formatDateRange, formatTime, toDateTimeLocalString } from "@/lib/utils"
 import { createEvent, updateEvent } from "@/lib/actions/events"
 import { FormBuilder, RegistrationField } from "./form-builder"
 import { Loader2, Move, CalendarDays } from "lucide-react"
@@ -18,6 +19,16 @@ export function EventForm({ clubs, event }: EventFormProps) {
     const [selectedClubId, setSelectedClubId] = useState<string>(event?.club_id || "")
     const [pocMembers, setPocMembers] = useState<any[]>([])
     const [loadingMembers, setLoadingMembers] = useState(false)
+    const [selectedPoc, setSelectedPoc] = useState<string>(event?.poc_name || "")
+    // const { toast, showToast, hideToast } = useToast()
+
+    // Date/time controlled states for proper syncing
+    const [startTime, setStartTime] = useState(event?.start_time ? toDateTimeLocalString(event.start_time) : "")
+    const [endTime, setEndTime] = useState(event?.end_time ? toDateTimeLocalString(event.end_time) : "")
+    const [startDate, setStartDate] = useState(event?.start_time ? new Date(event.start_time).toISOString().slice(0, 10) : "")
+    const [endDate, setEndDate] = useState(event?.end_time ? new Date(event.end_time).toISOString().slice(0, 10) : "")
+    const [dailyStartTime, setDailyStartTime] = useState(event?.daily_start_time?.slice(0, 5) || "")
+    const [dailyEndTime, setDailyEndTime] = useState(event?.daily_end_time?.slice(0, 5) || "")
 
     useEffect(() => {
         if (!selectedClubId) {

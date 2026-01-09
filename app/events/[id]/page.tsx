@@ -83,7 +83,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                                 </span>
                                 {event.is_virtual && (
                                     <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                                        {event.venue && event.venue.toLowerCase() !== 'online' ? 'Hybrid Event' : 'Virtual Event'}
+                                        Virtual Event
                                     </span>
                                 )}
                             </div>

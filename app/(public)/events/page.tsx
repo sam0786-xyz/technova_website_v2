@@ -131,9 +131,9 @@ function EventCard({ event }: { event: any }) {
 
                         {/* Virtual Badge */}
                         {event.is_virtual && (
-                            <div className="text-xs px-2 py-1 rounded-md inline-block bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                                {event.venue && event.venue.toLowerCase() !== 'online' ? 'Hybrid' : 'Virtual'}
-                            </div>
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                Virtual
+                            </span>
                         )}
 
                         {/* Multi-Day Badge */}

@@ -4,6 +4,8 @@ import { createClient as createServerClient } from "@supabase/supabase-js"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
+import { generateEventSlug } from "@/lib/utils/slugify"
+import { parseDateTimeLocal } from "@/lib/utils"
 
 // Helper to get authenticated client or admin client
 async function getSupabase() {
@@ -72,11 +74,11 @@ export async function createEvent(formData: FormData) {
         daily_end_time = formData.get("daily_end_time") as string
 
         // Combine date + time for start_time and end_time
-        start_time = `${start_date}T${daily_start_time}:00`
-        end_time = `${end_date}T${daily_end_time}:00`
+        start_time = parseDateTimeLocal(`${start_date}T${daily_start_time}`)
+        end_time = parseDateTimeLocal(`${end_date}T${daily_end_time}`)
     } else {
-        start_time = formData.get("start_time") as string
-        end_time = formData.get("end_time") as string
+        start_time = parseDateTimeLocal(formData.get("start_time") as string)
+        end_time = parseDateTimeLocal(formData.get("end_time") as string)
     }
 
     // If no club selected, try to find one or create default
@@ -187,11 +189,11 @@ export async function updateEvent(formData: FormData) {
         daily_end_time = formData.get("daily_end_time") as string
 
         // Combine date + time for start_time and end_time
-        start_time = `${start_date}T${daily_start_time}:00`
-        end_time = `${end_date}T${daily_end_time}:00`
+        start_time = parseDateTimeLocal(`${start_date}T${daily_start_time}`)
+        end_time = parseDateTimeLocal(`${end_date}T${daily_end_time}`)
     } else {
-        start_time = formData.get("start_time") as string
-        end_time = formData.get("end_time") as string
+        start_time = parseDateTimeLocal(formData.get("start_time") as string)
+        end_time = parseDateTimeLocal(formData.get("end_time") as string)
     }
 
     const { error } = await supabase.from('events').update({
@@ -358,5 +360,65 @@ export async function getEventById(id: string) {
         registered_count: count || 0,
         poc_email: pocDetails?.email || null,
         poc_phone: pocDetails?.phone || null
+    }
+}
+
+/**
+ * Get event by slug or ID (for backwards compatibility)
+ * Tries slug first, then falls back to UUID lookup
+ */
+export async function getEventBySlugOrId(slugOrId: string) {
+    const supabase = await getSupabase()
+
+    // Try slug first
+    let { data: event, error } = await supabase.from('events')
+        .select(`
+            *,
+            club:clubs!events_club_id_fkey(name, logo_url)
+        `)
+        .eq('slug', slugOrId)
+        .single()
+
+    // If not found by slug, try by ID (backwards compatibility)
+    if (error || !event) {
+        const { data: eventById, error: errorById } = await supabase.from('events')
+            .select(`
+                *,
+                club:clubs!events_club_id_fkey(name, logo_url)
+            `)
+            .eq('id', slugOrId)
+            .single()
+
+        if (errorById || !eventById) return null
+        event = eventById
+    }
+
+    // Fetch registration count
+    const { count } = await supabase
+        .from('registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', event.id)
+
+    // Fetch POC details if available
+    let pocDetails = null
+    if (event.poc_name && event.club_id) {
+        const { data: member } = await supabase
+            .from('club_members')
+            .select('email, phone, role')
+            .eq('club_id', event.club_id)
+            .eq('name', event.poc_name)
+            .single()
+
+        if (member) {
+            pocDetails = member
+        }
+    }
+
+    return {
+        ...event,
+        registered_count: count || 0,
+        poc_email: pocDetails?.email || null,
+        poc_phone: pocDetails?.phone || null,
+        poc_role: pocDetails?.role || null
     }
 }

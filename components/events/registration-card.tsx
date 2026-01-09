@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { registerForEvent, cancelRegistration } from "@/lib/actions/registrations"
 import { useRouter } from "next/navigation"
 import { Download, XCircle, Loader2 } from "lucide-react"
@@ -59,7 +59,9 @@ export function EventRegistrationCard({
     const [canceling, setCanceling] = useState(false)
     const [showModal, setShowModal] = useState(false)
     const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+    const [mounted, setMounted] = useState(false)
     const router = useRouter()
+
 
     const registrationFields: RegistrationField[] = typeof event.registration_fields === 'string'
         ? JSON.parse(event.registration_fields)
@@ -202,6 +204,43 @@ export function EventRegistrationCard({
                                     No, Keep My Spot
                                 </button>
                             </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
+    // Check if event is past (is_past_event flag, completed status, or end_time has passed)
+    // Initial state only considers server-stable flags
+    const [isPastEvent, setIsPastEvent] = useState(
+        event.is_past_event || event.status === 'completed'
+    )
+
+    useEffect(() => {
+        setMounted(true)
+        // Check end_time only on client after mount to avoid hydration mismatch
+        if (!isPastEvent && event.end_time) {
+            setIsPastEvent(new Date(event.end_time) < new Date())
+        }
+    }, [event.end_time])
+
+    if (isPastEvent && mounted) {
+        const attendeeCount = event.registered_count || event.capacity || 0
+        return (
+            <div className="w-full md:w-80 bg-gray-100 p-6 rounded-xl border border-gray-200">
+                <div className="text-center">
+                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <p className="text-gray-700 font-bold text-lg mb-1">Event Completed</p>
+                    <p className="text-gray-500 text-sm mb-4">This event has already concluded.</p>
+                    {attendeeCount > 0 && (
+                        <div className="bg-white rounded-lg px-4 py-3 border border-gray-200">
+                            <p className="text-2xl font-bold text-gray-800">{attendeeCount}</p>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Attendees</p>
                         </div>
                     )}
                 </div>
