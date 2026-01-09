@@ -70,14 +70,14 @@ function sortMembersByRole(members: any[]) {
         if (r.includes('head') && !r.includes('pr')) return 8
 
         // Second in Command
-        if (r.includes('co-lead') || r.includes('colead') || r.includes('vice')) return 8
+        if (r.includes('co-lead') || r.includes('colead') || r.includes('vice')) return 9
 
         // Members
-        if (r.includes('technical')) return 9
-        if (r.includes('pr') || r.includes('marketing')) return 10
-        if (r.includes('design')) return 11
-        if (r.includes('doc') || r.includes('content')) return 12
-        if (r.includes('coordinator') || r.includes('executive')) return 13
+        if (r.includes('technical')) return 10
+        if (r.includes('pr') || r.includes('marketing')) return 11
+        if (r.includes('design')) return 12
+        if (r.includes('doc') || r.includes('content')) return 13
+        if (r.includes('coordinator') || r.includes('executive')) return 14
 
         return 99
     }
