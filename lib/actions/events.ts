@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { generateEventSlug } from "@/lib/utils/slugify"
+import { parseDateTimeLocal } from "@/lib/utils"
 
 // Helper to get authenticated client or admin client
 async function getSupabase() {
@@ -73,11 +74,11 @@ export async function createEvent(formData: FormData) {
         daily_end_time = formData.get("daily_end_time") as string
 
         // Combine date + time for start_time and end_time
-        start_time = `${start_date}T${daily_start_time}:00`
-        end_time = `${end_date}T${daily_end_time}:00`
+        start_time = parseDateTimeLocal(`${start_date}T${daily_start_time}`)
+        end_time = parseDateTimeLocal(`${end_date}T${daily_end_time}`)
     } else {
-        start_time = formData.get("start_time") as string
-        end_time = formData.get("end_time") as string
+        start_time = parseDateTimeLocal(formData.get("start_time") as string)
+        end_time = parseDateTimeLocal(formData.get("end_time") as string)
     }
 
     // If no club selected, try to find one or create default
@@ -194,11 +195,11 @@ export async function updateEvent(formData: FormData) {
         daily_end_time = formData.get("daily_end_time") as string
 
         // Combine date + time for start_time and end_time
-        start_time = `${start_date}T${daily_start_time}:00`
-        end_time = `${end_date}T${daily_end_time}:00`
+        start_time = parseDateTimeLocal(`${start_date}T${daily_start_time}`)
+        end_time = parseDateTimeLocal(`${end_date}T${daily_end_time}`)
     } else {
-        start_time = formData.get("start_time") as string
-        end_time = formData.get("end_time") as string
+        start_time = parseDateTimeLocal(formData.get("start_time") as string)
+        end_time = parseDateTimeLocal(formData.get("end_time") as string)
     }
 
     const { error } = await supabase.from('events').update({

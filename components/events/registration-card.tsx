@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { registerForEvent, cancelRegistration } from "@/lib/actions/registrations"
 import { useRouter } from "next/navigation"
 import { Download, XCircle, Loader2 } from "lucide-react"
@@ -66,8 +66,10 @@ export function EventRegistrationCard({
     const [canceling, setCanceling] = useState(false)
     const [showModal, setShowModal] = useState(false)
     const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+    const [mounted, setMounted] = useState(false)
     const router = useRouter()
     const { toast, showToast, hideToast } = useToast()
+
 
     const registrationFields: RegistrationField[] = typeof event.registration_fields === 'string'
         ? JSON.parse(event.registration_fields)

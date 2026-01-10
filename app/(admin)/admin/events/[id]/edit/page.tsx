@@ -7,8 +7,12 @@ import { History } from "lucide-react"
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    const event = await getEventById(id)
-    const clubs = await getClubs()
+
+    // Fetch data in parallel for better performance
+    const [event, clubs] = await Promise.all([
+        getEventById(id),
+        getClubs()
+    ])
 
     if (!event) {
         notFound()

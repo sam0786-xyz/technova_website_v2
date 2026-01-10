@@ -110,7 +110,7 @@ export default async function EventPage({
                                 </span>
                                 {event.is_virtual && (
                                     <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                                        {event.venue && event.venue.toLowerCase() !== 'online' ? 'Hybrid Event' : 'Virtual Event'}
+                                        Virtual Event
                                     </span>
                                 )}
                             </div>
@@ -163,7 +163,7 @@ export default async function EventPage({
                                     <MapPin className="w-5 h-5 text-blue-500" />
                                     <span>{event.venue || "Online"}</span>
                                 </div>
-                                {event.is_virtual && event.meeting_link && (
+                                {event.is_virtual && event.meeting_link && existingRegistration && (
                                     <div className="flex items-center gap-2">
                                         <Video className="w-5 h-5 text-purple-500" />
                                         <a href={event.meeting_link} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline font-medium">

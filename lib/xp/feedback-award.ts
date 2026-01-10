@@ -94,6 +94,15 @@ export async function awardXPForFeedback(
         }
     }
 
+    // CRITICAL: Record this in xp_awards history so it shows up on profile
+    await supabase.from('xp_awards').insert({
+        user_id: userId,
+        event_id: eventId,
+        xp_amount: FEEDBACK_XP_REWARD,
+        source: 'feedback',
+        description: 'Completed Feedback Form'
+    })
+
     // Mark XP as awarded in the response
     await supabase
         .from('feedback_responses')
