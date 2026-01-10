@@ -63,3 +63,52 @@ export async function generateQRBuffer(data: string): Promise<Buffer> {
         margin: 2
     })
 }
+
+// ==========================================
+// Certificate Verification QR Code
+// ==========================================
+
+export async function generateCertificateQR(
+    certificateId: string,
+    baseUrl?: string
+): Promise<{ qrDataUrl: string, qrBuffer: Buffer }> {
+    // Use environment variable or fallback
+    const siteUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://technova.example.com'
+    const verificationUrl = `${siteUrl}/verify/${certificateId}`
+
+    // Generate QR Code as Data URL
+    const qrDataUrl = await QRCode.toDataURL(verificationUrl, {
+        width: 400,
+        margin: 2,
+        errorCorrectionLevel: 'M', // Medium error correction for better scanning
+        color: {
+            dark: '#000000',
+            light: '#ffffff'
+        }
+    })
+
+    // Also generate as buffer for embedding in PDF
+    const qrBuffer = await QRCode.toBuffer(verificationUrl, {
+        width: 400,
+        margin: 2,
+        errorCorrectionLevel: 'M'
+    })
+
+    return { qrDataUrl, qrBuffer }
+}
+
+// Generate QR as PNG buffer for embedding in certificates
+export async function generateCertificateQRBuffer(
+    certificateId: string,
+    size: number = 200,
+    baseUrl?: string
+): Promise<Buffer> {
+    const siteUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://technova.example.com'
+    const verificationUrl = `${siteUrl}/verify/${certificateId}`
+
+    return await QRCode.toBuffer(verificationUrl, {
+        width: size,
+        margin: 1,
+        errorCorrectionLevel: 'M'
+    })
+}

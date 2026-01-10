@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Download, Search, CheckCircle, XCircle, Clock, Loader2, X } from "lucide-react"
+import { ArrowLeft, Download, Search, CheckCircle, XCircle, Clock, Loader2, X, Award } from "lucide-react"
 import { Toast, useToast } from "@/components/ui/toast"
 import { togglePastEvent } from "@/lib/actions/events"
 import { formatDate } from "@/lib/utils"
@@ -157,6 +157,12 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                     >
                         <CheckCircle className="w-4 h-4" /> Export Checked-In
                     </button>
+                    <Link
+                        href={`/admin/events/${event.id}/certificates`}
+                        className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm font-medium"
+                    >
+                        <Award className="w-4 h-4" /> Certificates
+                    </Link>
                 </div>
             </div>
 

@@ -74,9 +74,25 @@ function HiddenLetterFlash() {
 
 // Matrix-style raining characters
 function MatrixRain() {
+    const [mounted, setMounted] = useState(false)
+    const [characters, setCharacters] = useState<string[][]>([])
+
+    useEffect(() => {
+        // Generate random characters only on client
+        const chars = [...Array(15)].map(() =>
+            [...Array(20)].map(() =>
+                String.fromCharCode(33 + Math.floor(Math.random() * 93))
+            )
+        )
+        setCharacters(chars)
+        setMounted(true)
+    }, [])
+
+    if (!mounted) return null
+
     return (
         <div className="absolute inset-0 overflow-hidden opacity-10 pointer-events-none">
-            {[...Array(15)].map((_, i) => (
+            {characters.map((column, i) => (
                 <motion.div
                     key={i}
                     className="absolute text-xs font-mono text-purple-400"
@@ -84,15 +100,15 @@ function MatrixRain() {
                     initial={{ y: -100 }}
                     animate={{ y: '100vh' }}
                     transition={{
-                        duration: 8 + Math.random() * 4,
+                        duration: 8 + (i % 5),
                         repeat: Infinity,
-                        delay: Math.random() * 5,
+                        delay: i * 0.3,
                         ease: 'linear'
                     }}
                 >
-                    {[...Array(20)].map((_, j) => (
+                    {column.map((char, j) => (
                         <div key={j} className="opacity-50">
-                            {String.fromCharCode(33 + Math.floor(Math.random() * 93))}
+                            {char}
                         </div>
                     ))}
                 </motion.div>
