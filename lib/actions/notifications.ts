@@ -216,30 +216,57 @@ export async function sendBlastEmail(
 
     const eventUrl = `${BASE_URL}/events/${event.slug || event.id}`
     let emailsSent = 0
+    let emailsFailed = 0
 
-    // Send emails
-    for (const participant of participants) {
-        try {
-            const emailHtml = await render(BlastEmail({
-                eventName: event.title,
-                userName: participant.name,
-                subject,
-                message,
-                eventUrl
-            }))
+    // Helper function to delay between sends (Resend free tier: 2 req/sec)
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-            await resend.emails.send({
-                from: 'Technova <noreply@technovashardauniversity.in>',
-                to: participant.email,
-                subject: `📢 ${subject} - ${event.title}`,
-                html: emailHtml
-            })
+    // Send emails with rate limiting
+    for (let i = 0; i < participants.length; i++) {
+        const participant = participants[i]
 
-            emailsSent++
-        } catch (err) {
-            console.error(`Failed to send blast to ${participant.email}:`, err)
+        // Add delay between emails to respect rate limit (600ms = ~1.6 req/sec, staying safely under 2/sec)
+        if (i > 0) {
+            await delay(600)
+        }
+
+        let retries = 2
+        while (retries > 0) {
+            try {
+                const emailHtml = await render(BlastEmail({
+                    eventName: event.title,
+                    userName: participant.name,
+                    subject,
+                    message,
+                    eventUrl
+                }))
+
+                await resend.emails.send({
+                    from: 'Technova <noreply@technovashardauniversity.in>',
+                    to: participant.email,
+                    subject: `📢 ${subject} - ${event.title}`,
+                    html: emailHtml
+                })
+
+                emailsSent++
+                console.log(`[Blast] Sent ${emailsSent}/${participants.length} to ${participant.email}`)
+                break // Success, exit retry loop
+            } catch (err: any) {
+                retries--
+                if (err?.statusCode === 429 && retries > 0) {
+                    // Rate limited - wait longer and retry
+                    console.log(`[Blast] Rate limited, waiting 2s before retry...`)
+                    await delay(2000)
+                } else {
+                    console.error(`[Blast] Failed to send to ${participant.email}:`, err?.message || err)
+                    emailsFailed++
+                    break
+                }
+            }
         }
     }
+
+    console.log(`[Blast] Complete: ${emailsSent} sent, ${emailsFailed} failed`)
 
     // Log the blast email (ignore if table doesn't exist)
     try {
