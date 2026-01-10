@@ -73,7 +73,12 @@ export async function generateCertificateQR(
     baseUrl?: string
 ): Promise<{ qrDataUrl: string, qrBuffer: Buffer }> {
     // Use environment variable or fallback
-    const siteUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://technova.example.com'
+    // Use environment variable or fallback
+    let defaultUrl = 'https://www.technovashardauniversity.in'
+    if (process.env.NODE_ENV === 'development') {
+        defaultUrl = 'http://localhost:3000'
+    }
+    const siteUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || defaultUrl
     const verificationUrl = `${siteUrl}/verify/${certificateId}`
 
     // Generate QR Code as Data URL
@@ -103,7 +108,12 @@ export async function generateCertificateQRBuffer(
     size: number = 200,
     baseUrl?: string
 ): Promise<Buffer> {
-    const siteUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://technova.example.com'
+    // Use environment variable or fallback
+    let defaultUrl = 'https://www.technovashardauniversity.in'
+    if (process.env.NODE_ENV === 'development') {
+        defaultUrl = 'http://localhost:3000'
+    }
+    const siteUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || defaultUrl
     const verificationUrl = `${siteUrl}/verify/${certificateId}`
 
     return await QRCode.toBuffer(verificationUrl, {
