@@ -80,3 +80,111 @@ export interface Resource {
   is_verified: boolean;
   created_at: string;
 }
+
+// ==========================================
+// Certificate System Types
+// ==========================================
+
+export type CertificateType = 'participation' | 'winner' | 'speaker' | 'coordinator' | 'volunteer';
+
+export type TextFieldType = 'participant_name' | 'event_name' | 'event_date' | 'certificate_id' | 'organizer_name' | 'role_title';
+
+export interface QRRegion {
+  x: number;      // percentage (0-100)
+  y: number;      // percentage (0-100)
+  width: number;  // percentage (0-100)
+  height: number; // percentage (0-100)
+}
+
+export interface TextRegion {
+  id: string;     // unique identifier for the region
+  field: TextFieldType;
+  x: number;      // percentage (0-100)
+  y: number;      // percentage (0-100)
+  fontSize: number;   // in points
+  color: string;      // hex color
+  fontWeight?: 'normal' | 'bold';
+  alignment?: 'left' | 'center' | 'right';
+}
+
+export interface SignatureRegion {
+  x: number;      // percentage (0-100)
+  y: number;      // percentage (0-100)
+  width: number;  // percentage (0-100)
+  height: number; // percentage (0-100)
+}
+
+export interface CertificateTemplate {
+  id: string;
+  event_id: string;
+  template_url: string;
+  qr_region: QRRegion;
+  text_regions: TextRegion[];
+  signature_url?: string;
+  signature_region?: SignatureRegion;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Certificate {
+  id: string;
+  certificate_id: string;  // Short 8-char display ID
+  event_id: string;
+  user_id: string;
+  template_id: string | null;
+  certificate_type: CertificateType;
+  role_title?: string;
+  issued_at: string;
+  status: 'valid' | 'revoked';
+  revoked_at?: string;
+  revoked_reason?: string;
+  downloaded_count: number;
+  linkedin_shares: number;
+  view_count: number;
+  // Joined data
+  event?: {
+    title: string;
+    start_time: string;
+    club_id?: string;
+    club?: {
+      name: string;
+    };
+  };
+  user?: {
+    name: string | null;
+    email: string | null;
+  };
+}
+
+export interface CertificateWithDetails extends Certificate {
+  event: {
+    title: string;
+    start_time: string;
+    club?: {
+      name: string;
+    };
+  };
+  user: {
+    name: string | null;
+    email: string | null;
+  };
+}
+
+export interface CertificateAnalytics {
+  id: string;
+  certificate_id: string;
+  action_type: 'view' | 'download' | 'linkedin_share' | 'verification';
+  ip_address?: string;
+  user_agent?: string;
+  created_at: string;
+}
+
+export interface CertificateStats {
+  total: number;
+  valid: number;
+  revoked: number;
+  downloads: number;
+  views: number;
+  linkedin_shares: number;
+  by_type: Record<CertificateType, number>;
+}

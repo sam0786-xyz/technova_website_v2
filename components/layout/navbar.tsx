@@ -29,6 +29,7 @@ export function Navbar({ user }: NavbarProps) {
 
     const authLinks = [
         { href: "/leaderboard", label: "Leaderboard" },
+        { href: "/dashboard/certificates", label: "My Certificates" },
     ]
 
     const adminLinks = [
