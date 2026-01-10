@@ -68,9 +68,18 @@ export function EventForm({ clubs, event }: EventFormProps) {
     const positionRef = useRef<HTMLDivElement>(null)
     const [isDragging, setIsDragging] = useState(false)
 
-    const [questions, setQuestions] = useState<RegistrationField[]>(
-        event?.registration_fields ? (typeof event.registration_fields === 'string' ? JSON.parse(event.registration_fields) : event.registration_fields) : []
-    )
+    const [questions, setQuestions] = useState<RegistrationField[]>(() => {
+        if (!event?.registration_fields) return []
+        try {
+            if (typeof event.registration_fields === 'string') {
+                return JSON.parse(event.registration_fields)
+            }
+            return Array.isArray(event.registration_fields) ? event.registration_fields : []
+        } catch (e) {
+            console.error('Failed to parse registration_fields:', e)
+            return []
+        }
+    })
 
     const handleSubmit = async (formData: FormData) => {
         setLoading(true)
