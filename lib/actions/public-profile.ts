@@ -84,7 +84,7 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
         .eq('id', userId)
         .single()
 
-    // Get recent events (last 10)
+    // 1. Get XP Awards (Generic)
     const { data: awards } = await supabase
         .from('xp_awards')
         .select(`
@@ -95,18 +95,85 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
         `)
         .eq('user_id', userId)
         .order('awarded_at', { ascending: false })
-        .limit(10)
+        .limit(20)
 
-    const recentEvents: RecentEventParticipation[] = (awards || []).map(award => ({
-        eventId: award.event_id,
-        eventTitle: (award.events as any)?.title || 'Unknown Event',
-        eventDate: new Date((award.events as any)?.start_time || award.awarded_at).toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-        }),
-        xpEarned: award.xp_amount
-    }))
+    // 2. Get Attended Registrations (Official Attendance)
+    const { data: attended } = await supabase
+        .from('registrations')
+        .select(`
+            id,
+            event_id,
+            created_at,
+            events (id, title, start_time)
+        `)
+        .eq('user_id', userId)
+        .eq('attended', true)
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+    // 3. Get Feedback Responses (Implicit Attendance/Participation)
+    const { data: feedback } = await supabase
+        .from('feedback_responses')
+        .select(`
+            id,
+            xp_awarded,
+            submitted_at,
+            form:event_feedback_forms(
+                event_id,
+                event:events(id, title, start_time)
+            )
+        `)
+        .eq('user_id', userId)
+        .eq('xp_awarded', true)
+        .order('submitted_at', { ascending: false })
+        .limit(20)
+
+    // Merge and Deduplicate Events
+    const eventMap = new Map<string, RecentEventParticipation>()
+
+    // Helper to add event
+    const addEvent = (eventId: string, title: string, dateStr: string, xp: number) => {
+        if (!eventId || eventMap.has(eventId)) return
+        eventMap.set(eventId, {
+            eventId,
+            eventTitle: title,
+            eventDate: new Date(dateStr).toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            }),
+            xpEarned: xp
+        })
+    }
+
+    // Process Awards
+    awards?.forEach(a => {
+        if (a.event_id && a.events) {
+            addEvent(a.event_id, (a.events as any).title, (a.events as any).start_time || a.awarded_at, a.xp_amount)
+        }
+    })
+
+    // Process Attendance
+    attended?.forEach(a => {
+        if (a.event_id && a.events) {
+            // Default attendance XP if not found via award
+            addEvent(a.event_id, (a.events as any).title, (a.events as any).start_time, 50)
+        }
+    })
+
+    // Process Feedback
+    feedback?.forEach(f => {
+        const event = (f.form as any)?.event
+        const eventId = (f.form as any)?.event_id
+        if (eventId && event) {
+            // Default feedback XP if not found via award
+            addEvent(eventId, event.title, event.start_time, 15)
+        }
+    })
+
+    const recentEvents: RecentEventParticipation[] = Array.from(eventMap.values())
+        .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime())
+        .slice(0, 10)
 
     // Get XP history for chart (last 30 days)
     const thirtyDaysAgo = new Date()
