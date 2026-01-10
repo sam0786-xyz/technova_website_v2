@@ -87,7 +87,7 @@ This digital platform serves as the central hub for:
 | **Custom Form Builder** | Dynamic registration forms with Text, Number, Checkbox, and Select field types |
 | **Virtual Event Support** | Native handling for online/hybrid events with meeting link distribution |
 | **Banner Management** | Intelligent image uploads with customizable focus points |
-| **Email Notifications** | Automated confirmations, reminders, and updates via Resend |
+| **Blast Notifications** | Admin-triggered blast emails to all registered participants with custom messages |
 | **Payment Integration** | Razorpay support for paid workshop registrations |
 
 ### 🚀 Performance & SEO
@@ -178,6 +178,9 @@ technova_website_v2/
 
    # Application
    NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+   # Email Notifications
+   RESEND_API_KEY=your_resend_api_key
    ```
 
 4. **Initialize Database**

@@ -163,7 +163,7 @@ export default async function EventPage({
                                     <MapPin className="w-5 h-5 text-blue-500" />
                                     <span>{event.venue || "Online"}</span>
                                 </div>
-                                {event.is_virtual && event.meeting_link && (
+                                {event.is_virtual && event.meeting_link && existingRegistration && (
                                     <div className="flex items-center gap-2">
                                         <Video className="w-5 h-5 text-purple-500" />
                                         <a href={event.meeting_link} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline font-medium">

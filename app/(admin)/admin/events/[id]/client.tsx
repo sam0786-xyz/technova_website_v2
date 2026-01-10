@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Download, Search, CheckCircle, XCircle, Clock, Loader2, X } from "lucide-react"
+import { ArrowLeft, Download, Search, CheckCircle, XCircle, Clock, Loader2, X, Send, Mail } from "lucide-react"
 import { Toast, useToast } from "@/components/ui/toast"
 import { togglePastEvent } from "@/lib/actions/events"
 import { formatDate } from "@/lib/utils"
@@ -14,6 +14,12 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
     const [showConfirmModal, setShowConfirmModal] = useState(false)
     const [isPastEvent, setIsPastEvent] = useState(event.is_past_event || false)
     const { toast, showToast, hideToast } = useToast()
+
+    // Blast email state
+    const [showBlastModal, setShowBlastModal] = useState(false)
+    const [blastSubject, setBlastSubject] = useState("")
+    const [blastMessage, setBlastMessage] = useState("")
+    const [isSendingBlast, setIsSendingBlast] = useState(false)
 
     // Check if event is completed (end_time has passed)
     const isCompleted = new Date(event.end_time) < new Date()
@@ -36,6 +42,41 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
             showToast(error.message || "Failed to update event", "error")
         } finally {
             setIsToggling(false)
+        }
+    }
+
+    const handleSendBlast = async () => {
+        if (!blastSubject.trim() || !blastMessage.trim()) {
+            showToast("Please enter both subject and message", "error")
+            return
+        }
+
+        setIsSendingBlast(true)
+        try {
+            const res = await fetch('/api/admin/blast-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventId: event.id,
+                    subject: blastSubject,
+                    message: blastMessage
+                })
+            })
+
+            const data = await res.json()
+
+            if (res.ok) {
+                showToast(data.message || "Blast email sent successfully!", "success")
+                setShowBlastModal(false)
+                setBlastSubject("")
+                setBlastMessage("")
+            } else {
+                showToast(data.error || "Failed to send blast email", "error")
+            }
+        } catch (err: any) {
+            showToast(err.message || "Failed to send blast email", "error")
+        } finally {
+            setIsSendingBlast(false)
         }
     }
 
@@ -156,6 +197,12 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
                     >
                         <CheckCircle className="w-4 h-4" /> Export Checked-In
+                    </button>
+                    <button
+                        onClick={() => setShowBlastModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
+                    >
+                        <Mail className="w-4 h-4" /> Send Blast Email
                     </button>
                 </div>
             </div>
@@ -318,6 +365,77 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                                     }`}
                             >
                                 Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Blast Email Modal */}
+            {showBlastModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                                <Mail className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900">Send Blast Email</h3>
+                                <p className="text-gray-500 text-sm">Message all {registrations.length} registered participants</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Subject</label>
+                                <input
+                                    type="text"
+                                    value={blastSubject}
+                                    onChange={(e) => setBlastSubject(e.target.value)}
+                                    placeholder="e.g., Important Update about the Event"
+                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Message</label>
+                                <textarea
+                                    value={blastMessage}
+                                    onChange={(e) => setBlastMessage(e.target.value)}
+                                    placeholder="Write your message here..."
+                                    rows={5}
+                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 justify-end mt-6">
+                            <button
+                                onClick={() => {
+                                    setShowBlastModal(false)
+                                    setBlastSubject("")
+                                    setBlastMessage("")
+                                }}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                                disabled={isSendingBlast}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSendBlast}
+                                disabled={isSendingBlast || !blastSubject.trim() || !blastMessage.trim()}
+                                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isSendingBlast ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Sending...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="w-4 h-4" />
+                                        Send to All
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
