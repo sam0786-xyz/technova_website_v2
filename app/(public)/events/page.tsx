@@ -23,13 +23,23 @@ export default function PublicEventsPage() {
     }, [])
 
     const now = new Date()
-    // Filter events: past if is_past_event=true OR status='completed' OR start_time has passed
+
+    // Upcoming: hasn't started yet
     const upcomingEvents = allEvents.filter((event: any) =>
         !event.is_past_event && event.status !== 'completed' && new Date(event.start_time) > now
     ).sort((a: any, b: any) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
 
+    // Ongoing: has started but hasn't ended yet
+    const ongoingEvents = allEvents.filter((event: any) =>
+        !event.is_past_event &&
+        event.status !== 'completed' &&
+        new Date(event.start_time) <= now &&
+        new Date(event.end_time) > now
+    ).sort((a: any, b: any) => new Date(a.end_time).getTime() - new Date(b.end_time).getTime())
+
+    // Past: has ended OR manually marked as past
     const pastEvents = allEvents.filter((event: any) =>
-        event.is_past_event || event.status === 'completed' || new Date(event.start_time) <= now
+        event.is_past_event || event.status === 'completed' || new Date(event.end_time) <= now
     ).sort((a: any, b: any) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
 
     return (
@@ -111,6 +121,33 @@ export default function PublicEventsPage() {
                                 </StaggerContainer>
                             )}
                         </section>
+
+                        {/* ONGOING EVENTS */}
+                        {ongoingEvents.length > 0 && (
+                            <section className="mb-20">
+                                <RevealOnScroll>
+                                    <div className="flex items-center gap-3 mb-8">
+                                        <div className="w-10 h-10 bg-amber-600/20 rounded-xl flex items-center justify-center relative">
+                                            <Clock className="w-5 h-5 text-amber-400" />
+                                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                                        </div>
+                                        <h2 className="text-2xl font-bold">Happening Now</h2>
+                                        <span className="px-2.5 py-1 bg-green-500/10 text-green-400 text-xs font-semibold rounded-full border border-green-500/20">
+                                            LIVE
+                                        </span>
+                                        <div className="flex-1 h-px bg-gradient-to-r from-amber-500/30 to-transparent ml-4" />
+                                    </div>
+                                </RevealOnScroll>
+
+                                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {ongoingEvents.map((event: any) => (
+                                        <StaggerItem key={event.id}>
+                                            <EventCard event={event} isOngoing />
+                                        </StaggerItem>
+                                    ))}
+                                </StaggerContainer>
+                            </section>
+                        )}
 
                         {/* PAST EVENTS - Timeline Style */}
                         <section className="mb-20">
@@ -194,14 +231,25 @@ export default function PublicEventsPage() {
     )
 }
 
-function EventCard({ event }: { event: any }) {
+function EventCard({ event, isOngoing }: { event: any; isOngoing?: boolean }) {
     return (
         <Link href={`/events/${event.slug || event.id}`} className="block h-full">
             <motion.div
-                className="bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/10 hover:border-blue-500/30 transition-all duration-500 overflow-hidden group relative h-full shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(59,130,246,0.15)]"
+                className={`bg-white/[0.03] backdrop-blur-xl rounded-2xl border transition-all duration-500 overflow-hidden group relative h-full shadow-[0_8px_32px_rgba(0,0,0,0.3)] ${isOngoing
+                        ? 'border-green-500/30 hover:border-green-500/50 hover:shadow-[0_8px_40px_rgba(34,197,94,0.15)]'
+                        : 'border-white/10 hover:border-blue-500/30 hover:shadow-[0_8px_40px_rgba(59,130,246,0.15)]'
+                    }`}
                 whileHover={{ y: -4 }}
                 transition={{ duration: 0.3 }}
             >
+                {/* LIVE Badge for Ongoing Events */}
+                {isOngoing && (
+                    <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-2.5 py-1 bg-green-500/90 backdrop-blur-sm rounded-full">
+                        <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                        <span className="text-xs font-bold text-white">LIVE</span>
+                    </div>
+                )}
+
                 {/* Club Badge */}
                 <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 z-10 shadow-lg">
                     {event.club?.logo_url && (
