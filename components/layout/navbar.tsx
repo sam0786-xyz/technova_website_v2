@@ -131,7 +131,7 @@ export function Navbar({ user }: NavbarProps) {
 
                 {/* Mobile Links */}
                 {isOpen && (
-                    <div className="md:hidden py-4 space-y-1 border-t border-white/10">
+                    <div className="md:hidden py-4 space-y-1 border-t border-white/10 max-h-[calc(100vh-80px)] overflow-y-auto pb-8">
                         {publicLinks.map(link => (
                             <Link
                                 key={link.href}
