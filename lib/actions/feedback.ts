@@ -554,6 +554,7 @@ export async function submitFeedback(formId: string, answers: Record<string, any
         if (!attendError) {
             attendanceMarked = true
             // Award XP for attendance as well (using daily XP distribution)
+            // This is wrapped in try-catch because the daily_checkins table may not exist
             try {
                 const { awardDailyXP } = await import('@/lib/xp/award')
                 await awardDailyXP(session.user.id, form.event_id, {
@@ -563,7 +564,8 @@ export async function submitFeedback(formId: string, answers: Record<string, any
                     end_time: form.event.end_time
                 })
             } catch (xpErr) {
-                console.error("Attendance XP Error:", xpErr)
+                // Silently log - don't fail feedback submission due to XP issues
+                console.error("Attendance XP Error (non-fatal):", xpErr instanceof Error ? xpErr.message : xpErr)
             }
         }
     }

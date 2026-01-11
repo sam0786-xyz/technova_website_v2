@@ -91,42 +91,11 @@ export default function PublicEventsPage() {
                     </div>
                 ) : (
                     <>
-                        {/* UPCOMING EVENTS */}
-                        <section className="mb-20">
-                            <RevealOnScroll>
-                                <div className="flex items-center gap-3 mb-8">
-                                    <div className="w-10 h-10 bg-blue-600/20 rounded-xl flex items-center justify-center">
-                                        <Sparkles className="w-5 h-5 text-blue-400" />
-                                    </div>
-                                    <h2 className="text-2xl font-bold">Upcoming Events</h2>
-                                    <div className="flex-1 h-px bg-gradient-to-r from-blue-500/30 to-transparent ml-4" />
-                                </div>
-                            </RevealOnScroll>
-
-                            {upcomingEvents.length === 0 ? (
-                                <RevealOnScroll>
-                                    <div className="text-center py-16 bg-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10">
-                                        <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                                        <p className="text-gray-400">No upcoming events scheduled.</p>
-                                        <p className="text-gray-500 text-sm mt-2">Check back soon for new events!</p>
-                                    </div>
-                                </RevealOnScroll>
-                            ) : (
-                                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {upcomingEvents.map((event: any, idx: number) => (
-                                        <StaggerItem key={event.id}>
-                                            <EventCard event={event} />
-                                        </StaggerItem>
-                                    ))}
-                                </StaggerContainer>
-                            )}
-                        </section>
-
-                        {/* ONGOING EVENTS */}
+                        {/* ONGOING EVENTS - Show first (most important) */}
                         {ongoingEvents.length > 0 && (
                             <section className="mb-20">
                                 <RevealOnScroll>
-                                    <div className="flex items-center gap-3 mb-8">
+                                    <div className="flex flex-wrap items-center gap-3 mb-8">
                                         <div className="w-10 h-10 bg-amber-600/20 rounded-xl flex items-center justify-center relative">
                                             <Clock className="w-5 h-5 text-amber-400" />
                                             <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
@@ -135,11 +104,11 @@ export default function PublicEventsPage() {
                                         <span className="px-2.5 py-1 bg-green-500/10 text-green-400 text-xs font-semibold rounded-full border border-green-500/20">
                                             LIVE
                                         </span>
-                                        <div className="flex-1 h-px bg-gradient-to-r from-amber-500/30 to-transparent ml-4" />
+                                        <div className="flex-1 h-px bg-gradient-to-r from-amber-500/30 to-transparent ml-4 hidden sm:block" />
                                     </div>
                                 </RevealOnScroll>
 
-                                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                     {ongoingEvents.map((event: any) => (
                                         <StaggerItem key={event.id}>
                                             <EventCard event={event} isOngoing />
@@ -148,6 +117,37 @@ export default function PublicEventsPage() {
                                 </StaggerContainer>
                             </section>
                         )}
+
+                        {/* UPCOMING EVENTS */}
+                        <section className="mb-20">
+                            <RevealOnScroll>
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="w-10 h-10 bg-blue-600/20 rounded-xl flex items-center justify-center">
+                                        <Sparkles className="w-5 h-5 text-blue-400" />
+                                    </div>
+                                    <h2 className="text-2xl font-bold">Upcoming Events</h2>
+                                    <div className="flex-1 h-px bg-gradient-to-r from-blue-500/30 to-transparent ml-4 hidden sm:block" />
+                                </div>
+                            </RevealOnScroll>
+
+                            {upcomingEvents.length === 0 ? (
+                                <RevealOnScroll>
+                                    <div className="text-center py-12 sm:py-16 bg-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10">
+                                        <Calendar className="w-10 h-10 sm:w-12 sm:h-12 text-gray-600 mx-auto mb-4" />
+                                        <p className="text-gray-400">No upcoming events scheduled.</p>
+                                        <p className="text-gray-500 text-sm mt-2">Check back soon for new events!</p>
+                                    </div>
+                                </RevealOnScroll>
+                            ) : (
+                                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                    {upcomingEvents.map((event: any, idx: number) => (
+                                        <StaggerItem key={event.id}>
+                                            <EventCard event={event} />
+                                        </StaggerItem>
+                                    ))}
+                                </StaggerContainer>
+                            )}
+                        </section>
 
                         {/* PAST EVENTS - Timeline Style */}
                         <section className="mb-20">
@@ -236,8 +236,8 @@ function EventCard({ event, isOngoing }: { event: any; isOngoing?: boolean }) {
         <Link href={`/events/${event.slug || event.id}`} className="block h-full">
             <motion.div
                 className={`bg-white/[0.03] backdrop-blur-xl rounded-2xl border transition-all duration-500 overflow-hidden group relative h-full shadow-[0_8px_32px_rgba(0,0,0,0.3)] ${isOngoing
-                        ? 'border-green-500/30 hover:border-green-500/50 hover:shadow-[0_8px_40px_rgba(34,197,94,0.15)]'
-                        : 'border-white/10 hover:border-blue-500/30 hover:shadow-[0_8px_40px_rgba(59,130,246,0.15)]'
+                    ? 'border-green-500/30 hover:border-green-500/50 hover:shadow-[0_8px_40px_rgba(34,197,94,0.15)]'
+                    : 'border-white/10 hover:border-blue-500/30 hover:shadow-[0_8px_40px_rgba(59,130,246,0.15)]'
                     }`}
                 whileHover={{ y: -4 }}
                 transition={{ duration: 0.3 }}
