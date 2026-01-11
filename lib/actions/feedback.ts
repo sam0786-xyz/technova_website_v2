@@ -449,136 +449,141 @@ export async function toggleRequiresFeedback(eventId: string) {
 /**
  * Submit feedback response
  */
-export async function submitFeedback(formId: string, answers: Record<string, any>) {
-    const session = await auth()
-    if (!session) {
-        throw new Error("Please log in to submit feedback")
-    }
-
-    const supabase = await getSupabase()
-
-    // 1. Verify form exists and is open
-    const { data: form, error: formError } = await supabase
-        .from('event_feedback_forms')
-        .select('*, event:events(*)')
-        .eq('id', formId)
-        .single()
-
-    if (formError || !form) {
-        throw new Error("Feedback form not found")
-    }
-
-    // 2. Check if form is available
-    const now = new Date()
-    const eventEnded = new Date(form.event.end_time) < now
-    const isAvailable = (form.release_mode === 'automatic' && eventEnded) ||
-        (form.release_mode === 'manual' && form.is_released)
-    const isClosed = form.closes_at && new Date(form.closes_at) < now
-
-    if (!isAvailable) {
-        throw new Error("Feedback form is not yet available")
-    }
-
-    if (isClosed) {
-        throw new Error("Feedback form has closed")
-    }
-
-    // 3. Check for duplicate submission
-    const { data: existing } = await supabase
-        .from('feedback_responses')
-        .select('id')
-        .eq('form_id', formId)
-        .eq('user_id', session.user.id)
-        .single()
-
-    if (existing) {
-        throw new Error("You have already submitted feedback for this form")
-    }
-
-    // 4. Check if user is registered for the event
-    const { data: registration } = await supabase
-        .from('registrations')
-        .select('id, attended')
-        .eq('event_id', form.event_id)
-        .eq('user_id', session.user.id)
-        .single()
-
-    if (!registration) {
-        throw new Error("You must be registered for this event to submit feedback")
-    }
-
-    // 5. Insert response
-    const { error: insertError } = await supabase
-        .from('feedback_responses')
-        .insert({
-            form_id: formId,
-            user_id: session.user.id,
-            answers,
-            xp_awarded: false
-        })
-
-    if (insertError) {
-        console.error("Submit Feedback Error:", insertError)
-        if (insertError.code === '23505') {
-            throw new Error("You have already submitted feedback for this form")
-        }
-        throw new Error("Failed to submit feedback")
-    }
-
-    // 6. Award XP
-    let xpAwarded = 0
+export async function submitFeedback(formId: string, answers: Record<string, any>): Promise<{ success: boolean; message?: string; error?: string; xpAwarded?: number; attendanceMarked?: boolean }> {
     try {
-        const { awardXPForFeedback } = await import('@/lib/xp/feedback-award')
-        const result = await awardXPForFeedback(session.user.id, formId, form.event_id)
-        xpAwarded = result.xpAwarded
+        const session = await auth()
+        if (!session) {
+            return { success: false, error: "Please log in to submit feedback" }
+        }
 
-        // Mark XP as awarded
-        await supabase
+        const supabase = await getSupabase()
+
+        // 1. Verify form exists and is open
+        const { data: form, error: formError } = await supabase
+            .from('event_feedback_forms')
+            .select('*, event:events(*)')
+            .eq('id', formId)
+            .single()
+
+        if (formError || !form) {
+            return { success: false, error: "Feedback form not found" }
+        }
+
+        // 2. Check if form is available
+        const now = new Date()
+        const eventEnded = new Date(form.event.end_time) < now
+        const isAvailable = (form.release_mode === 'automatic' && eventEnded) ||
+            (form.release_mode === 'manual' && form.is_released)
+        const isClosed = form.closes_at && new Date(form.closes_at) < now
+
+        if (!isAvailable) {
+            return { success: false, error: "Feedback form is not yet available" }
+        }
+
+        if (isClosed) {
+            return { success: false, error: "Feedback form has closed" }
+        }
+
+        // 3. Check for duplicate submission
+        const { data: existing } = await supabase
             .from('feedback_responses')
-            .update({ xp_awarded: true })
+            .select('id')
             .eq('form_id', formId)
             .eq('user_id', session.user.id)
-    } catch (xpError) {
-        console.error("XP Award Error:", xpError)
-        // Don't fail the submission if XP fails
-    }
+            .single()
 
-    // 7. For virtual events, mark attendance automatically
-    let attendanceMarked = false
-    if (form.event.is_virtual && !registration.attended) {
-        const { error: attendError } = await supabase
+        if (existing) {
+            return { success: false, error: "You have already submitted feedback for this form" }
+        }
+
+        // 4. Check if user is registered for the event
+        const { data: registration } = await supabase
             .from('registrations')
-            .update({ attended: true })
-            .eq('id', registration.id)
+            .select('id, attended')
+            .eq('event_id', form.event_id)
+            .eq('user_id', session.user.id)
+            .single()
 
-        if (!attendError) {
-            attendanceMarked = true
-            // Award XP for attendance as well (using daily XP distribution)
-            // This is wrapped in try-catch because the daily_checkins table may not exist
-            try {
-                const { awardDailyXP } = await import('@/lib/xp/award')
-                await awardDailyXP(session.user.id, form.event_id, {
-                    event_type: form.event.event_type || 'workshop',
-                    difficulty_level: form.event.difficulty_level || 'easy',
-                    start_time: form.event.start_time,
-                    end_time: form.event.end_time
-                })
-            } catch (xpErr) {
-                // Silently log - don't fail feedback submission due to XP issues
-                console.error("Attendance XP Error (non-fatal):", xpErr instanceof Error ? xpErr.message : xpErr)
+        if (!registration) {
+            return { success: false, error: "You must be registered for this event to submit feedback" }
+        }
+
+        // 5. Insert response
+        const { error: insertError } = await supabase
+            .from('feedback_responses')
+            .insert({
+                form_id: formId,
+                user_id: session.user.id,
+                answers,
+                xp_awarded: false
+            })
+
+        if (insertError) {
+            console.error("Submit Feedback Error:", insertError)
+            if (insertError.code === '23505') {
+                return { success: false, error: "You have already submitted feedback for this form" }
+            }
+            return { success: false, error: "Failed to submit feedback" }
+        }
+
+        // 6. Award XP
+        let xpAwarded = 0
+        try {
+            const { awardXPForFeedback } = await import('@/lib/xp/feedback-award')
+            const result = await awardXPForFeedback(session.user.id, formId, form.event_id)
+            xpAwarded = result.xpAwarded
+
+            // Mark XP as awarded
+            await supabase
+                .from('feedback_responses')
+                .update({ xp_awarded: true })
+                .eq('form_id', formId)
+                .eq('user_id', session.user.id)
+        } catch (xpError) {
+            console.error("XP Award Error:", xpError)
+            // Don't fail the submission if XP fails
+        }
+
+        // 7. For virtual events, mark attendance automatically
+        let attendanceMarked = false
+        if (form.event.is_virtual && !registration.attended) {
+            const { error: attendError } = await supabase
+                .from('registrations')
+                .update({ attended: true })
+                .eq('id', registration.id)
+
+            if (!attendError) {
+                attendanceMarked = true
+                // Award XP for attendance as well (using daily XP distribution)
+                // This is wrapped in try-catch because the daily_checkins table may not exist
+                try {
+                    const { awardDailyXP } = await import('@/lib/xp/award')
+                    await awardDailyXP(session.user.id, form.event_id, {
+                        event_type: form.event.event_type || 'workshop',
+                        difficulty_level: form.event.difficulty_level || 'easy',
+                        start_time: form.event.start_time,
+                        end_time: form.event.end_time
+                    })
+                } catch (xpErr) {
+                    // Silently log - don't fail feedback submission due to XP issues
+                    console.error("Attendance XP Error (non-fatal):", xpErr instanceof Error ? xpErr.message : xpErr)
+                }
             }
         }
-    }
 
-    revalidatePath(`/events/${form.event_id}`)
+        revalidatePath(`/events/${form.event_id}`)
 
-    return {
-        success: true,
-        message: attendanceMarked
-            ? 'Feedback submitted and attendance marked!'
-            : 'Feedback submitted successfully!',
-        xpAwarded,
-        attendanceMarked
+        return {
+            success: true,
+            message: attendanceMarked
+                ? 'Feedback submitted and attendance marked!'
+                : 'Feedback submitted successfully!',
+            xpAwarded,
+            attendanceMarked
+        }
+    } catch (err) {
+        console.error("Submit Feedback Unexpected Error:", err)
+        return { success: false, error: "An unexpected error occurred. Please try again." }
     }
 }
 

@@ -145,10 +145,16 @@ export function EventFeedbackSection({ eventId, userId, isRegistered, eventEnded
         try {
             const result = await submitFeedback(selectedFormId, answers)
 
-            if (result.xpAwarded > 0) {
+            // Check if submission was successful
+            if (!result.success) {
+                showToast(result.error || 'Failed to submit feedback', 'error')
+                return
+            }
+
+            if (result.xpAwarded && result.xpAwarded > 0) {
                 showToast(`Thank you! You earned +${result.xpAwarded} XP 🎉`, 'success')
             } else {
-                showToast('Thank you for your feedback!', 'success')
+                showToast(result.message || 'Thank you for your feedback!', 'success')
             }
 
             setAlreadySubmitted(prev => ({ ...prev, [selectedFormId]: true }))
