@@ -179,8 +179,49 @@ export function Navbar({ user }: NavbarProps) {
                         </div>
 
                         {user ? (
-                            <div className="border-t border-white/10 mt-4 pt-4 px-4">
-                                <UserNav user={user} />
+                            <div className="border-t border-white/10 mt-4 pt-4 space-y-1">
+                                <p className="text-xs text-gray-500 px-4 mb-2">Account</p>
+
+                                {/* User Info */}
+                                <div className="px-4 py-2 flex items-center gap-3">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=3b82f6&color=fff`}
+                                        alt={user.name || ''}
+                                        className="w-10 h-10 rounded-full"
+                                    />
+                                    <div>
+                                        <p className="text-white font-medium">{user.name}</p>
+                                        <p className="text-gray-400 text-xs truncate max-w-[200px]">{user.email}</p>
+                                    </div>
+                                </div>
+
+                                {/* Profile Links */}
+                                <Link
+                                    href="/profile"
+                                    className="block text-gray-300 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    👤 My Profile
+                                </Link>
+                                <Link
+                                    href="/profile/edit"
+                                    className="block text-gray-300 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    ⚙️ Edit Profile
+                                </Link>
+
+                                {/* Logout Button */}
+                                <button
+                                    onClick={() => {
+                                        setIsOpen(false)
+                                        import('next-auth/react').then(({ signOut }) => signOut({ callbackUrl: '/' }))
+                                    }}
+                                    className="block w-full text-left text-red-400 hover:text-red-300 hover:bg-red-500/10 py-3 px-4 rounded-lg"
+                                >
+                                    🚪 Logout
+                                </button>
                             </div>
                         ) : (
                             <Link

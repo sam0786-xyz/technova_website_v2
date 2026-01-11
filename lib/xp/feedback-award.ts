@@ -95,19 +95,38 @@ export async function awardXPForFeedback(
     }
 
     // CRITICAL: Record this in xp_awards history so it shows up on profile
-    await supabase.from('xp_awards').insert({
-        user_id: userId,
-        event_id: eventId,
-        xp_amount: FEEDBACK_XP_REWARD,
-        source: 'feedback',
-        description: 'Completed Feedback Form'
-    })
+    // Wrapped in try-catch because table schema may not have all columns
+    try {
+        await supabase.from('xp_awards').insert({
+            user_id: userId,
+            event_id: eventId,
+            xp_amount: FEEDBACK_XP_REWARD,
+            source: 'feedback',
+            description: 'Completed Feedback Form'
+        })
+    } catch (insertErr) {
+        console.error('XP Awards Insert Error (non-fatal):', insertErr)
+        // Try simpler insert without optional columns
+        try {
+            await supabase.from('xp_awards').insert({
+                user_id: userId,
+                event_id: eventId,
+                xp_amount: FEEDBACK_XP_REWARD
+            })
+        } catch {
+            console.error('XP Awards Simple Insert also failed')
+        }
+    }
 
     // Mark XP as awarded in the response
-    await supabase
-        .from('feedback_responses')
-        .update({ xp_awarded: true })
-        .eq('id', response.id)
+    try {
+        await supabase
+            .from('feedback_responses')
+            .update({ xp_awarded: true })
+            .eq('id', response.id)
+    } catch (updateErr) {
+        console.error('Feedback Response Update Error (non-fatal):', updateErr)
+    }
 
     return {
         success: true,
