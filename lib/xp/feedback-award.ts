@@ -95,37 +95,40 @@ export async function awardXPForFeedback(
     }
 
     // CRITICAL: Record this in xp_awards history so it shows up on profile
-    // Wrapped in try-catch because table schema may not have all columns
-    try {
-        await supabase.from('xp_awards').insert({
+    // Supabase returns errors in response, not by throwing
+    const { error: xpInsertError } = await supabase.from('xp_awards').insert({
+        user_id: userId,
+        event_id: eventId,
+        xp_amount: FEEDBACK_XP_REWARD,
+        source: 'feedback',
+        description: 'Completed Feedback Form'
+    })
+
+    if (xpInsertError) {
+        console.error('[XP Awards] Insert Error:', xpInsertError.message, xpInsertError.code)
+        // Try simpler insert without optional columns (source, description)
+        const { error: simpleInsertError } = await supabase.from('xp_awards').insert({
             user_id: userId,
             event_id: eventId,
-            xp_amount: FEEDBACK_XP_REWARD,
-            source: 'feedback',
-            description: 'Completed Feedback Form'
+            xp_amount: FEEDBACK_XP_REWARD
         })
-    } catch (insertErr) {
-        console.error('XP Awards Insert Error (non-fatal):', insertErr)
-        // Try simpler insert without optional columns
-        try {
-            await supabase.from('xp_awards').insert({
-                user_id: userId,
-                event_id: eventId,
-                xp_amount: FEEDBACK_XP_REWARD
-            })
-        } catch {
-            console.error('XP Awards Simple Insert also failed')
+        if (simpleInsertError) {
+            console.error('[XP Awards] Simple Insert also failed:', simpleInsertError.message)
+        } else {
+            console.log('[XP Awards] Simple insert succeeded (without source/description)')
         }
+    } else {
+        console.log(`[XP Awards] Recorded ${FEEDBACK_XP_REWARD} XP for user ${userId}`)
     }
 
     // Mark XP as awarded in the response
-    try {
-        await supabase
-            .from('feedback_responses')
-            .update({ xp_awarded: true })
-            .eq('id', response.id)
-    } catch (updateErr) {
-        console.error('Feedback Response Update Error (non-fatal):', updateErr)
+    const { error: markError } = await supabase
+        .from('feedback_responses')
+        .update({ xp_awarded: true })
+        .eq('id', response.id)
+
+    if (markError) {
+        console.error('[Feedback] Failed to mark xp_awarded:', markError.message)
     }
 
     return {

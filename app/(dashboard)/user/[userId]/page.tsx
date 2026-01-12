@@ -24,7 +24,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[120px]" />
             </div>
 
-            <div className="relative container mx-auto py-8 px-4 max-w-4xl">
+            <div className="relative container mx-auto py-8 px-3 sm:px-4 pt-20 sm:pt-24 max-w-4xl">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-2 text-sm mb-6">
                     <Link href="/" className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors">
@@ -261,16 +261,19 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                 <Link
                                     key={`${event.eventId}-${idx}`}
                                     href={`/events/${event.eventId}`}
-                                    className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group"
+                                    className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group"
                                 >
-                                    <div>
-                                        <p className="font-medium text-white group-hover:text-cyan-300 transition-colors">
+                                    <div className="min-w-0 flex-1 mr-4">
+                                        <p className="font-medium text-white group-hover:text-cyan-300 transition-colors truncate text-sm sm:text-base">
                                             {event.eventTitle}
                                         </p>
-                                        <p className="text-sm text-gray-500">{event.eventDate}</p>
+                                        <p className="text-xs sm:text-sm text-gray-500">{event.eventDate}</p>
                                     </div>
-                                    <div className="text-right">
-                                        <span className="text-cyan-400 font-bold">+{event.xpEarned} XP</span>
+                                    <div className="text-right flex-shrink-0">
+                                        <span className="text-cyan-400 font-bold text-sm sm:text-base">+{event.xpEarned} XP</span>
+                                        {event.source && (
+                                            <p className="text-xs text-gray-500 capitalize">{event.source}</p>
+                                        )}
                                     </div>
                                 </Link>
                             ))}

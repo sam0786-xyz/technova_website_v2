@@ -34,6 +34,7 @@ export interface RecentEventParticipation {
     eventTitle: string
     eventDate: string
     xpEarned: number
+    source?: string  // 'attendance' | 'feedback' | 'referral' etc.
 }
 
 export interface PublicProfileResponse {
@@ -91,6 +92,7 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
             xp_amount,
             awarded_at,
             event_id,
+            source,
             events (id, title, start_time)
         `)
         .eq('user_id', userId)
@@ -132,8 +134,17 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
     const eventMap = new Map<string, RecentEventParticipation>()
 
     // Helper to add event
-    const addEvent = (eventId: string, title: string, dateStr: string, xp: number) => {
-        if (!eventId || eventMap.has(eventId)) return
+    const addEvent = (eventId: string, title: string, dateStr: string, xp: number, source?: string) => {
+        if (!eventId) return
+        // If event already exists, add XP and update source if different
+        const existing = eventMap.get(eventId)
+        if (existing) {
+            existing.xpEarned += xp
+            if (source && existing.source && !existing.source.includes(source)) {
+                existing.source = `${existing.source}, ${source}`
+            }
+            return
+        }
         eventMap.set(eventId, {
             eventId,
             eventTitle: title,
@@ -142,14 +153,16 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
                 month: 'short',
                 year: 'numeric'
             }),
-            xpEarned: xp
+            xpEarned: xp,
+            source: source || 'attendance'
         })
     }
 
-    // Process Awards
+    // Process Awards (from xp_awards table - includes source)
     awards?.forEach(a => {
         if (a.event_id && a.events) {
-            addEvent(a.event_id, (a.events as any).title, (a.events as any).start_time || a.awarded_at, a.xp_amount)
+            const source = (a as any).source || 'event'
+            addEvent(a.event_id, (a.events as any).title, (a.events as any).start_time || a.awarded_at, a.xp_amount, source)
         }
     })
 
@@ -157,7 +170,7 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
     attended?.forEach(a => {
         if (a.event_id && a.events) {
             // Default attendance XP if not found via award
-            addEvent(a.event_id, (a.events as any).title, (a.events as any).start_time, 50)
+            addEvent(a.event_id, (a.events as any).title, (a.events as any).start_time, 50, 'attendance')
         }
     })
 
@@ -167,7 +180,7 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
         const eventId = (f.form as any)?.event_id
         if (eventId && event) {
             // Default feedback XP if not found via award
-            addEvent(eventId, event.title, event.start_time, 15)
+            addEvent(eventId, event.title, event.start_time, 15, 'feedback')
         }
     })
 
