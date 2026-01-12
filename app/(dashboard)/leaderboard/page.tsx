@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     ])
 
     return (
-        <div className="min-h-screen bg-black p-6 md:p-8 space-y-8">
+        <div className="min-h-screen bg-black px-3 py-4 pt-20 sm:px-4 sm:py-6 md:p-8 md:pt-24 space-y-6 sm:space-y-8">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>

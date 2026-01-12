@@ -485,14 +485,15 @@ export async function submitFeedback(formId: string, answers: Record<string, any
         }
 
         // 3. Check for duplicate submission
-        const { data: existing } = await supabase
+        const { data: existing, error: existingError } = await supabase
             .from('feedback_responses')
             .select('id')
             .eq('form_id', formId)
             .eq('user_id', session.user.id)
-            .single()
+            .maybeSingle()
 
-        if (existing) {
+        // Only block if we actually found an existing submission (not just a query error)
+        if (existing && !existingError) {
             return { success: false, error: "You have already submitted feedback for this form" }
         }
 

@@ -74,7 +74,7 @@ export function Leaderboard({ initialData, topThree: initialTopThree }: Leaderbo
     }
 
     return (
-        <div className="w-full bg-gray-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 space-y-8">
+        <div className="w-full bg-gray-900/50 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm">
                 <Link href="/" className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors">
@@ -215,9 +215,9 @@ export function Leaderboard({ initialData, topThree: initialTopThree }: Leaderbo
                 <table className="w-full text-left">
                     <thead className="bg-white/5 text-gray-400 text-xs uppercase font-medium">
                         <tr>
-                            <th className="px-6 py-4">Rank</th>
-                            <th className="px-6 py-4">User</th>
-                            <th className="px-6 py-4 text-right">XP Points</th>
+                            <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4">Rank</th>
+                            <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4">User</th>
+                            <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 text-right">XP</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -244,23 +244,23 @@ export function Leaderboard({ initialData, topThree: initialTopThree }: Leaderbo
                                     className="hover:bg-white/5 transition-colors group cursor-pointer"
                                     onClick={() => window.location.href = `/user/${user.id}`}
                                 >
-                                    <td className="px-6 py-4 text-gray-500 font-mono text-sm">
+                                    <td className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 text-gray-500 font-mono text-xs sm:text-sm">
                                         #{rank}
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-2 sm:px-4 md:px-6 py-3 sm:py-4">
                                         <ProfileHoverCard user={user} rank={rank}>
-                                            <Link href={`/user/${user.id}`} className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xs font-bold text-white">
+                                            <Link href={`/user/${user.id}`} className="flex items-center gap-2 sm:gap-3">
+                                                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
                                                     {user.name.charAt(0)}
                                                 </div>
-                                                <div>
-                                                    <p className="font-medium text-gray-200 group-hover:text-cyan-300 transition-colors">{user.name}</p>
-                                                    <p className="text-xs text-gray-500 truncate max-w-[150px]">{user.email}</p>
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-gray-200 group-hover:text-cyan-300 transition-colors text-sm sm:text-base truncate">{user.name}</p>
+                                                    <p className="text-xs text-gray-500 truncate max-w-[100px] sm:max-w-[150px] hidden sm:block">{user.email}</p>
                                                 </div>
                                             </Link>
                                         </ProfileHoverCard>
                                     </td>
-                                    <td className="px-6 py-4 text-right font-mono text-cyan-300 font-medium">
+                                    <td className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 text-right font-mono text-cyan-300 font-medium text-sm sm:text-base">
                                         {user.xp_points}
                                     </td>
                                 </motion.tr>
@@ -278,8 +278,8 @@ export function Leaderboard({ initialData, topThree: initialTopThree }: Leaderbo
 
             {/* Pagination */}
             {data.totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4">
-                    <p className="text-sm text-gray-400">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+                    <p className="text-xs sm:text-sm text-gray-400">
                         Page {currentPage} of {data.totalPages}
                     </p>
                     <div className="flex items-center gap-2">

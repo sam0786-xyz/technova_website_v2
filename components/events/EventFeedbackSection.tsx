@@ -182,7 +182,7 @@ export function EventFeedbackSection({ eventId, userId, isRegistered, eventEnded
     // Don't show anything if feedback is disabled
     if (status === 'loading') {
         return (
-            <div className="bg-white rounded-xl shadow-xl p-6">
+            <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6">
                 <div className="flex items-center justify-center py-8">
                     <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
                 </div>
@@ -195,7 +195,7 @@ export function EventFeedbackSection({ eventId, userId, isRegistered, eventEnded
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-xl p-6 mt-8">
+        <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 mt-6 sm:mt-8">
             <div className="flex items-center gap-2 mb-4">
                 <MessageSquare className="w-5 h-5 text-purple-600" />
                 <h2 className="text-xl font-bold">Event Feedback</h2>
