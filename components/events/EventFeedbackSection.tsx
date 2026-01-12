@@ -57,8 +57,9 @@ export function EventFeedbackSection({ eventId, userId, isRegistered, eventEnded
             setForms(formsData)
 
             // Check submission status for each form
+            // Declare submittedMap outside so it's in scope for status checks
+            let submittedMap: Record<string, boolean> = {}
             if (userId) {
-                const submittedMap: Record<string, boolean> = {}
                 for (const form of formsData) {
                     const submission = await getMyFeedbackSubmission(form.id)
                     submittedMap[form.id] = !!submission
@@ -66,18 +67,21 @@ export function EventFeedbackSection({ eventId, userId, isRegistered, eventEnded
                 setAlreadySubmitted(submittedMap)
             }
 
-            // Determine overall status
+            // Determine overall status - IMPORTANT: use submittedMap (local variable) not alreadySubmitted (stale state)
             const hasAvailable = formsData.some((f: FeedbackFormUI) => f.isAvailable)
-            const allSubmitted = userId && formsData.every((f: FeedbackFormUI) => alreadySubmitted[f.id])
+            const allSubmitted = userId && formsData.length > 0 && formsData.every((f: FeedbackFormUI) => submittedMap[f.id])
 
-            if (allSubmitted && formsData.length > 0) {
+            if (allSubmitted) {
                 setStatus('submitted')
             } else if (hasAvailable) {
                 setStatus('open')
-                // Auto-select first available form
-                const firstAvailable = formsData.find((f: FeedbackFormUI) => f.isAvailable && !alreadySubmitted[f.id])
+                // Auto-select first available form that hasn't been submitted
+                const firstAvailable = formsData.find((f: FeedbackFormUI) => f.isAvailable && !submittedMap[f.id])
                 if (firstAvailable) {
                     loadFormQuestions(firstAvailable.id)
+                } else {
+                    // All available forms already submitted
+                    setStatus('submitted')
                 }
             } else if (result.status === 'not_released') {
                 setStatus('not_released')

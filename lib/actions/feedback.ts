@@ -510,7 +510,8 @@ export async function submitFeedback(formId: string, answers: Record<string, any
         }
 
         // 5. Insert response
-        const { error: insertError } = await supabase
+        console.log(`[Feedback] Attempting insert for form ${formId}, user ${session.user.id}`)
+        const { data: insertedData, error: insertError } = await supabase
             .from('feedback_responses')
             .insert({
                 form_id: formId,
@@ -518,14 +519,18 @@ export async function submitFeedback(formId: string, answers: Record<string, any
                 answers,
                 xp_awarded: false
             })
+            .select('id')
+            .single()
 
         if (insertError) {
-            console.error("Submit Feedback Error:", insertError)
+            console.error("[Feedback] Insert Error:", insertError.message, insertError.code, insertError.details)
             if (insertError.code === '23505') {
                 return { success: false, error: "You have already submitted feedback for this form" }
             }
-            return { success: false, error: "Failed to submit feedback" }
+            return { success: false, error: `Failed to submit feedback: ${insertError.message}` }
         }
+
+        console.log(`[Feedback] Successfully inserted feedback response with id: ${insertedData?.id}`)
 
         // 6. Award XP
         let xpAwarded = 0
