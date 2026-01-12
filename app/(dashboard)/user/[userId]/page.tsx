@@ -252,36 +252,57 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 <div className="bg-gray-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
                         <Calendar className="w-5 h-5 text-purple-400" />
-                        Recent Event Participation
+                        XP History
                     </h2>
 
                     {recentEvents.length > 0 ? (
                         <div className="space-y-3">
-                            {recentEvents.map((event, idx) => (
-                                <Link
-                                    key={`${event.eventId}-${idx}`}
-                                    href={`/events/${event.eventId}`}
-                                    className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group"
-                                >
-                                    <div className="min-w-0 flex-1 mr-4">
-                                        <p className="font-medium text-white group-hover:text-cyan-300 transition-colors truncate text-sm sm:text-base">
-                                            {event.eventTitle}
-                                        </p>
-                                        <p className="text-xs sm:text-sm text-gray-500">{event.eventDate}</p>
-                                    </div>
-                                    <div className="text-right flex-shrink-0">
-                                        <span className="text-cyan-400 font-bold text-sm sm:text-base">+{event.xpEarned} XP</span>
-                                        {event.source && (
-                                            <p className="text-xs text-gray-500 capitalize">{event.source}</p>
-                                        )}
-                                    </div>
-                                </Link>
-                            ))}
+                            {recentEvents.map((event, idx) => {
+                                const content = (
+                                    <>
+                                        <div className="min-w-0 flex-1 mr-4">
+                                            <p className="font-medium text-white group-hover:text-cyan-300 transition-colors truncate text-sm sm:text-base">
+                                                {event.eventTitle}
+                                            </p>
+                                            <p className="text-xs sm:text-sm text-gray-500">{event.eventDate}</p>
+                                        </div>
+                                        <div className="text-right flex-shrink-0">
+                                            <span className="text-cyan-400 font-bold text-sm sm:text-base">+{event.xpEarned} XP</span>
+                                            {event.source && (
+                                                <p className="text-xs text-gray-500 capitalize">{event.source}</p>
+                                            )}
+                                        </div>
+                                    </>
+                                )
+
+                                // If no eventId, render as div (not clickable)
+                                if (!event.eventId) {
+                                    return (
+                                        <div
+                                            key={`xp-${idx}`}
+                                            className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5"
+                                        >
+                                            {content}
+                                        </div>
+                                    )
+                                }
+
+                                // If has eventId, render as Link
+                                return (
+                                    <Link
+                                        key={`${event.eventId}-${idx}`}
+                                        href={`/events/${event.eventId}`}
+                                        className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group"
+                                    >
+                                        {content}
+                                    </Link>
+                                )
+                            })}
                         </div>
                     ) : (
                         <div className="text-center py-8 text-gray-500">
                             <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                            <p>No events attended yet</p>
+                            <p>No XP earned yet</p>
                         </div>
                     )}
                 </div>
