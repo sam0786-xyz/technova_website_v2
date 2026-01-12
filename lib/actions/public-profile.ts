@@ -100,10 +100,10 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
     }
 
     // 1. Get ALL XP Awards (no limit - we want complete history)
-    // Using simpler query that works even if some columns don't exist
+    // Note: xp_awards table only has: id, user_id, event_id, xp_amount, awarded_at
     const { data: awards, error: awardsError } = await supabase
         .from('xp_awards')
-        .select('id, xp_amount, awarded_at, event_id, source')
+        .select('id, xp_amount, awarded_at, event_id')
         .eq('user_id', userId)
         .order('awarded_at', { ascending: false })
 
@@ -145,9 +145,10 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
     awards?.forEach(a => {
         const event = a.event_id ? eventsMap[a.event_id] : null
         const hasEvent = !!event
+        // source column doesn't exist in xp_awards, so we infer from context
         const eventTitle = hasEvent
             ? event.title
-            : getSourceLabel(a.source) || 'XP Award'
+            : 'XP Award'
         const eventDate = hasEvent
             ? event.start_time
             : a.awarded_at
@@ -161,7 +162,7 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
                 year: 'numeric'
             }),
             xpEarned: a.xp_amount,
-            source: a.source || (hasEvent ? 'event' : 'bonus')
+            source: hasEvent ? 'event' : 'bonus'
         })
     })
 
