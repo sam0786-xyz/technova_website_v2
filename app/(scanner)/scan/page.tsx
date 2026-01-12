@@ -152,10 +152,38 @@ export default function ScannerPage() {
         }
 
         try {
+            // Parse the QR code JSON data first
+            let qrData: Record<string, string>
+            try {
+                qrData = JSON.parse(decodedText)
+            } catch {
+                // If the QR code is not valid JSON, it might be an old format or invalid
+                console.error('Invalid QR format:', decodedText)
+                setScanResult('error')
+                setMessage('Invalid QR code format')
+                setScannedName('')
+                setIsScanning(false)
+                return
+            }
+
+            // Validate required fields (supports both short and long key formats)
+            const token = qrData.token || qrData.t
+            const userId = qrData.userId || qrData.u
+            const eventId = qrData.eventId || qrData.e
+
+            if (!token || !userId || !eventId) {
+                console.error('Missing required QR fields:', qrData)
+                setScanResult('error')
+                setMessage('Invalid QR code data')
+                setScannedName('')
+                setIsScanning(false)
+                return
+            }
+
             const response = await fetch('/api/scan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: decodedText
+                body: JSON.stringify(qrData)
             })
 
             const result = await response.json()

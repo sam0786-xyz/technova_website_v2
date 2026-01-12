@@ -69,7 +69,7 @@ export default async function EventPage({
 
             const { qrDataUrl } = await generateQRToken(
                 session.user.id,
-                id,
+                event.id,  // Use event.id (UUID), not id (might be slug)
                 userData,
                 existingRegistration.qr_token_id
             )
