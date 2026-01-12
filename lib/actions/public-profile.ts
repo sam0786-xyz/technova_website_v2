@@ -86,45 +86,70 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
         .eq('id', userId)
         .single()
 
+    // Helper function to get readable label for source (defined early to avoid hoisting issues)
+    function getSourceLabel(source: string | null): string {
+        const labels: Record<string, string> = {
+            'feedback': 'Feedback Bonus',
+            'attendance': 'Attendance XP',
+            'referral': 'Referral Bonus',
+            'registration': 'Registration Bonus',
+            'daily_checkin': 'Daily Check-in',
+            'bonus': 'Bonus XP'
+        }
+        return labels[source || ''] || 'XP Award'
+    }
+
     // 1. Get ALL XP Awards (no limit - we want complete history)
-    const { data: awards } = await supabase
+    // Using simpler query that works even if some columns don't exist
+    const { data: awards, error: awardsError } = await supabase
         .from('xp_awards')
-        .select(`
-            id,
-            xp_amount,
-            awarded_at,
-            event_id,
-            source,
-            description,
-            events (id, title, start_time)
-        `)
+        .select('id, xp_amount, awarded_at, event_id, source')
         .eq('user_id', userId)
         .order('awarded_at', { ascending: false })
 
+    if (awardsError) {
+        console.error('[XP History] Awards query error:', awardsError.message)
+    }
+
+    // Fetch event details separately for awards with event_id
+    const eventIds = (awards || []).filter(a => a.event_id).map(a => a.event_id)
+    let eventsMap: Record<string, { title: string; start_time: string }> = {}
+
+    if (eventIds.length > 0) {
+        const { data: events } = await supabase
+            .from('events')
+            .select('id, title, start_time')
+            .in('id', eventIds)
+
+        events?.forEach(e => {
+            eventsMap[e.id] = { title: e.title, start_time: e.start_time }
+        })
+    }
+
     // 2. Get Referral XP (where user is the referrer)
-    const { data: referrals } = await supabase
+    const { data: referrals, error: referralsError } = await supabase
         .from('referrals')
-        .select(`
-            id,
-            xp_awarded,
-            created_at,
-            referred_user_id
-        `)
+        .select('id, xp_awarded, created_at')
         .eq('referrer_id', userId)
         .gt('xp_awarded', 0)
         .order('created_at', { ascending: false })
+
+    if (referralsError) {
+        console.error('[XP History] Referrals query error:', referralsError.message)
+    }
 
     // Build XP history list - each item is a separate XP entry
     const xpItems: RecentEventParticipation[] = []
 
     // Process XP Awards
     awards?.forEach(a => {
-        const hasEvent = a.event_id && a.events
+        const event = a.event_id ? eventsMap[a.event_id] : null
+        const hasEvent = !!event
         const eventTitle = hasEvent
-            ? (a.events as any).title
-            : (a as any).description || getSourceLabel((a as any).source) || 'XP Award'
+            ? event.title
+            : getSourceLabel(a.source) || 'XP Award'
         const eventDate = hasEvent
-            ? (a.events as any).start_time
+            ? event.start_time
             : a.awarded_at
 
         xpItems.push({
@@ -136,7 +161,7 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
                 year: 'numeric'
             }),
             xpEarned: a.xp_amount,
-            source: (a as any).source || (hasEvent ? 'event' : 'bonus')
+            source: a.source || (hasEvent ? 'event' : 'bonus')
         })
     })
 
@@ -155,6 +180,8 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
         })
     })
 
+    console.log(`[XP History] User ${userId}: ${awards?.length || 0} awards, ${referrals?.length || 0} referrals, ${xpItems.length} total items`)
+
     // Sort by date descending and take recent ones for display
     const recentEvents: RecentEventParticipation[] = xpItems
         .sort((a, b) => {
@@ -167,19 +194,6 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
             return parseDate(b.eventDate) - parseDate(a.eventDate)
         })
         .slice(0, 20)  // Show up to 20 recent items
-
-    // Helper function to get readable label for source
-    function getSourceLabel(source: string | null): string {
-        const labels: Record<string, string> = {
-            'feedback': 'Feedback Bonus',
-            'attendance': 'Attendance XP',
-            'referral': 'Referral Bonus',
-            'registration': 'Registration Bonus',
-            'daily_checkin': 'Daily Check-in',
-            'bonus': 'Bonus XP'
-        }
-        return labels[source || ''] || 'XP Award'
-    }
 
     // Get XP history for chart (last 30 days)
     const thirtyDaysAgo = new Date()
