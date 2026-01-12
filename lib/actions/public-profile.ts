@@ -169,8 +169,7 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
     }
 
     // Build XP history list - each item is a separate XP entry
-    // Track which events we've already added to avoid duplicates
-    const addedEventIds = new Set<string>()
+    // No deduplication - show all XP sources so totals match
     const xpItems: RecentEventParticipation[] = []
 
     // Process XP Awards (from xp_awards table)
@@ -183,8 +182,6 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
         const eventDate = hasEvent
             ? event.start_time
             : a.awarded_at
-
-        if (a.event_id) addedEventIds.add(a.event_id)
 
         xpItems.push({
             eventId: hasEvent ? a.event_id : undefined,
@@ -202,13 +199,9 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
     // Process Attendance XP (from registrations where attended=true)
     // Standard attendance XP is 50
     attended?.forEach(a => {
-        // Skip if already added via xp_awards
-        if (a.event_id && addedEventIds.has(a.event_id)) return
-
         const eventData = a.events as any
         if (!eventData) return
 
-        addedEventIds.add(a.event_id)
         xpItems.push({
             eventId: a.event_id,
             eventTitle: eventData.title || 'Event Attendance',
@@ -223,20 +216,16 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
     })
 
     // Process Feedback XP (from feedback_responses where xp_awarded=true)
-    // Standard feedback XP is 15
+    // Standard feedback XP is 15 (from FEEDBACK_XP_REWARD constant)
     feedback?.forEach(f => {
         const form = f.form as any
         const eventData = form?.event
         const eventId = form?.event_id
-
-        // Skip if already added via xp_awards or attendance
-        if (eventId && addedEventIds.has(eventId)) return
         if (!eventData) return
 
-        if (eventId) addedEventIds.add(eventId)
         xpItems.push({
             eventId: eventId || undefined,
-            eventTitle: eventData.title || 'Feedback XP',
+            eventTitle: `${eventData.title || 'Event'} (Feedback)`,
             eventDate: new Date(eventData.start_time || f.submitted_at).toLocaleDateString('en-IN', {
                 day: 'numeric',
                 month: 'short',
@@ -262,7 +251,7 @@ async function fetchPublicProfileFromDB(userId: string): Promise<PublicProfileRe
         })
     })
 
-    console.log(`[XP History] User ${userId}: ${awards?.length || 0} awards, ${referrals?.length || 0} referrals, ${xpItems.length} total items`)
+    console.log(`[XP History] User ${userId}: ${awards?.length || 0} awards, ${attended?.length || 0} attended, ${feedback?.length || 0} feedback, ${referrals?.length || 0} referrals, ${xpItems.length} total items`)
 
     // Sort by date descending and take recent ones for display
     const recentEvents: RecentEventParticipation[] = xpItems
