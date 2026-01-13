@@ -773,48 +773,71 @@ export default function ScannerPage() {
                                     <p>No registrations yet</p>
                                 </div>
                             ) : (
-                                registeredAttendees.map(attendee => (
-                                    <div
-                                        key={attendee.id}
-                                        className={`flex items-center gap-4 p-4 rounded-xl border ${attendee.attended
-                                            ? 'bg-green-500/5 border-green-500/20'
-                                            : 'bg-white/[0.02] border-white/10'
-                                            }`}
-                                    >
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${attendee.attended
-                                            ? 'bg-green-500/20 text-green-400'
-                                            : 'bg-white/10 text-gray-400'
-                                            }`}>
-                                            {attendee.name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium truncate">{attendee.name}</p>
-                                            <p className="text-sm text-gray-500 truncate">{attendee.email}</p>
-                                        </div>
-                                        {attendee.attended ? (
-                                            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                                        ) : (
-                                            <button
-                                                onClick={() => handleManualCheckIn(attendee.id)}
-                                                disabled={checkingInId === attendee.id}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex-shrink-0"
-                                                title="Manual Check-in"
-                                            >
-                                                {checkingInId === attendee.id ? (
-                                                    <>
-                                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                                        <span className="hidden sm:inline">Checking...</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <UserPlus className="w-4 h-4" />
-                                                        <span className="hidden sm:inline">Check In</span>
-                                                    </>
+                                registeredAttendees.map(attendee => {
+                                    // For multi-day events with day filter: check if checked in on that specific day
+                                    const checkedInOnSelectedDay = selectedDay
+                                        ? attendee.checkinDates?.includes(selectedDay)
+                                        : false
+                                    // Show check-in button if: no day selected and not attended, OR day selected and not checked in that day
+                                    const showCheckInButton = selectedDay
+                                        ? !checkedInOnSelectedDay
+                                        : !attendee.attended
+
+                                    return (
+                                        <div
+                                            key={attendee.id}
+                                            className={`flex items-center gap-4 p-4 rounded-xl border ${selectedDay
+                                                ? checkedInOnSelectedDay
+                                                    ? 'bg-green-500/5 border-green-500/20'
+                                                    : 'bg-white/[0.02] border-white/10'
+                                                : attendee.attended
+                                                    ? 'bg-green-500/5 border-green-500/20'
+                                                    : 'bg-white/[0.02] border-white/10'
+                                                }`}
+                                        >
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${(selectedDay ? checkedInOnSelectedDay : attendee.attended)
+                                                ? 'bg-green-500/20 text-green-400'
+                                                : 'bg-white/10 text-gray-400'
+                                                }`}>
+                                                {attendee.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium truncate">{attendee.name}</p>
+                                                <p className="text-sm text-gray-500 truncate">{attendee.email}</p>
+                                                {/* Show days checked in for multi-day events */}
+                                                {isMultiDay && attendee.daysCheckedIn !== undefined && attendee.daysCheckedIn > 0 && (
+                                                    <p className="text-xs text-green-400 mt-0.5">
+                                                        {attendee.daysCheckedIn}/{eventDaysList.length} days checked in
+                                                    </p>
                                                 )}
-                                            </button>
-                                        )}
-                                    </div>
-                                ))
+                                            </div>
+                                            {showCheckInButton ? (
+                                                <button
+                                                    onClick={() => handleManualCheckIn(attendee.id)}
+                                                    disabled={checkingInId === attendee.id}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex-shrink-0"
+                                                    title={selectedDay ? `Check in for ${selectedDay}` : 'Manual Check-in'}
+                                                >
+                                                    {checkingInId === attendee.id ? (
+                                                        <>
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            <span className="hidden sm:inline">Checking...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <UserPlus className="w-4 h-4" />
+                                                            <span className="hidden sm:inline">
+                                                                {selectedDay ? 'Check In Today' : 'Check In'}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                            ) : (
+                                                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                                            )}
+                                        </div>
+                                    )
+                                })
                             )}
                         </div>
                     </div>
