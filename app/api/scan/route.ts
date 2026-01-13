@@ -54,9 +54,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, message: 'Registration not found' }, { status: 404 })
         }
 
-        // 2. Check if already marked
-        if (registration.attended) {
-            // Get user name for display
+        // 2. Determine if this is a multi-day event
+        const eventStart = registration.events?.start_time ? new Date(registration.events.start_time) : null
+        const eventEnd = registration.events?.end_time ? new Date(registration.events.end_time) : null
+        const isMultiDay = registration.events?.is_multi_day ||
+            (eventStart && eventEnd && eventStart.toDateString() !== eventEnd.toDateString())
+
+        // 3. For single-day events: block if already attended
+        // For multi-day events: allow re-scans (awardDailyXP handles per-day deduplication)
+        if (!isMultiDay && registration.attended) {
             const { data: existingUser } = await supabase
                 .schema('next_auth' as unknown as 'public')
                 .from('users')
@@ -71,7 +77,7 @@ export async function POST(req: NextRequest) {
             }, { status: 400 })
         }
 
-        // 2.5. For online events requiring feedback, check if feedback submitted
+        // 4. For online events requiring feedback, check if feedback submitted
         if (registration.events?.is_virtual && registration.events?.requires_feedback_for_attendance) {
             const feedbackSubmitted = await hasSubmittedEventFeedback(userId, eventId)
             if (!feedbackSubmitted) {
@@ -83,27 +89,48 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // 3. Mark as attended
-        const { error: updateError } = await supabase
-            .from('registrations')
-            .update({ attended: true })
-            .eq('id', registration.id)
-
-
-        if (updateError) {
-            return NextResponse.json({ success: false, message: 'Failed to update' }, { status: 500 })
-        }
-
-        // 4. Award daily XP for attendance (distributes XP across event days)
+        // 5. Award daily XP for attendance (handles per-day deduplication for multi-day events)
         const xpResult = await awardDailyXP(userId, eventId, {
             event_type: registration.events?.event_type,
             difficulty_level: registration.events?.difficulty_level,
             start_time: registration.events?.start_time,
             end_time: registration.events?.end_time,
-            is_multi_day: registration.events?.is_multi_day
+            is_multi_day: isMultiDay
         })
 
-        // 5. Get User Name from next_auth schema
+        // Check if already checked in today (for multi-day events)
+        if (!xpResult.success && xpResult.message?.includes('Already checked in')) {
+            const { data: existingUser } = await supabase
+                .schema('next_auth' as unknown as 'public')
+                .from('users')
+                .select('name')
+                .eq('id', userId)
+                .single()
+
+            return NextResponse.json({
+                success: false,
+                message: isMultiDay ? 'Already checked in today' : 'Already checked in',
+                userName: existingUser?.name || 'Attendee',
+                daysCheckedIn: xpResult.daysCheckedIn,
+                remainingDays: xpResult.remainingDays,
+                eventDays: xpResult.eventDays
+            }, { status: 400 })
+        }
+
+        // 6. Mark as attended (first time only)
+        if (!registration.attended) {
+            const { error: updateError } = await supabase
+                .from('registrations')
+                .update({ attended: true })
+                .eq('id', registration.id)
+
+            if (updateError) {
+                console.error('Attendance update error:', updateError)
+                // Continue even if update fails - XP was awarded
+            }
+        }
+
+        // 7. Get User Name from next_auth schema
         const { data: user } = await supabase
             .schema('next_auth' as unknown as 'public')
             .from('users')
@@ -113,7 +140,9 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            message: 'Check-in successful',
+            message: isMultiDay
+                ? `Day ${xpResult.daysCheckedIn} check-in successful!`
+                : 'Check-in successful',
             userName: user?.name || 'Attendee',
             xpAwarded: xpResult.xpAwarded,
             xpMessage: xpResult.message,
@@ -121,7 +150,8 @@ export async function POST(req: NextRequest) {
             dailyXP: xpResult.dailyXP,
             eventDays: xpResult.eventDays,
             daysCheckedIn: xpResult.daysCheckedIn,
-            remainingDays: xpResult.remainingDays
+            remainingDays: xpResult.remainingDays,
+            isMultiDay
         })
 
     } catch (err) {
