@@ -12,18 +12,26 @@ import { formatDate } from '@/lib/utils'
 
 interface Attendee {
     id: string
+    userId?: string
     name: string
     email: string
     image?: string
     attended: boolean
     checked_in_at?: string
     registered_at: string
+    // Daily check-in fields
+    daysCheckedIn?: number
+    checkedInToday?: boolean
+    checkedInOnDay?: boolean | null
+    checkinDates?: string[]
 }
 
 interface EventInfo {
     id: string
     title: string
     start_time: string
+    end_time?: string
+    is_multi_day?: boolean
 }
 
 export default function ScannerPage() {
@@ -38,12 +46,18 @@ export default function ScannerPage() {
     const [events, setEvents] = useState<EventInfo[]>([])
     const [selectedEvent, setSelectedEvent] = useState<string>('')
     const [attendees, setAttendees] = useState<Attendee[]>([])
+    const [allAttendees, setAllAttendees] = useState<Attendee[]>([])
     const [loadingAttendees, setLoadingAttendees] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [activeTab, setActiveTab] = useState<'scanner' | 'checkins' | 'registered'>('scanner')
     const [showEventDropdown, setShowEventDropdown] = useState(false)
     const [checkingInId, setCheckingInId] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<'all' | 'checked' | 'pending'>('all')
+
+    // Day filter for multi-day events
+    const [eventDaysList, setEventDaysList] = useState<string[]>([])
+    const [selectedDay, setSelectedDay] = useState<string>('') // empty = all days
+    const [isMultiDay, setIsMultiDay] = useState(false)
 
     const scannerRef = useRef<Html5Qrcode | null>(null)
 
@@ -64,23 +78,42 @@ export default function ScannerPage() {
         fetchEvents()
     }, [])
 
-    // Fetch attendees when event changes
+    // Reset day filter when event changes
+    useEffect(() => {
+        setSelectedDay('')
+        setEventDaysList([])
+        setIsMultiDay(false)
+    }, [selectedEvent])
+
+    // Fetch attendees when event or day filter changes
     const fetchAttendees = useCallback(async () => {
         if (!selectedEvent) return
 
         setLoadingAttendees(true)
         try {
-            const res = await fetch(`/api/events/${selectedEvent}/attendees`)
+            const dayParam = selectedDay ? `?day=${selectedDay}` : ''
+            const res = await fetch(`/api/events/${selectedEvent}/attendees${dayParam}`)
             const data = await res.json()
             if (data.attendees) {
                 setAttendees(data.attendees)
+            }
+            if (data.allAttendees) {
+                setAllAttendees(data.allAttendees)
+            } else if (data.attendees) {
+                setAllAttendees(data.attendees)
+            }
+            if (data.eventDaysList) {
+                setEventDaysList(data.eventDaysList)
+            }
+            if (data.isMultiDay !== undefined) {
+                setIsMultiDay(data.isMultiDay)
             }
         } catch (error) {
             console.error('Failed to fetch attendees:', error)
         } finally {
             setLoadingAttendees(false)
         }
-    }, [selectedEvent])
+    }, [selectedEvent, selectedDay])
 
     useEffect(() => {
         fetchAttendees()
@@ -98,10 +131,14 @@ export default function ScannerPage() {
         }
     }, [])
 
+    // Stats use allAttendees for consistent counts
     const stats = {
-        registered: attendees.length,
-        checkedIn: attendees.filter(a => a.attended).length,
-        pending: attendees.filter(a => !a.attended).length
+        registered: allAttendees.length,
+        checkedIn: allAttendees.filter(a => a.attended).length,
+        pending: allAttendees.filter(a => !a.attended).length,
+        // Day-specific stats
+        checkedInToday: allAttendees.filter(a => a.checkedInToday).length,
+        checkedInOnDay: selectedDay ? attendees.length : 0
     }
 
     const filteredAttendees = attendees.filter(a =>
@@ -383,6 +420,52 @@ export default function ScannerPage() {
                                 ))}
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* Day Filter for Multi-day Events */}
+                {isMultiDay && eventDaysList.length > 1 && (
+                    <div className="mb-6">
+                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Select Day</p>
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                            <button
+                                onClick={() => setSelectedDay('')}
+                                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedDay === ''
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                    }`}
+                            >
+                                All Days
+                            </button>
+                            {eventDaysList.map((day, index) => {
+                                const dayDate = new Date(day + 'T00:00:00')
+                                const dayLabel = dayDate.toLocaleDateString('en-IN', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short'
+                                })
+                                const isToday = day === new Date().toISOString().split('T')[0]
+                                const dayCheckedIn = allAttendees.filter(a => a.checkinDates?.includes(day)).length
+
+                                return (
+                                    <button
+                                        key={day}
+                                        onClick={() => setSelectedDay(day)}
+                                        className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedDay === day
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                            }`}
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <span>Day {index + 1}</span>
+                                            {isToday && <span className="bg-green-500 w-2 h-2 rounded-full"></span>}
+                                        </span>
+                                        <span className="text-xs opacity-70 block">{dayLabel}</span>
+                                        <span className="text-xs text-green-400">{dayCheckedIn} checked in</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
                     </div>
                 )}
 
