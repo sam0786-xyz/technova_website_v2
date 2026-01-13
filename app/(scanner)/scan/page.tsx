@@ -266,30 +266,85 @@ export default function ScannerPage() {
         setMessage('')
 
         try {
-            if (!scannerRef.current) {
-                scannerRef.current = new Html5Qrcode("reader", {
-                    verbose: false,
-                    formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
-                })
+            // Clear any existing instance first
+            if (scannerRef.current) {
+                try {
+                    if (scannerRef.current.isScanning) {
+                        await scannerRef.current.stop()
+                    }
+                    scannerRef.current.clear()
+                } catch {
+                    // Ignore cleanup errors
+                }
+                scannerRef.current = null
             }
 
-            await scannerRef.current.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                handleScanSuccess,
-                () => { }
-            )
-            setCameraActive(true)
+            // Small delay for Android devices to release camera resources
+            await new Promise(resolve => setTimeout(resolve, 300))
+
+            // Create new instance with Android-friendly settings
+            scannerRef.current = new Html5Qrcode("reader", {
+                verbose: false,
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+                // Disable BarcodeDetector API - fixes Samsung/Chrome issues
+                useBarCodeDetectorIfSupported: false
+            })
+
+            const qrConfig = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            }
+
+            // Try environment camera first (back camera)
+            try {
+                await scannerRef.current.start(
+                    { facingMode: { exact: "environment" } },
+                    qrConfig,
+                    handleScanSuccess,
+                    () => { }
+                )
+                setCameraActive(true)
+            } catch (envError) {
+                console.warn("Back camera failed, trying any camera:", envError)
+                // Fallback to any available camera
+                try {
+                    await scannerRef.current.start(
+                        { facingMode: "environment" },
+                        qrConfig,
+                        handleScanSuccess,
+                        () => { }
+                    )
+                    setCameraActive(true)
+                } catch (fallbackError) {
+                    console.warn("Environment mode failed, trying user camera:", fallbackError)
+                    // Last resort: try front camera
+                    await scannerRef.current.start(
+                        { facingMode: "user" },
+                        qrConfig,
+                        handleScanSuccess,
+                        () => { }
+                    )
+                    setCameraActive(true)
+                }
+            }
         } catch (err) {
-            console.error("Camera start failed", err)
-            setMessage("Failed to start camera. Please allow permissions.")
+            console.error("Camera start failed:", err)
+            setMessage("Failed to start camera. Please allow camera permissions and try again.")
             setScanResult('error')
         }
     }
 
     const stopCamera = async () => {
-        if (scannerRef.current && scannerRef.current.isScanning) {
-            await scannerRef.current.stop()
+        if (scannerRef.current) {
+            try {
+                if (scannerRef.current.isScanning) {
+                    await scannerRef.current.stop()
+                }
+                scannerRef.current.clear()
+            } catch (err) {
+                console.error("Stop camera error:", err)
+            }
             setCameraActive(false)
         }
     }
