@@ -19,6 +19,36 @@ export async function GET(
         }
 
         const { eventId } = await params
+        const { searchParams } = new URL(req.url)
+        const dayFilter = searchParams.get('day') // Format: YYYY-MM-DD
+
+        // Fetch event details for multi-day info
+        const { data: event } = await supabase
+            .from('events')
+            .select('start_time, end_time, is_multi_day')
+            .eq('id', eventId)
+            .single()
+
+        // Calculate event days
+        let eventDays = 1
+        let eventDaysList: string[] = []
+        if (event) {
+            const start = new Date(event.start_time)
+            const end = event.end_time ? new Date(event.end_time) : start
+            const isMultiDay = event.is_multi_day || start.toDateString() !== end.toDateString()
+
+            if (isMultiDay) {
+                // Generate list of days
+                const current = new Date(start)
+                while (current <= end) {
+                    eventDaysList.push(current.toISOString().split('T')[0])
+                    current.setDate(current.getDate() + 1)
+                }
+                eventDays = eventDaysList.length
+            } else {
+                eventDaysList = [start.toISOString().split('T')[0]]
+            }
+        }
 
         // Fetch all registrations for this event with user details
         const { data: registrations, error: regError } = await supabase
@@ -33,7 +63,12 @@ export async function GET(
         }
 
         if (!registrations || registrations.length === 0) {
-            return NextResponse.json({ attendees: [] })
+            return NextResponse.json({
+                attendees: [],
+                eventDays,
+                eventDaysList,
+                isMultiDay: eventDays > 1
+            })
         }
 
         // Get user details from next_auth schema
@@ -49,22 +84,58 @@ export async function GET(
             console.error('Error fetching users:', userError)
         }
 
+        // Fetch daily check-ins for all users in this event
+        const { data: dailyCheckins } = await supabase
+            .from('daily_checkins')
+            .select('user_id, checkin_date, xp_awarded')
+            .eq('event_id', eventId)
+
+        // Create check-in map: userId -> { date -> xp }
+        const checkinMap = new Map<string, Map<string, number>>()
+        dailyCheckins?.forEach(c => {
+            if (!checkinMap.has(c.user_id)) {
+                checkinMap.set(c.user_id, new Map())
+            }
+            checkinMap.get(c.user_id)!.set(c.checkin_date, c.xp_awarded)
+        })
+
         // Map users to registrations
         const userMap = new Map(users?.map(u => [u.id, u]) || [])
+        const today = new Date().toISOString().split('T')[0]
 
         const attendees = registrations.map(reg => {
             const user = userMap.get(reg.user_id)
+            const userCheckins = checkinMap.get(reg.user_id)
+            const daysCheckedIn = userCheckins?.size || 0
+            const checkedInToday = userCheckins?.has(today) || false
+            const checkedInOnDay = dayFilter ? (userCheckins?.has(dayFilter) || false) : null
+
             return {
                 id: reg.id,
+                userId: reg.user_id,
                 name: user?.name || 'Unknown',
                 email: user?.email || '',
                 image: user?.image,
                 attended: reg.attended || false,
-                registered_at: reg.created_at
+                registered_at: reg.created_at,
+                // Daily check-in info
+                daysCheckedIn,
+                checkedInToday,
+                checkedInOnDay,
+                checkinDates: userCheckins ? Array.from(userCheckins.keys()) : []
             }
         })
 
-        return NextResponse.json({ attendees })
+        // Don't filter here - send all attendees, let UI handle filtering
+        // Each attendee has checkedInOnDay field for day-specific filtering
+
+        return NextResponse.json({
+            attendees,
+            eventDays,
+            eventDaysList,
+            isMultiDay: eventDays > 1,
+            selectedDay: dayFilter
+        })
     } catch (error) {
         console.error('Error:', error)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })

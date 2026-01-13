@@ -12,18 +12,26 @@ import { formatDate } from '@/lib/utils'
 
 interface Attendee {
     id: string
+    userId?: string
     name: string
     email: string
     image?: string
     attended: boolean
     checked_in_at?: string
     registered_at: string
+    // Daily check-in fields
+    daysCheckedIn?: number
+    checkedInToday?: boolean
+    checkedInOnDay?: boolean | null
+    checkinDates?: string[]
 }
 
 interface EventInfo {
     id: string
     title: string
     start_time: string
+    end_time?: string
+    is_multi_day?: boolean
 }
 
 export default function ScannerPage() {
@@ -38,12 +46,18 @@ export default function ScannerPage() {
     const [events, setEvents] = useState<EventInfo[]>([])
     const [selectedEvent, setSelectedEvent] = useState<string>('')
     const [attendees, setAttendees] = useState<Attendee[]>([])
+    const [allAttendees, setAllAttendees] = useState<Attendee[]>([])
     const [loadingAttendees, setLoadingAttendees] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [activeTab, setActiveTab] = useState<'scanner' | 'checkins' | 'registered'>('scanner')
     const [showEventDropdown, setShowEventDropdown] = useState(false)
     const [checkingInId, setCheckingInId] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<'all' | 'checked' | 'pending'>('all')
+
+    // Day filter for multi-day events
+    const [eventDaysList, setEventDaysList] = useState<string[]>([])
+    const [selectedDay, setSelectedDay] = useState<string>('') // empty = all days
+    const [isMultiDay, setIsMultiDay] = useState(false)
 
     const scannerRef = useRef<Html5Qrcode | null>(null)
 
@@ -64,7 +78,14 @@ export default function ScannerPage() {
         fetchEvents()
     }, [])
 
-    // Fetch attendees when event changes
+    // Reset day filter when event changes
+    useEffect(() => {
+        setSelectedDay('')
+        setEventDaysList([])
+        setIsMultiDay(false)
+    }, [selectedEvent])
+
+    // Fetch attendees when event or day filter changes
     const fetchAttendees = useCallback(async () => {
         if (!selectedEvent) return
 
@@ -74,13 +95,20 @@ export default function ScannerPage() {
             const data = await res.json()
             if (data.attendees) {
                 setAttendees(data.attendees)
+                setAllAttendees(data.attendees) // Same array, for compatibility
+            }
+            if (data.eventDaysList) {
+                setEventDaysList(data.eventDaysList)
+            }
+            if (data.isMultiDay !== undefined) {
+                setIsMultiDay(data.isMultiDay)
             }
         } catch (error) {
             console.error('Failed to fetch attendees:', error)
         } finally {
             setLoadingAttendees(false)
         }
-    }, [selectedEvent])
+    }, [selectedEvent]) // Remove selectedDay dependency - filtering is client-side
 
     useEffect(() => {
         fetchAttendees()
@@ -98,19 +126,31 @@ export default function ScannerPage() {
         }
     }, [])
 
+    // Stats use allAttendees for consistent counts
     const stats = {
-        registered: attendees.length,
-        checkedIn: attendees.filter(a => a.attended).length,
-        pending: attendees.filter(a => !a.attended).length
+        registered: allAttendees.length,
+        checkedIn: allAttendees.filter(a => a.attended).length,
+        pending: allAttendees.filter(a => !a.attended).length,
+        // Day-specific stats
+        checkedInToday: allAttendees.filter(a => a.checkedInToday).length,
+        checkedInOnDay: selectedDay
+            ? allAttendees.filter(a => a.checkinDates?.includes(selectedDay)).length
+            : 0
     }
 
-    const filteredAttendees = attendees.filter(a =>
+    // Apply search filter
+    const searchFilteredAttendees = attendees.filter(a =>
         a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         a.email.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-    const checkedInAttendees = filteredAttendees.filter(a => a.attended)
-    const registeredAttendees = filteredAttendees.filter(a => {
+    // For "Checked In" tab: filter by selected day if day is selected
+    const checkedInAttendees = selectedDay
+        ? searchFilteredAttendees.filter(a => a.checkinDates?.includes(selectedDay))
+        : searchFilteredAttendees.filter(a => a.attended)
+
+    // For "All/Registered" tab: apply status filter but show ALL attendees (not day-filtered)
+    const registeredAttendees = searchFilteredAttendees.filter(a => {
         if (statusFilter === 'checked') return a.attended
         if (statusFilter === 'pending') return !a.attended
         return true // 'all'
@@ -226,30 +266,85 @@ export default function ScannerPage() {
         setMessage('')
 
         try {
-            if (!scannerRef.current) {
-                scannerRef.current = new Html5Qrcode("reader", {
-                    verbose: false,
-                    formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
-                })
+            // Clear any existing instance first
+            if (scannerRef.current) {
+                try {
+                    if (scannerRef.current.isScanning) {
+                        await scannerRef.current.stop()
+                    }
+                    scannerRef.current.clear()
+                } catch {
+                    // Ignore cleanup errors
+                }
+                scannerRef.current = null
             }
 
-            await scannerRef.current.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                handleScanSuccess,
-                () => { }
-            )
-            setCameraActive(true)
+            // Small delay for Android devices to release camera resources
+            await new Promise(resolve => setTimeout(resolve, 300))
+
+            // Create new instance with Android-friendly settings
+            scannerRef.current = new Html5Qrcode("reader", {
+                verbose: false,
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+                // Disable BarcodeDetector API - fixes Samsung/Chrome issues
+                useBarCodeDetectorIfSupported: false
+            })
+
+            const qrConfig = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            }
+
+            // Try environment camera first (back camera)
+            try {
+                await scannerRef.current.start(
+                    { facingMode: { exact: "environment" } },
+                    qrConfig,
+                    handleScanSuccess,
+                    () => { }
+                )
+                setCameraActive(true)
+            } catch (envError) {
+                console.warn("Back camera failed, trying any camera:", envError)
+                // Fallback to any available camera
+                try {
+                    await scannerRef.current.start(
+                        { facingMode: "environment" },
+                        qrConfig,
+                        handleScanSuccess,
+                        () => { }
+                    )
+                    setCameraActive(true)
+                } catch (fallbackError) {
+                    console.warn("Environment mode failed, trying user camera:", fallbackError)
+                    // Last resort: try front camera
+                    await scannerRef.current.start(
+                        { facingMode: "user" },
+                        qrConfig,
+                        handleScanSuccess,
+                        () => { }
+                    )
+                    setCameraActive(true)
+                }
+            }
         } catch (err) {
-            console.error("Camera start failed", err)
-            setMessage("Failed to start camera. Please allow permissions.")
+            console.error("Camera start failed:", err)
+            setMessage("Failed to start camera. Please allow camera permissions and try again.")
             setScanResult('error')
         }
     }
 
     const stopCamera = async () => {
-        if (scannerRef.current && scannerRef.current.isScanning) {
-            await scannerRef.current.stop()
+        if (scannerRef.current) {
+            try {
+                if (scannerRef.current.isScanning) {
+                    await scannerRef.current.stop()
+                }
+                scannerRef.current.clear()
+            } catch (err) {
+                console.error("Stop camera error:", err)
+            }
             setCameraActive(false)
         }
     }
@@ -383,6 +478,52 @@ export default function ScannerPage() {
                                 ))}
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* Day Filter for Multi-day Events */}
+                {isMultiDay && eventDaysList.length > 1 && (
+                    <div className="mb-6">
+                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Select Day</p>
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                            <button
+                                onClick={() => setSelectedDay('')}
+                                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedDay === ''
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                    }`}
+                            >
+                                All Days
+                            </button>
+                            {eventDaysList.map((day, index) => {
+                                const dayDate = new Date(day + 'T00:00:00')
+                                const dayLabel = dayDate.toLocaleDateString('en-IN', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short'
+                                })
+                                const isToday = day === new Date().toISOString().split('T')[0]
+                                const dayCheckedIn = allAttendees.filter(a => a.checkinDates?.includes(day)).length
+
+                                return (
+                                    <button
+                                        key={day}
+                                        onClick={() => setSelectedDay(day)}
+                                        className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedDay === day
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                            }`}
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <span>Day {index + 1}</span>
+                                            {isToday && <span className="bg-green-500 w-2 h-2 rounded-full"></span>}
+                                        </span>
+                                        <span className="text-xs opacity-70 block">{dayLabel}</span>
+                                        <span className="text-xs text-green-400">{dayCheckedIn} checked in</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
                     </div>
                 )}
 
@@ -596,7 +737,7 @@ export default function ScannerPage() {
                                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                                     }`}
                             >
-                                All ({filteredAttendees.length})
+                                All ({searchFilteredAttendees.length})
                             </button>
                             <button
                                 onClick={() => setStatusFilter('checked')}
@@ -632,48 +773,71 @@ export default function ScannerPage() {
                                     <p>No registrations yet</p>
                                 </div>
                             ) : (
-                                registeredAttendees.map(attendee => (
-                                    <div
-                                        key={attendee.id}
-                                        className={`flex items-center gap-4 p-4 rounded-xl border ${attendee.attended
-                                            ? 'bg-green-500/5 border-green-500/20'
-                                            : 'bg-white/[0.02] border-white/10'
-                                            }`}
-                                    >
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${attendee.attended
-                                            ? 'bg-green-500/20 text-green-400'
-                                            : 'bg-white/10 text-gray-400'
-                                            }`}>
-                                            {attendee.name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium truncate">{attendee.name}</p>
-                                            <p className="text-sm text-gray-500 truncate">{attendee.email}</p>
-                                        </div>
-                                        {attendee.attended ? (
-                                            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                                        ) : (
-                                            <button
-                                                onClick={() => handleManualCheckIn(attendee.id)}
-                                                disabled={checkingInId === attendee.id}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex-shrink-0"
-                                                title="Manual Check-in"
-                                            >
-                                                {checkingInId === attendee.id ? (
-                                                    <>
-                                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                                        <span className="hidden sm:inline">Checking...</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <UserPlus className="w-4 h-4" />
-                                                        <span className="hidden sm:inline">Check In</span>
-                                                    </>
+                                registeredAttendees.map(attendee => {
+                                    // For multi-day events with day filter: check if checked in on that specific day
+                                    const checkedInOnSelectedDay = selectedDay
+                                        ? attendee.checkinDates?.includes(selectedDay)
+                                        : false
+                                    // Show check-in button if: no day selected and not attended, OR day selected and not checked in that day
+                                    const showCheckInButton = selectedDay
+                                        ? !checkedInOnSelectedDay
+                                        : !attendee.attended
+
+                                    return (
+                                        <div
+                                            key={attendee.id}
+                                            className={`flex items-center gap-4 p-4 rounded-xl border ${selectedDay
+                                                ? checkedInOnSelectedDay
+                                                    ? 'bg-green-500/5 border-green-500/20'
+                                                    : 'bg-white/[0.02] border-white/10'
+                                                : attendee.attended
+                                                    ? 'bg-green-500/5 border-green-500/20'
+                                                    : 'bg-white/[0.02] border-white/10'
+                                                }`}
+                                        >
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${(selectedDay ? checkedInOnSelectedDay : attendee.attended)
+                                                ? 'bg-green-500/20 text-green-400'
+                                                : 'bg-white/10 text-gray-400'
+                                                }`}>
+                                                {attendee.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium truncate">{attendee.name}</p>
+                                                <p className="text-sm text-gray-500 truncate">{attendee.email}</p>
+                                                {/* Show days checked in for multi-day events */}
+                                                {isMultiDay && attendee.daysCheckedIn !== undefined && attendee.daysCheckedIn > 0 && (
+                                                    <p className="text-xs text-green-400 mt-0.5">
+                                                        {attendee.daysCheckedIn}/{eventDaysList.length} days checked in
+                                                    </p>
                                                 )}
-                                            </button>
-                                        )}
-                                    </div>
-                                ))
+                                            </div>
+                                            {showCheckInButton ? (
+                                                <button
+                                                    onClick={() => handleManualCheckIn(attendee.id)}
+                                                    disabled={checkingInId === attendee.id}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex-shrink-0"
+                                                    title={selectedDay ? `Check in for ${selectedDay}` : 'Manual Check-in'}
+                                                >
+                                                    {checkingInId === attendee.id ? (
+                                                        <>
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            <span className="hidden sm:inline">Checking...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <UserPlus className="w-4 h-4" />
+                                                            <span className="hidden sm:inline">
+                                                                {selectedDay ? 'Check In Today' : 'Check In'}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                            ) : (
+                                                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                                            )}
+                                        </div>
+                                    )
+                                })
                             )}
                         </div>
                     </div>
