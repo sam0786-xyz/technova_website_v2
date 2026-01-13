@@ -126,15 +126,11 @@ export async function GET(
             }
         })
 
-        // Filter by day if specified
-        let filteredAttendees = attendees
-        if (dayFilter) {
-            filteredAttendees = attendees.filter(a => a.checkedInOnDay)
-        }
+        // Don't filter here - send all attendees, let UI handle filtering
+        // Each attendee has checkedInOnDay field for day-specific filtering
 
         return NextResponse.json({
-            attendees: filteredAttendees,
-            allAttendees: attendees, // Include all for stats
+            attendees,
             eventDays,
             eventDaysList,
             isMultiDay: eventDays > 1,

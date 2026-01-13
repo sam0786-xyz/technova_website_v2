@@ -91,16 +91,11 @@ export default function ScannerPage() {
 
         setLoadingAttendees(true)
         try {
-            const dayParam = selectedDay ? `?day=${selectedDay}` : ''
-            const res = await fetch(`/api/events/${selectedEvent}/attendees${dayParam}`)
+            const res = await fetch(`/api/events/${selectedEvent}/attendees`)
             const data = await res.json()
             if (data.attendees) {
                 setAttendees(data.attendees)
-            }
-            if (data.allAttendees) {
-                setAllAttendees(data.allAttendees)
-            } else if (data.attendees) {
-                setAllAttendees(data.attendees)
+                setAllAttendees(data.attendees) // Same array, for compatibility
             }
             if (data.eventDaysList) {
                 setEventDaysList(data.eventDaysList)
@@ -113,7 +108,7 @@ export default function ScannerPage() {
         } finally {
             setLoadingAttendees(false)
         }
-    }, [selectedEvent, selectedDay])
+    }, [selectedEvent]) // Remove selectedDay dependency - filtering is client-side
 
     useEffect(() => {
         fetchAttendees()
@@ -138,16 +133,24 @@ export default function ScannerPage() {
         pending: allAttendees.filter(a => !a.attended).length,
         // Day-specific stats
         checkedInToday: allAttendees.filter(a => a.checkedInToday).length,
-        checkedInOnDay: selectedDay ? attendees.length : 0
+        checkedInOnDay: selectedDay
+            ? allAttendees.filter(a => a.checkinDates?.includes(selectedDay)).length
+            : 0
     }
 
-    const filteredAttendees = attendees.filter(a =>
+    // Apply search filter
+    const searchFilteredAttendees = attendees.filter(a =>
         a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         a.email.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-    const checkedInAttendees = filteredAttendees.filter(a => a.attended)
-    const registeredAttendees = filteredAttendees.filter(a => {
+    // For "Checked In" tab: filter by selected day if day is selected
+    const checkedInAttendees = selectedDay
+        ? searchFilteredAttendees.filter(a => a.checkinDates?.includes(selectedDay))
+        : searchFilteredAttendees.filter(a => a.attended)
+
+    // For "All/Registered" tab: apply status filter but show ALL attendees (not day-filtered)
+    const registeredAttendees = searchFilteredAttendees.filter(a => {
         if (statusFilter === 'checked') return a.attended
         if (statusFilter === 'pending') return !a.attended
         return true // 'all'
@@ -679,7 +682,7 @@ export default function ScannerPage() {
                                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                                     }`}
                             >
-                                All ({filteredAttendees.length})
+                                All ({searchFilteredAttendees.length})
                             </button>
                             <button
                                 onClick={() => setStatusFilter('checked')}
