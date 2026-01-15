@@ -290,7 +290,39 @@ export default function ScannerPage() {
             // Longer delay for Android devices to release camera resources
             await new Promise(resolve => setTimeout(resolve, 500))
 
-            // Get list of cameras first (helps with Android compatibility)
+            // CRITICAL FOR ANDROID: Request camera permission FIRST
+            // On Android, enumerateDevices() returns empty until getUserMedia() is called
+            let permissionGranted = false
+            try {
+                console.log('Requesting camera permission...')
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                })
+                // Stop the stream immediately - we just needed to trigger permission
+                stream.getTracks().forEach(track => track.stop())
+                permissionGranted = true
+                console.log('Camera permission granted')
+
+                // Wait a bit for Android to fully release the camera
+                await new Promise(resolve => setTimeout(resolve, 500))
+            } catch (permError) {
+                console.warn('Camera permission request failed:', permError)
+                // Try with any camera (front)
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+                    stream.getTracks().forEach(track => track.stop())
+                    permissionGranted = true
+                    await new Promise(resolve => setTimeout(resolve, 500))
+                } catch (err) {
+                    console.error('All camera permission requests failed:', err)
+                }
+            }
+
+            if (!permissionGranted) {
+                throw new Error('Camera permission denied. Please allow camera access in your browser settings.')
+            }
+
+            // NOW enumerate cameras (after permission is granted)
             let cameras: { id: string; label: string }[] = []
             try {
                 const deviceList = await Html5Qrcode.getCameras()
