@@ -59,6 +59,12 @@ export default function ScannerPage() {
     const [selectedDay, setSelectedDay] = useState<string>('') // empty = all days
     const [isMultiDay, setIsMultiDay] = useState(false)
 
+    // Camera device selection for Android compatibility
+    const [cameraDevices, setCameraDevices] = useState<{ id: string; label: string }[]>([])
+    const [selectedCameraId, setSelectedCameraId] = useState<string>('')
+    const [cameraError, setCameraError] = useState<string>('')
+    const [isLoadingCamera, setIsLoadingCamera] = useState(false)
+
     const scannerRef = useRef<Html5Qrcode | null>(null)
 
     // Fetch live events on mount
@@ -261,9 +267,11 @@ export default function ScannerPage() {
         }, 3000)
     }
 
-    const startCamera = async () => {
+    const startCamera = async (cameraId?: string) => {
         setScanResult(null)
         setMessage('')
+        setCameraError('')
+        setIsLoadingCamera(true)
 
         try {
             // Clear any existing instance first
@@ -279,8 +287,19 @@ export default function ScannerPage() {
                 scannerRef.current = null
             }
 
-            // Small delay for Android devices to release camera resources
-            await new Promise(resolve => setTimeout(resolve, 300))
+            // Longer delay for Android devices to release camera resources
+            await new Promise(resolve => setTimeout(resolve, 500))
+
+            // Get list of cameras first (helps with Android compatibility)
+            let cameras: { id: string; label: string }[] = []
+            try {
+                const deviceList = await Html5Qrcode.getCameras()
+                cameras = deviceList.map(d => ({ id: d.id, label: d.label || `Camera ${d.id.slice(0, 8)}` }))
+                setCameraDevices(cameras)
+                console.log('Available cameras:', cameras)
+            } catch (camError) {
+                console.warn('Could not enumerate cameras:', camError)
+            }
 
             // Create new instance with Android-friendly settings
             scannerRef.current = new Html5Qrcode("reader", {
@@ -296,42 +315,116 @@ export default function ScannerPage() {
                 aspectRatio: 1.0
             }
 
-            // Try environment camera first (back camera)
-            try {
-                await scannerRef.current.start(
-                    { facingMode: { exact: "environment" } },
-                    qrConfig,
-                    handleScanSuccess,
-                    () => { }
+            // Strategy: Prefer device ID if provided, else find back camera, else fallback
+            let cameraToUse = cameraId
+
+            if (!cameraToUse && cameras.length > 0) {
+                // Try to find a back/rear camera by label
+                const backCamera = cameras.find(c =>
+                    c.label.toLowerCase().includes('back') ||
+                    c.label.toLowerCase().includes('rear') ||
+                    c.label.toLowerCase().includes('environment')
                 )
-                setCameraActive(true)
-            } catch (envError) {
-                console.warn("Back camera failed, trying any camera:", envError)
-                // Fallback to any available camera
+                if (backCamera) {
+                    cameraToUse = backCamera.id
+                    console.log('Selected back camera:', backCamera.label)
+                } else if (cameras.length === 1) {
+                    // Only one camera available, use it
+                    cameraToUse = cameras[0].id
+                    console.log('Using only available camera:', cameras[0].label)
+                }
+            }
+
+            // Try to start camera
+            const attemptStart = async () => {
+                // Method 1: Use specific camera ID
+                if (cameraToUse) {
+                    try {
+                        console.log('Starting camera by ID:', cameraToUse)
+                        await scannerRef.current!.start(
+                            cameraToUse,
+                            qrConfig,
+                            handleScanSuccess,
+                            () => { }
+                        )
+                        setSelectedCameraId(cameraToUse)
+                        setCameraActive(true)
+                        return true
+                    } catch (err) {
+                        console.warn('Camera ID start failed:', err)
+                    }
+                }
+
+                // Method 2: Try facingMode environment
                 try {
-                    await scannerRef.current.start(
+                    console.log('Trying facingMode: environment')
+                    await new Promise(resolve => setTimeout(resolve, 300))
+                    await scannerRef.current!.start(
                         { facingMode: "environment" },
                         qrConfig,
                         handleScanSuccess,
                         () => { }
                     )
                     setCameraActive(true)
-                } catch (fallbackError) {
-                    console.warn("Environment mode failed, trying user camera:", fallbackError)
-                    // Last resort: try front camera
-                    await scannerRef.current.start(
+                    return true
+                } catch (err) {
+                    console.warn('Environment mode failed:', err)
+                }
+
+                // Method 3: Try any camera with user facingMode
+                try {
+                    console.log('Trying facingMode: user')
+                    await new Promise(resolve => setTimeout(resolve, 300))
+                    await scannerRef.current!.start(
                         { facingMode: "user" },
                         qrConfig,
                         handleScanSuccess,
                         () => { }
                     )
                     setCameraActive(true)
+                    return true
+                } catch (err) {
+                    console.warn('User mode failed:', err)
                 }
+
+                // Method 4: Try first available camera ID
+                if (cameras.length > 0 && cameras[0].id !== cameraToUse) {
+                    try {
+                        console.log('Trying first available camera:', cameras[0].id)
+                        await new Promise(resolve => setTimeout(resolve, 300))
+                        await scannerRef.current!.start(
+                            cameras[0].id,
+                            qrConfig,
+                            handleScanSuccess,
+                            () => { }
+                        )
+                        setSelectedCameraId(cameras[0].id)
+                        setCameraActive(true)
+                        return true
+                    } catch (err) {
+                        console.warn('First camera failed:', err)
+                    }
+                }
+
+                return false
             }
+
+            const success = await attemptStart()
+
+            if (!success) {
+                throw new Error('All camera start methods failed')
+            }
+
         } catch (err) {
             console.error("Camera start failed:", err)
-            setMessage("Failed to start camera. Please allow camera permissions and try again.")
+            const errorMsg = cameraDevices.length === 0
+                ? "No cameras found. Please allow camera permissions in your browser settings."
+                : "Camera failed to start. Try selecting a different camera below, or use 'Scan from File' option."
+            setCameraError(errorMsg)
+            setMessage(errorMsg)
             setScanResult('error')
+        } finally {
+            setIsLoadingCamera(false)
         }
     }
 
@@ -598,14 +691,59 @@ export default function ScannerPage() {
                                 <div className="w-full">
                                     <div id="reader" className="w-full h-full"></div>
                                     {!cameraActive && !scanResult && (
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <button
-                                                onClick={startCamera}
-                                                className="flex items-center gap-2 bg-blue-600 px-8 py-4 rounded-xl hover:bg-blue-700 transition-colors font-medium"
-                                            >
-                                                <Camera className="w-6 h-6" />
-                                                Start Scanning
-                                            </button>
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                                            {isLoadingCamera ? (
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+                                                    <p className="text-gray-400">Starting camera...</p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => startCamera()}
+                                                        className="flex items-center gap-2 bg-blue-600 px-8 py-4 rounded-xl hover:bg-blue-700 transition-colors font-medium"
+                                                    >
+                                                        <Camera className="w-6 h-6" />
+                                                        Start Scanning
+                                                    </button>
+
+                                                    {/* Show camera error and options */}
+                                                    {cameraError && (
+                                                        <div className="text-center max-w-xs">
+                                                            <p className="text-red-400 text-sm mb-3">{cameraError}</p>
+
+                                                            {/* Camera selector dropdown */}
+                                                            {cameraDevices.length > 1 && (
+                                                                <div className="mb-3">
+                                                                    <p className="text-xs text-gray-500 mb-1">Select Camera:</p>
+                                                                    <select
+                                                                        value={selectedCameraId}
+                                                                        onChange={(e) => {
+                                                                            setSelectedCameraId(e.target.value)
+                                                                            startCamera(e.target.value)
+                                                                        }}
+                                                                        className="bg-zinc-800 border border-white/20 rounded-lg px-3 py-2 text-sm w-full"
+                                                                    >
+                                                                        <option value="">Auto-detect</option>
+                                                                        {cameraDevices.map(cam => (
+                                                                            <option key={cam.id} value={cam.id}>
+                                                                                {cam.label}
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                            )}
+
+                                                            <button
+                                                                onClick={() => setMode('file')}
+                                                                className="text-blue-400 hover:text-blue-300 text-sm underline"
+                                                            >
+                                                                Use file upload instead
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -616,10 +754,29 @@ export default function ScannerPage() {
                                     {/* Hidden divs for scanner instances */}
                                     <div id="reader" className="hidden"></div>
                                     <div id="file-reader" className="hidden"></div>
-                                    <label className="flex flex-col items-center gap-4 cursor-pointer p-8 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-white/5 transition-colors">
-                                        <Upload className="w-12 h-12 text-gray-500" />
-                                        <div className="text-sm text-gray-400">
-                                            <span className="font-bold text-white">Click to upload</span> QR code image
+
+                                    {/* Take Photo directly - best for Android */}
+                                    <label className="flex flex-col items-center gap-4 cursor-pointer p-6 border-2 border-dashed border-blue-500/50 bg-blue-500/10 rounded-xl hover:bg-blue-500/20 transition-colors mb-4">
+                                        <Camera className="w-10 h-10 text-blue-400" />
+                                        <div className="text-sm text-center">
+                                            <span className="font-bold text-white block">Take Photo of QR Code</span>
+                                            <span className="text-gray-400">Opens camera directly</span>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            capture="environment"
+                                            className="hidden"
+                                            onChange={handleFileUpload}
+                                        />
+                                    </label>
+
+                                    {/* Upload from gallery */}
+                                    <label className="flex flex-col items-center gap-4 cursor-pointer p-6 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500 hover:bg-white/5 transition-colors">
+                                        <Upload className="w-10 h-10 text-gray-500" />
+                                        <div className="text-sm text-center">
+                                            <span className="font-bold text-white block">Upload from Gallery</span>
+                                            <span className="text-gray-400">Select existing QR image</span>
                                         </div>
                                         <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                                     </label>
