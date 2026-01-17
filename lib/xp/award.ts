@@ -4,6 +4,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { calculateEventXP, canCalculateXP, type EventXPData } from './calculator'
+import { revalidateTag } from 'next/cache'
 
 // ==========================================
 // Types
@@ -140,6 +141,10 @@ export async function awardXPForAttendance(
             // but the user's total may not be updated
         }
     }
+
+    // 6. Revalidate leaderboard cache to show updated rankings immediately
+    revalidateTag('leaderboard')
+    revalidateTag(`user-${userId}`)
 
     return {
         success: true,
@@ -379,6 +384,10 @@ export async function awardDailyXP(
         // Check-in was recorded, so we continue even if user XP update fails
     }
 
+    // 8. Revalidate leaderboard cache
+    revalidateTag('leaderboard')
+    revalidateTag(`user-${userId}`)
+
     const newDaysCheckedIn = daysCheckedIn + 1
     const remainingDays = Math.max(0, eventDays - newDaysCheckedIn)
 
@@ -393,4 +402,5 @@ export async function awardDailyXP(
         message: `Awarded ${xpToAward} XP (Day ${newDaysCheckedIn}/${eventDays})`,
         breakdown
     }
+}
 }
