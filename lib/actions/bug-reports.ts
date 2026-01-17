@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/server'
-import { auth } from '@/auth'
+import { getServerSession } from 'next-auth'
 import { revalidateTag } from 'next/cache'
 
 export interface BugReportSubmission {
@@ -26,7 +26,7 @@ export interface BugReportResponse {
  * Submit a bug report and award XP
  */
 export async function submitBugReport(data: BugReportSubmission): Promise<BugReportResponse> {
-    const session = await auth()
+    const session = await getServerSession()
 
     if (!session?.user?.id) {
         return { success: false, message: 'You must be logged in to submit a bug report' }
@@ -138,7 +138,7 @@ export async function submitBugReport(data: BugReportSubmission): Promise<BugRep
  * Get all bug reports (admin only)
  */
 export async function getAllBugReports() {
-    const session = await auth()
+    const session = await getServerSession()
 
     if (session?.user?.role !== 'super_admin') {
         return { success: false, data: [] }
