@@ -515,10 +515,53 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4 }}
-                                className="text-gray-400 text-lg leading-relaxed mb-8 max-w-lg"
+                                className="text-gray-400 text-lg leading-relaxed mb-6 max-w-lg"
                             >
                                 {displayDescription}
                             </motion.p>
+
+                            {/* Social Media Links */}
+                            {dbClub && (dbClub.linkedin_url || dbClub.instagram_url || dbClub.contact_email) && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.45 }}
+                                    className="flex items-center gap-3 mb-8"
+                                >
+                                    <span className="text-gray-500 text-sm mr-2">Connect:</span>
+                                    {dbClub.linkedin_url && (
+                                        <a
+                                            href={ensureAbsoluteUrl(dbClub.linkedin_url)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={`p-3 rounded-full ${colors.bg} border ${colors.border} hover:bg-white/10 transition-all hover:scale-110`}
+                                            title="LinkedIn"
+                                        >
+                                            <Linkedin className={`w-5 h-5 ${colors.text}`} />
+                                        </a>
+                                    )}
+                                    {dbClub.instagram_url && (
+                                        <a
+                                            href={ensureAbsoluteUrl(dbClub.instagram_url)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={`p-3 rounded-full ${colors.bg} border ${colors.border} hover:bg-white/10 transition-all hover:scale-110`}
+                                            title="Instagram"
+                                        >
+                                            <Camera className={`w-5 h-5 ${colors.text}`} />
+                                        </a>
+                                    )}
+                                    {dbClub.contact_email && (
+                                        <a
+                                            href={`mailto:${dbClub.contact_email}`}
+                                            className={`p-3 rounded-full ${colors.bg} border ${colors.border} hover:bg-white/10 transition-all hover:scale-110`}
+                                            title="Email"
+                                        >
+                                            <Mail className={`w-5 h-5 ${colors.text}`} />
+                                        </a>
+                                    )}
+                                </motion.div>
+                            )}
 
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
