@@ -368,11 +368,12 @@ async function fetchUserRankFromDB(userId: string): Promise<UserRankInfo | null>
     const totalUsers = totalCount || 1
     const percentile = Math.round(((totalUsers - rank) / totalUsers) * 100)
 
-    // Get events attended count
+    // Get events attended count from registrations table
     const { count: eventsCount } = await supabase
-        .from('xp_awards')
+        .from('registrations')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
+        .eq('attended', true)
 
     return {
         rank,
