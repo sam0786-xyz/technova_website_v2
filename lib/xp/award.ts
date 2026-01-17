@@ -4,6 +4,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { calculateEventXP, canCalculateXP, type EventXPData } from './calculator'
+import { revalidateTag } from 'next/cache'
 
 // ==========================================
 // Types
@@ -106,40 +107,32 @@ export async function awardXPForAttendance(
         }
     }
 
-    // 5. Update user's total XP points
+    // 5. Update user's total XP points (direct increment - more reliable than RPC)
+    const { data: user } = await supabase
+        .schema('next_auth' as unknown as 'public')
+        .from('users')
+        .select('xp_points')
+        .eq('id', userId)
+        .single()
+
+    const currentXP = user?.xp_points || 0
+    const newXP = currentXP + finalXP
+
     const { error: updateError } = await supabase
         .schema('next_auth' as unknown as 'public')
         .from('users')
-        .update({
-            xp_points: supabase.rpc('increment_xp', { user_id: userId, amount: finalXP })
-        })
+        .update({ xp_points: newXP })
         .eq('id', userId)
 
-    // Fallback: Direct increment if RPC doesn't exist
     if (updateError) {
-        // Get current XP and add
-        const { data: user } = await supabase
-            .schema('next_auth' as unknown as 'public')
-            .from('users')
-            .select('xp_points')
-            .eq('id', userId)
-            .single()
-
-        const currentXP = user?.xp_points || 0
-        const newXP = currentXP + finalXP
-
-        const { error: fallbackError } = await supabase
-            .schema('next_auth' as unknown as 'public')
-            .from('users')
-            .update({ xp_points: newXP })
-            .eq('id', userId)
-
-        if (fallbackError) {
-            console.error('XP Update Error:', fallbackError)
-            // XP was recorded in xp_awards, so we don't fail completely
-            // but the user's total may not be updated
-        }
+        console.error('XP Update Error:', updateError)
+        // XP was recorded in xp_awards, so we don't fail completely
+        // but the user's total may not be updated
     }
+
+    // 6. Revalidate leaderboard cache to show updated rankings immediately
+    revalidateTag('leaderboard')
+    revalidateTag(`user-${userId}`)
 
     return {
         success: true,
@@ -378,6 +371,10 @@ export async function awardDailyXP(
         console.error('XP Update Error:', updateError)
         // Check-in was recorded, so we continue even if user XP update fails
     }
+
+    // 8. Revalidate leaderboard cache
+    revalidateTag('leaderboard')
+    revalidateTag(`user-${userId}`)
 
     const newDaysCheckedIn = daysCheckedIn + 1
     const remainingDays = Math.max(0, eventDays - newDaysCheckedIn)

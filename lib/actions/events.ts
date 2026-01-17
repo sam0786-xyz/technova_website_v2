@@ -66,12 +66,21 @@ export async function createEvent(formData: FormData) {
     let end_time: string
     let daily_start_time: string | null = null
     let daily_end_time: string | null = null
+    let excluded_dates: string[] = []
 
     if (is_multi_day) {
         const start_date = formData.get("start_date") as string
         const end_date = formData.get("end_date") as string
         daily_start_time = formData.get("daily_start_time") as string
         daily_end_time = formData.get("daily_end_time") as string
+
+        // Parse excluded dates (holidays)
+        const excludedDatesStr = formData.get("excluded_dates") as string
+        try {
+            excluded_dates = excludedDatesStr ? JSON.parse(excludedDatesStr) : []
+        } catch {
+            excluded_dates = []
+        }
 
         // Combine date + time for start_time and end_time
         start_time = parseDateTimeLocal(`${start_date}T${daily_start_time}`)
@@ -118,7 +127,8 @@ export async function createEvent(formData: FormData) {
         daily_end_time,
         event_type,
         difficulty_level,
-        poc_name
+        poc_name,
+        excluded_dates
     }).select('id').single()
 
     if (error || !newEvent) {
@@ -187,12 +197,21 @@ export async function updateEvent(formData: FormData) {
     let end_time: string
     let daily_start_time: string | null = null
     let daily_end_time: string | null = null
+    let excluded_dates: string[] = []
 
     if (is_multi_day) {
         const start_date = formData.get("start_date") as string
         const end_date = formData.get("end_date") as string
         daily_start_time = formData.get("daily_start_time") as string
         daily_end_time = formData.get("daily_end_time") as string
+
+        // Parse excluded dates (holidays)
+        const excludedDatesStr = formData.get("excluded_dates") as string
+        try {
+            excluded_dates = excludedDatesStr ? JSON.parse(excludedDatesStr) : []
+        } catch {
+            excluded_dates = []
+        }
 
         // Combine date + time for start_time and end_time
         start_time = parseDateTimeLocal(`${start_date}T${daily_start_time}`)
@@ -225,7 +244,8 @@ export async function updateEvent(formData: FormData) {
         daily_end_time,
         event_type,
         difficulty_level,
-        poc_name
+        poc_name,
+        excluded_dates
     }).eq('id', id)
 
     if (error) {

@@ -67,6 +67,15 @@ export default function ScannerPage() {
 
     const scannerRef = useRef<Html5Qrcode | null>(null)
 
+    // Detect Android and default to file mode for better reliability
+    useEffect(() => {
+        const isAndroid = /android/i.test(navigator.userAgent)
+        if (isAndroid) {
+            console.log('Android device detected - defaulting to file upload mode')
+            setMode('file')
+        }
+    }, [])
+
     // Fetch live events on mount
     useEffect(() => {
         async function fetchEvents() {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Users, Search, Code, BookOpen, Sparkles } from "lucide-react";
+import { Users, Search, Code, BookOpen, Sparkles, Bug } from "lucide-react";
 
 const tabs = [
     {
@@ -29,6 +29,12 @@ const tabs = [
         href: "/resources",
         icon: BookOpen,
         color: "amber"
+    },
+    {
+        name: "Report Bug",
+        href: "/report-bug",
+        icon: Bug,
+        color: "red"
     }
 ];
 
@@ -61,6 +67,7 @@ export function DevSpaceTabs() {
                             purple: isActive ? "border-purple-500 text-purple-400 bg-purple-500/10" : "hover:text-purple-400 hover:bg-purple-500/5",
                             emerald: isActive ? "border-emerald-500 text-emerald-400 bg-emerald-500/10" : "hover:text-emerald-400 hover:bg-emerald-500/5",
                             amber: isActive ? "border-amber-500 text-amber-400 bg-amber-500/10" : "hover:text-amber-400 hover:bg-amber-500/5",
+                            red: isActive ? "border-red-500 text-red-400 bg-red-500/10" : "hover:text-red-400 hover:bg-red-500/5",
                         };
 
                         return (
