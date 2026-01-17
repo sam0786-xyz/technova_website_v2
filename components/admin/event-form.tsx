@@ -30,6 +30,7 @@ export function EventForm({ clubs, event }: EventFormProps) {
     const [endDate, setEndDate] = useState(event?.end_time ? new Date(event.end_time).toISOString().slice(0, 10) : "")
     const [dailyStartTime, setDailyStartTime] = useState(event?.daily_start_time?.slice(0, 5) || "")
     const [dailyEndTime, setDailyEndTime] = useState(event?.daily_end_time?.slice(0, 5) || "")
+    const [excludedDates, setExcludedDates] = useState<string[]>(event?.excluded_dates || [])
 
     useEffect(() => {
         if (!selectedClubId) {
@@ -308,7 +309,57 @@ export function EventForm({ clubs, event }: EventFormProps) {
                                 />
                             </div>
                         </div>
-                        <p className="text-xs text-gray-400">The event will occur daily from the daily start time to the daily end time, between the start and end dates.</p>
+
+                        {/* Excluded Dates / Holidays */}
+                        <div className="p-4 rounded-xl bg-amber-900/20 border border-amber-500/20">
+                            <label className="block text-sm font-medium text-amber-300 mb-3">
+                                Excluded Dates / Holidays (Optional)
+                            </label>
+                            <div className="flex gap-2 mb-3">
+                                <input
+                                    type="date"
+                                    id="new-excluded-date"
+                                    min={startDate}
+                                    max={endDate}
+                                    className="flex-1 p-2 bg-black/50 border border-white/10 rounded-lg text-white focus:border-amber-500 focus:outline-none"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const input = document.getElementById('new-excluded-date') as HTMLInputElement
+                                        const date = input?.value
+                                        if (date && !excludedDates.includes(date)) {
+                                            setExcludedDates([...excludedDates, date].sort())
+                                            input.value = ''
+                                        }
+                                    }}
+                                    className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium transition-colors"
+                                >
+                                    Add Holiday
+                                </button>
+                            </div>
+                            {excludedDates.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {excludedDates.map(date => (
+                                        <span key={date} className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/20 border border-amber-500/30 rounded-full text-sm text-amber-300">
+                                            {new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                            <button
+                                                type="button"
+                                                onClick={() => setExcludedDates(excludedDates.filter(d => d !== date))}
+                                                className="text-amber-400 hover:text-red-400 font-bold"
+                                            >
+                                                ×
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-gray-500">No holidays added. Students can check in on all days.</p>
+                            )}
+                            <input type="hidden" name="excluded_dates" value={JSON.stringify(excludedDates)} />
+                        </div>
+
+                        <p className="text-xs text-gray-400">The event will occur daily from the daily start time to the daily end time, between the start and end dates (excluding holidays).</p>
                     </div>
                 ) : (
                     /* Single-Day Event: Standard datetime inputs */
