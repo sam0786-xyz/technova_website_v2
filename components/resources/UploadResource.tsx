@@ -23,7 +23,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 function SubmitButton() {
@@ -43,6 +43,15 @@ function SubmitButton() {
 export function UploadResource() {
     const [open, setOpen] = useState(false);
     const [state, formAction] = useActionState(createResource, null);
+
+    useEffect(() => {
+        if (state?.success) {
+            const timer = setTimeout(() => {
+                setOpen(false);
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [state?.success]);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
