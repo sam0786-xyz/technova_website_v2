@@ -25,23 +25,29 @@ export async function GET(
         // Fetch event details for multi-day info
         const { data: event } = await supabase
             .from('events')
-            .select('start_time, end_time, is_multi_day')
+            .select('start_time, end_time, is_multi_day, excluded_dates')
             .eq('id', eventId)
             .single()
 
         // Calculate event days
         let eventDays = 1
         let eventDaysList: string[] = []
+        const excludedDates: string[] = (event?.excluded_dates || []) as string[]
+
         if (event) {
             const start = new Date(event.start_time)
             const end = event.end_time ? new Date(event.end_time) : start
             const isMultiDay = event.is_multi_day || start.toDateString() !== end.toDateString()
 
             if (isMultiDay) {
-                // Generate list of days
+                // Generate list of days, excluding holidays
                 const current = new Date(start)
                 while (current <= end) {
-                    eventDaysList.push(current.toISOString().split('T')[0])
+                    const dateStr = current.toISOString().split('T')[0]
+                    // Only add if not in excluded dates (holidays)
+                    if (!excludedDates.includes(dateStr)) {
+                        eventDaysList.push(dateStr)
+                    }
                     current.setDate(current.getDate() + 1)
                 }
                 eventDays = eventDaysList.length
