@@ -328,7 +328,8 @@ export default function ScannerPage() {
             }
 
             if (!permissionGranted) {
-                throw new Error('Camera permission denied. Please allow camera access in your browser settings.')
+                setCameraError('Camera permission denied. Please allow camera access in your browser settings.')
+                return // Exit early, error message is set
             }
 
             // NOW enumerate cameras (after permission is granted)
@@ -729,8 +730,20 @@ export default function ScannerPage() {
                         {/* Scanner Container */}
                         <div className="relative w-full max-w-md bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 min-h-[350px] flex flex-col items-center justify-center">
                             {mode === 'camera' && (
-                                <div className="w-full">
+                                <div className="w-full relative">
                                     <div id="reader" className="w-full h-full"></div>
+
+                                    {cameraActive && (
+                                        <div className="absolute top-4 right-4 z-50">
+                                            <button
+                                                onClick={() => stopCamera()}
+                                                className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors border border-white/10"
+                                                title="Stop Scanning"
+                                            >
+                                                <XCircle className="w-6 h-6" />
+                                            </button>
+                                        </div>
+                                    )}
                                     {!cameraActive && !scanResult && (
                                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
                                             {isLoadingCamera ? (
@@ -777,10 +790,19 @@ export default function ScannerPage() {
 
                                                             <button
                                                                 onClick={() => setMode('file')}
-                                                                className="text-blue-400 hover:text-blue-300 text-sm underline"
+                                                                className="text-blue-400 hover:text-blue-300 text-sm underline block mx-auto mt-2"
                                                             >
                                                                 Use file upload instead
                                                             </button>
+
+                                                            <div className="mt-4 p-3 bg-white/5 rounded-lg text-left">
+                                                                <p className="text-xs text-gray-500 font-bold mb-1">How to enable camera:</p>
+                                                                <ol className="text-[10px] text-gray-400 list-decimal pl-4 space-y-1">
+                                                                    <li>Click the <span className="font-bold text-gray-300">lock icon</span> next to the URL</li>
+                                                                    <li>Toggle <span className="font-bold text-gray-300">Camera</span> to ON</li>
+                                                                    <li>Refresh the page and try again</li>
+                                                                </ol>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </>
