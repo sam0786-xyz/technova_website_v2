@@ -4,8 +4,8 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-
 import { auth } from "@/lib/auth";
+import { ADMIN_EMAILS } from "@/lib/auth/role-utils";
 
 const createResourceSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters"),
@@ -25,8 +25,7 @@ export async function createResource(prevState: any, formData: FormData) {
         return { error: "You must be logged in to upload resources." };
     }
 
-    // Check valid role or permissions if needed
-    // For now, allow any logged in user to upload, but marked as unverified by default in DB
+    const isAdmin = user.email && (ADMIN_EMAILS.includes(user.email) || user.email === 'technova@sharda.ac.in');
 
     const result = createResourceSchema.safeParse({
         title: formData.get("title"),
@@ -53,7 +52,7 @@ export async function createResource(prevState: any, formData: FormData) {
         type,
         semester,
         subject,
-        is_verified: true // Auto-verify for now or controlled by admin policy later
+        is_verified: isAdmin ? true : false
     });
 
     if (error) {
@@ -62,6 +61,7 @@ export async function createResource(prevState: any, formData: FormData) {
     }
 
     revalidatePath('/resources');
+    revalidatePath('/admin/resources');
     return { success: true };
 }
 
@@ -77,9 +77,7 @@ export async function getResources(semester?: string, subject?: string) {
         query = query.eq('semester', semester);
     }
 
-    // Subject filter would require exact match or we filter in client if fuzzy
     if (subject) {
-        // Simple exact match for now
         query = query.ilike('subject', `%${subject}%`);
     }
 
@@ -91,4 +89,79 @@ export async function getResources(semester?: string, subject?: string) {
     }
 
     return data;
+}
+
+export async function getAllResourcesAdmin() {
+    const session = await auth();
+    if (!session || !session.user || !['admin', 'super_admin'].includes(session.user.role)) {
+        throw new Error("Unauthorized");
+    }
+
+    const supabase = createAdminClient();
+
+    // 1. Get resources
+    const { data: resources, error } = await supabase
+        .from('resources')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    if (!resources || resources.length === 0) return [];
+
+    // 2. Get User IDs
+    const userIds = Array.from(new Set(resources.map(r => r.uploaded_by)));
+
+    // 3. Get User Details
+    const { data: users, error: userError } = await supabase
+        .schema('next_auth')
+        .from('users')
+        .select('id, name, email')
+        .in('id', userIds);
+
+    // 4. Merge
+    const combined = resources.map(res => {
+        const user = users?.find(u => u.id === res.uploaded_by);
+        return {
+            ...res,
+            user: user || { name: 'Unknown', email: 'Unknown' }
+        };
+    });
+
+    return combined;
+}
+
+export async function approveResource(id: string) {
+    const session = await auth();
+    if (!session || !session.user || !['admin', 'super_admin'].includes(session.user.role)) {
+        throw new Error("Unauthorized");
+    }
+
+    const supabase = createAdminClient();
+    const { error } = await supabase
+        .from('resources')
+        .update({ is_verified: true })
+        .eq('id', id);
+
+    if (error) throw new Error(error.message);
+
+    revalidatePath('/resources');
+    revalidatePath('/admin/resources');
+}
+
+export async function deleteResource(id: string) {
+    const session = await auth();
+    if (!session || !session.user || !['admin', 'super_admin'].includes(session.user.role)) {
+        throw new Error("Unauthorized");
+    }
+
+    const supabase = createAdminClient();
+    const { error } = await supabase
+        .from('resources')
+        .delete()
+        .eq('id', id);
+
+    if (error) throw new Error(error.message);
+
+    revalidatePath('/resources');
+    revalidatePath('/admin/resources');
 }
