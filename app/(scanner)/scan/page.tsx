@@ -71,7 +71,6 @@ export default function ScannerPage() {
     useEffect(() => {
         const isAndroid = /android/i.test(navigator.userAgent)
         if (isAndroid) {
-            console.log('Android device detected - defaulting to file upload mode')
             setMode('file')
         }
     }, [])
@@ -303,19 +302,16 @@ export default function ScannerPage() {
             // On Android, enumerateDevices() returns empty until getUserMedia() is called
             let permissionGranted = false
             try {
-                console.log('Requesting camera permission...')
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: 'environment' }
                 })
                 // Stop the stream immediately - we just needed to trigger permission
                 stream.getTracks().forEach(track => track.stop())
                 permissionGranted = true
-                console.log('Camera permission granted')
 
                 // Wait a bit for Android to fully release the camera
                 await new Promise(resolve => setTimeout(resolve, 500))
             } catch (permError) {
-                console.warn('Camera permission request failed:', permError)
                 // Try with any camera (front)
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true })
@@ -323,7 +319,7 @@ export default function ScannerPage() {
                     permissionGranted = true
                     await new Promise(resolve => setTimeout(resolve, 500))
                 } catch (err) {
-                    console.error('All camera permission requests failed:', err)
+                    // Fail silently, error handled below
                 }
             }
 
@@ -338,9 +334,8 @@ export default function ScannerPage() {
                 const deviceList = await Html5Qrcode.getCameras()
                 cameras = deviceList.map(d => ({ id: d.id, label: d.label || `Camera ${d.id.slice(0, 8)}` }))
                 setCameraDevices(cameras)
-                console.log('Available cameras:', cameras)
             } catch (camError) {
-                console.warn('Could not enumerate cameras:', camError)
+                // Ignore camera enumeration errors
             }
 
             // Create new instance with Android-friendly settings
@@ -369,11 +364,9 @@ export default function ScannerPage() {
                 )
                 if (backCamera) {
                     cameraToUse = backCamera.id
-                    console.log('Selected back camera:', backCamera.label)
                 } else if (cameras.length === 1) {
                     // Only one camera available, use it
                     cameraToUse = cameras[0].id
-                    console.log('Using only available camera:', cameras[0].label)
                 }
             }
 
@@ -382,7 +375,6 @@ export default function ScannerPage() {
                 // Method 1: Use specific camera ID
                 if (cameraToUse) {
                     try {
-                        console.log('Starting camera by ID:', cameraToUse)
                         await scannerRef.current!.start(
                             cameraToUse,
                             qrConfig,
@@ -393,13 +385,12 @@ export default function ScannerPage() {
                         setCameraActive(true)
                         return true
                     } catch (err) {
-                        console.warn('Camera ID start failed:', err)
+                        // Attempt next method
                     }
                 }
 
                 // Method 2: Try facingMode environment
                 try {
-                    console.log('Trying facingMode: environment')
                     await new Promise(resolve => setTimeout(resolve, 300))
                     await scannerRef.current!.start(
                         { facingMode: "environment" },
@@ -410,12 +401,11 @@ export default function ScannerPage() {
                     setCameraActive(true)
                     return true
                 } catch (err) {
-                    console.warn('Environment mode failed:', err)
+                    // Attempt next method
                 }
 
                 // Method 3: Try any camera with user facingMode
                 try {
-                    console.log('Trying facingMode: user')
                     await new Promise(resolve => setTimeout(resolve, 300))
                     await scannerRef.current!.start(
                         { facingMode: "user" },
@@ -426,13 +416,12 @@ export default function ScannerPage() {
                     setCameraActive(true)
                     return true
                 } catch (err) {
-                    console.warn('User mode failed:', err)
+                    // Attempt next method
                 }
 
                 // Method 4: Try first available camera ID
                 if (cameras.length > 0 && cameras[0].id !== cameraToUse) {
                     try {
-                        console.log('Trying first available camera:', cameras[0].id)
                         await new Promise(resolve => setTimeout(resolve, 300))
                         await scannerRef.current!.start(
                             cameras[0].id,
@@ -444,7 +433,7 @@ export default function ScannerPage() {
                         setCameraActive(true)
                         return true
                     } catch (err) {
-                        console.warn('First camera failed:', err)
+                        // Fail silently
                     }
                 }
 
