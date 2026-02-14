@@ -28,7 +28,14 @@ export async function GET() {
             return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 })
         }
 
-        return NextResponse.json({ events: events || [] })
+        // Filter out events that have ended
+        const now = new Date()
+        const activeEvents = (events || []).filter(event => {
+            if (!event.end_time) return true
+            return new Date(event.end_time) > now
+        })
+
+        return NextResponse.json({ events: activeEvents })
     } catch (error) {
         console.error('Error:', error)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })

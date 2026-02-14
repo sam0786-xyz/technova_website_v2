@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Download, Search, CheckCircle, XCircle, Clock, Loader2, X, Award, Send, Mail } from "lucide-react"
+import { ArrowLeft, Download, Search, CheckCircle, XCircle, Clock, Loader2, X, Award, Send, Mail, ChevronLeft, ChevronRight } from "lucide-react"
 import { Toast, useToast } from "@/components/ui/toast"
 import { togglePastEvent } from "@/lib/actions/events"
 import { formatDate } from "@/lib/utils"
@@ -10,6 +10,8 @@ import { FeedbackFormManager } from "@/components/admin/FeedbackFormManager"
 
 export function AdminEventClient({ event, registrations }: { event: any, registrations: any[] }) {
     const [search, setSearch] = useState("")
+    const [page, setPage] = useState(1)
+    const PAGE_SIZE = 25
     const [isToggling, setIsToggling] = useState(false)
     const [showConfirmModal, setShowConfirmModal] = useState(false)
     const [isPastEvent, setIsPastEvent] = useState(event.is_past_event || false)
@@ -87,6 +89,10 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
         r.user.system_id?.toLowerCase().includes(search.toLowerCase())
     )
 
+    // Pagination
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+    const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
     // Stats
     const total = registrations.length
     const attended = registrations.filter(r => r.attended).length
@@ -126,9 +132,9 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                     `"${r.user.year || ''}"`,
                     `"${r.user.course || ''}"`,
                     `"${r.user.section || ''}"`,
-                    r.payment_status,
-                    r.attended ? "Yes" : "No",
-                    new Date(r.created_at).toLocaleString(),
+                    `"${r.payment_status || ''}"`,
+                    `"${r.attended ? 'Yes' : 'No'}"`,
+                    `"${new Date(r.created_at).toLocaleString()}"`,
                     ...customValues
                 ].join(",")
             })
@@ -238,7 +244,7 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                         type="text"
                         placeholder="Search by name, email, or system ID..."
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                         className="flex-1 outline-none text-sm"
                     />
                 </div>
@@ -261,14 +267,14 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                             </tr>
                         </thead>
                         <tbody className="divide-y">
-                            {filtered.length === 0 ? (
+                            {paged.length === 0 ? (
                                 <tr>
                                     <td colSpan={7 + customFields.length} className="p-8 text-center text-gray-500">
                                         No registrations found matching "{search}"
                                     </td>
                                 </tr>
                             ) : (
-                                filtered.map((reg) => (
+                                paged.map((reg) => (
                                     <tr key={reg.id} className="hover:bg-gray-50 group">
                                         <td className="p-4 sticky left-0 bg-white group-hover:bg-gray-50 z-10 box-border border-r border-transparent group-hover:border-gray-100">
                                             <div className="font-medium text-gray-900">{reg.user.name}</div>
@@ -328,8 +334,31 @@ export function AdminEventClient({ event, registrations }: { event: any, registr
                         </tbody>
                     </table>
                 </div>
-                <div className="p-4 border-t text-xs text-gray-400 text-center">
-                    Showing {filtered.length} of {registrations.length} registrations
+                <div className="p-4 border-t flex items-center justify-between">
+                    <p className="text-xs text-gray-400">
+                        Showing {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} registrations
+                    </p>
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronLeft className="w-3 h-3" /> Previous
+                            </button>
+                            <span className="text-xs text-gray-500 px-1">
+                                Page {page} of {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                                Next <ChevronRight className="w-3 h-3" />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div >
 
