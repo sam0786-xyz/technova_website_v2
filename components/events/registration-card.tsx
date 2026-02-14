@@ -124,6 +124,12 @@ export function EventRegistrationCard({
             }
         } catch (err: unknown) {
             const error = err as Error
+            // Handle stale server action hash after deployment
+            if (error.message?.includes('was not found on the server') || error.message?.includes('Server Action')) {
+                showToast("Page outdated — refreshing now...", 'error')
+                setTimeout(() => window.location.reload(), 1000)
+                return
+            }
             showToast(error.message, 'error')
         } finally {
             setLoading(false)
