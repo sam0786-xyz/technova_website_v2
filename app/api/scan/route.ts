@@ -89,14 +89,21 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // 5. Award daily XP for attendance (handles per-day deduplication for multi-day events)
+        // 5. Determine Check-in Date
+        // If checking in before event starts (e.g. early arrival), record as Day 1
+        let checkinDate = new Date()
+        if (eventStart && checkinDate < eventStart) {
+            checkinDate = new Date(eventStart)
+        }
+
+        // 6. Award daily XP for attendance (handles per-day deduplication for multi-day events)
         const xpResult = await awardDailyXP(userId, eventId, {
             event_type: registration.events?.event_type,
             difficulty_level: registration.events?.difficulty_level,
             start_time: registration.events?.start_time,
             end_time: registration.events?.end_time,
             is_multi_day: isMultiDay
-        })
+        }, checkinDate)
 
         // Check if already checked in today (for multi-day events)
         if (!xpResult.success && xpResult.message?.includes('Already checked in')) {
