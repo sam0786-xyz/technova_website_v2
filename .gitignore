@@ -37,3 +37,4 @@ yarn-error.log*
 next-env.d.ts
 node_modules 3/
 node_modules_trash_*/
+*.pdf
