@@ -840,7 +840,7 @@ export default function HackathonPage() {
                         {/* Travel Connectivity */}
                         <div className="space-y-4">
                             {[
-                                { route: "By Metro", desc: "Nearest Station: Knowledge Park II (Aqua Line). E-rickshaws available to campus.", icon: TrainFront, color: "text-blue-400", border: "border-blue-500/30" },
+                                { route: "By Metro", desc: "Nearest Stations: Knowledge Park II & Pari Chowk (Aqua Line). E-rickshaws available to campus from both stations.", icon: TrainFront, color: "text-blue-400", border: "border-blue-500/30" },
                                 { route: "By Air", desc: "IGI Airport New Delhi is ~1.5 Hrs away via Noida-Greater Noida Expressway.", icon: Plane, color: "text-purple-400", border: "border-purple-500/30" },
                                 { route: "By Rail", desc: "New Delhi Railway Station (NDLS) is well connected via Metro (Yellow -> Blue -> Aqua line).", icon: Train, color: "text-emerald-400", border: "border-emerald-500/30" }
                             ].map((transit, i) => (
@@ -884,7 +884,7 @@ export default function HackathonPage() {
                             { q: "What is the evaluation basis?", a: "Innovation, feasibility, technical depth, impact, and demonstration quality." },
                             { q: "Will Wi-Fi be provided?", a: "Yes, Wi-Fi access will be arranged, though teams may use personal hotspots." },
                             { q: "What should teams bring?", a: "Laptops, chargers, stationery, ID cards, and personal essentials." },
-                            { q: "Will accommodation be provided?", a: "Yes. Hostel stay is available." }
+                            { q: "Will accommodation be provided?", a: "Yes. Hostel accommodation will be provided to needful participants arriving the night before the hackathon." }
                         ].map((faq, i) => (
                             <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors group">
                                 <h4 className="text-lg font-bold text-white mb-2 group-hover:text-purple-400 transition-colors flex items-center gap-2">
