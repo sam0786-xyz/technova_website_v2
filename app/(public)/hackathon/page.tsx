@@ -345,7 +345,56 @@ export default function HackathonPage() {
                     </div>
                 </div>
 
-                {/* Contact & Registration Info Block (Moved to Top) */}
+                {/* Video Highlights Section */}
+                <div className="mt-32 max-w-7xl mx-auto w-full relative z-20">
+                    <div className="text-center mb-16">
+                        <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-orange-500/10 border border-orange-500/20 mb-6">
+                            <Rocket className="w-8 h-8 text-orange-400" />
+                        </div>
+                        <h2 className="text-4xl md:text-5xl font-black mb-4">
+                            Real Innovation, Not{' '}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600 line-through decoration-red-500/50">Imported Robo Dogs</span>
+                        </h2>
+                        <p className="text-gray-400 max-w-3xl mx-auto text-lg leading-relaxed">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-white to-green-400 font-bold">
+                                Sharda builds real innovators
+                            </span>{' '}
+                            who code, create, and compete — from scratch.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[
+                            { id: "eQoYUPybySI", title: "Hackathon Highlights" },
+                            { id: "84lYodGmy7c", title: "Innovation in Action" },
+                            { id: "SCM0SXhth8o", title: "Building the Future" },
+                            { id: "jP2_UlMBSTs", title: "24 Hours of Code" }
+                        ].map((video, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: i * 0.1 }}
+                                className="group"
+                            >
+                                <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-lg group-hover:border-purple-500/40 group-hover:shadow-[0_0_30px_rgba(168,85,247,0.15)] transition-all duration-300">
+                                    <div className="aspect-[9/16]">
+                                        <iframe
+                                            src={`https://www.youtube.com/embed/${video.id}`}
+                                            title={video.title}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                            className="w-full h-full"
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-sm font-bold text-gray-400 mt-3 text-center group-hover:text-purple-400 transition-colors">{video.title}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
                 <div className="mt-32 max-w-6xl mx-auto w-full relative z-20">
                     <div className="grid md:grid-cols-2 gap-8">
                         {/* Contacts */}
