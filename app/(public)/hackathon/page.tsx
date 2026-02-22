@@ -235,8 +235,9 @@ export default function HackathonPage() {
                                 <ExternalLink className="w-5 h-5 relative z-10 text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                             </motion.a>
                             <motion.a
-                                href="/assets/docs/sharda-hackathon-brochure.pdf"
-                                download="sharda-hackathon-brochure.pdf"
+                                href="https://drive.google.com/file/d/1hTMH6CHzvjqZ9pWRB2wRnHlwBS_EpDdh/view?usp=sharing"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 className="group relative px-8 py-4 bg-white/5 border border-white/10 rounded-xl font-bold text-lg overflow-hidden transition-all hover:bg-white/10 flex items-center justify-center gap-3"
