@@ -28,6 +28,22 @@ const SLIDES = [
         statLabel: "Event Organization",
         title: "Flawless Execution",
         desc: "Rated highly for seamless management and 24-hour support."
+    },
+    {
+        id: 4,
+        type: 'stat',
+        statValue: "4.26/5",
+        statLabel: "Facilities & Venue",
+        title: "World-Class Infrastructure",
+        desc: "Equipped with high-speed Wi-Fi, ergonomic seating, and uninterrupted power."
+    },
+    {
+        id: 5,
+        type: 'stat',
+        statValue: "4.23/5",
+        statLabel: "Technical & Mentor Support",
+        title: "Expert Guidance",
+        desc: "Dedicated mentors and technical experts available around the clock to assist teams."
     }
 ]
 
