@@ -63,21 +63,21 @@ const TEAM_METADATA: Record<string, any> = {
         color: "text-green-500",
         bg: "bg-green-500/10",
         icon: Target,
-        imagePath: "/assets/team/khushi_narang.png"
+        imagePath: "/assets/team/technova_main/khushi_narang.png"
     },
     "Ankit Gautam": {
         bio: "Managing external communications and brand image.",
         color: "text-pink-500",
         bg: "bg-pink-500/10",
         icon: Users,
-        imagePath: "/assets/team/ankit_gautam.png"
+        imagePath: "/assets/team/technova_main/ankit_gautam.jpg"
     },
     "Suryansh Dixit": {
         bio: "Assisting in outreach and media relations.",
         color: "text-pink-500",
         bg: "bg-pink-500/10",
         icon: Users,
-        imagePath: "/assets/team/suryansh_dixit.png"
+        imagePath: "/assets/team/technova_main/suryansh_dixit.png"
     },
     "Farhan Khan": {
         bio: "Curating content and managing editorial strategy.",

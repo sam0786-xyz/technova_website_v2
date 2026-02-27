@@ -23,6 +23,9 @@ const CLUB_FOLDER_MAP: Record<string, string> = {
     "technova-main": "technova_main",
     "technova main": "technova_main",
     "technova executives": "technova_main",
+    "gdg-on-campus": "gdg_on_campus",
+    "gdg on campus": "gdg_on_campus",
+    "gdg": "gdg_on_campus",
 }
 
 // Member name to photo filename mapping
@@ -142,6 +145,17 @@ export const MEMBER_PHOTOS: Record<string, { folder: string; filename: string }>
     "parikshit_singh": { folder: "gitHub_club", filename: "parikshit.png" },
     "parikshit_sharma": { folder: "gitHub_club", filename: "parikshit.png" },
     "tanisha_mittal": { folder: "gitHub_club", filename: "tanisha_mittal.jpg" },
+
+    // GDG On Campus
+    "narmada_kaushik": { folder: "gdg_on_campus", filename: "narmada_kaushik.jpg" },
+    "narmada": { folder: "gdg_on_campus", filename: "narmada_kaushik.jpg" },
+    "aditya_singh": { folder: "gdg_on_campus", filename: "aditya_singh.png" },
+    "aditya": { folder: "gdg_on_campus", filename: "aditya_singh.png" },
+    "vansh_chauhan": { folder: "gdg_on_campus", filename: "vansh_chauhan.jpg" },
+    "vansh": { folder: "gdg_on_campus", filename: "vansh_chauhan.jpg" },
+    "yash_kumar_choudhary": { folder: "gdg_on_campus", filename: "yash_kumar_choudhary.jpg" },
+    "yash_kumar": { folder: "gdg_on_campus", filename: "yash_kumar_choudhary.jpg" },
+    "yash": { folder: "gdg_on_campus", filename: "yash_kumar_choudhary.jpg" },
 }
 
 /**
