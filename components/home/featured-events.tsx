@@ -23,7 +23,8 @@ const events = [
         border: "group-hover:border-orange-500/50",
         iconBg: "bg-orange-500/20 text-orange-400",
         deadline: "2026-03-27T00:00:00+05:30",
-        deadlineText: "27th March 2026"
+        deadlineText: "27th March 2026",
+        closingSoon: true
     },
     {
         id: "innovate-bharat",
@@ -66,7 +67,8 @@ const events = [
         border: "group-hover:border-emerald-500/50",
         iconBg: "bg-emerald-500/20 text-emerald-400",
         deadline: "2026-03-01T23:59:59+05:30",
-        deadlineText: "1st March 2026"
+        deadlineText: "1st March 2026",
+        closingSoon: true
     }
 ]
 
@@ -206,6 +208,14 @@ export function FeaturedEvents() {
                                             <div className="mb-2 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-center animate-pulse">
                                                 <p className="text-xs text-orange-400 font-bold uppercase tracking-wider">
                                                     🚨 Last Date To Register: {event.deadlineText}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {event.closingSoon && (
+                                            <div className="mb-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-center animate-pulse">
+                                                <p className="text-xs text-red-400 font-bold uppercase tracking-wider">
+                                                    ⏳ Registrations Closing Soon
                                                 </p>
                                             </div>
                                         )}
