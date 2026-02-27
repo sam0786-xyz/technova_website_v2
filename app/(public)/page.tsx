@@ -11,7 +11,7 @@ import { RevealOnScroll, StaggerContainer, StaggerItem } from "@/components/ui/r
 import { TypewriterText, TextRotate } from "@/components/ui/typewriter-text"
 import { MagneticButton } from "@/components/ui/magnetic-button"
 import { Spotlight } from "@/components/ui/spotlight"
-import { HackathonTeaser } from "@/components/home/hackathon-teaser"
+import { FeaturedEvents } from "@/components/home/featured-events"
 
 export default function LandingPage() {
   return (
@@ -121,8 +121,8 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* 24-HOUR HACKATHON TEASER */}
-      <HackathonTeaser />
+      {/* FLAGSHIP EVENTS */}
+      <FeaturedEvents />
 
       {/* VISION & MISSION - Bento Style */}
       <section className="py-24 relative">
