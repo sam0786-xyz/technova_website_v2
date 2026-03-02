@@ -15,7 +15,7 @@ const events = [
         location: "Delhi-NCR",
         description: "Join innovators, builders, founders, and cloud enthusiasts for a full-day experience packed with Real-world cloud & AI sessions, industry speakers, hands-on learning, and networking with 1000+ students & professionals.",
         link: "https://register.awscc.dev",
-        code: "EARLYBIRD70",
+        code: "HOLI60",
         tags: ["Cloud", "AI", "DevOps"],
         icon: Cloud,
         color: "orange",
@@ -49,26 +49,6 @@ const events = [
         deadline: "2026-03-14T23:59:59+05:30",
         deadlineText: "14th March 2026",
         isHighlight: true
-    },
-    {
-        id: "data-101",
-        title: "DATA 101 – Navigating the Data Landscape",
-        subtitle: "Start your journey in the data domain",
-        date: "March 01, 2026",
-        time: "9:30 PM Onwards",
-        location: "Databricks User Group",
-        description: "Curious about Data Engineering, Analytics & AI/ML? Join Harshit Kesarwani (Senior Data Engineer @ R Systems) for fundamentals of Data Engineering, industry tools, career roadmaps, and real-world applications.",
-        link: "https://usergroups.databricks.com/e/m2j7be/",
-        code: null,
-        tags: ["Data Engineering", "AI/ML", "Analytics"],
-        icon: Database,
-        color: "emerald",
-        gradient: "from-emerald-500/20 via-emerald-500/5 to-transparent",
-        border: "group-hover:border-emerald-500/50",
-        iconBg: "bg-emerald-500/20 text-emerald-400",
-        deadline: "2026-03-01T23:59:59+05:30",
-        deadlineText: "1st March 2026",
-        closingSoon: true
     }
 ]
 
@@ -128,7 +108,7 @@ export function FeaturedEvents() {
                     </motion.p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
                     {events.map((event, index) => {
                         const daysLeft = getDaysLeft(event.deadline)
 
