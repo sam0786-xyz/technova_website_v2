@@ -7,26 +7,6 @@ import { useState, useEffect } from 'react'
 
 const events = [
     {
-        id: "aws-community-day",
-        title: "AWS Cloud Club Student Community Day",
-        subtitle: "Delhi NCR’s Biggest Community-Led Tech Summit",
-        date: "March 27, 2026",
-        time: "Full Day",
-        location: "Delhi-NCR",
-        description: "Join innovators, builders, founders, and cloud enthusiasts for a full-day experience packed with Real-world cloud & AI sessions, industry speakers, hands-on learning, and networking with 1000+ students & professionals.",
-        link: "https://register.awscc.dev",
-        code: "HOLI60",
-        tags: ["Cloud", "AI", "DevOps"],
-        icon: Cloud,
-        color: "orange",
-        gradient: "from-orange-500/20 via-orange-500/5 to-transparent",
-        border: "group-hover:border-orange-500/50",
-        iconBg: "bg-orange-500/20 text-orange-400",
-        deadline: "2026-03-27T00:00:00+05:30",
-        deadlineText: "27th March 2026",
-        closingSoon: true
-    },
-    {
         id: "innovate-bharat",
         title: (
             <>
@@ -49,6 +29,26 @@ const events = [
         deadline: "2026-03-14T23:59:59+05:30",
         deadlineText: "14th March 2026",
         isHighlight: true
+    },
+    {
+        id: "aws-community-day",
+        title: "AWS Cloud Club Student Community Day",
+        subtitle: "Delhi NCR’s Biggest Community-Led Tech Summit",
+        date: "March 27, 2026",
+        time: "Full Day",
+        location: "Delhi-NCR",
+        description: "Join innovators, builders, founders, and cloud enthusiasts for a full-day experience packed with Real-world cloud & AI sessions, industry speakers, hands-on learning, and networking with 1000+ students & professionals.",
+        link: "https://register.awscc.dev",
+        code: "HOLI60",
+        tags: ["Cloud", "AI", "DevOps"],
+        icon: Cloud,
+        color: "orange",
+        gradient: "from-orange-500/20 via-orange-500/5 to-transparent",
+        border: "group-hover:border-orange-500/50",
+        iconBg: "bg-orange-500/20 text-orange-400",
+        deadline: "2026-03-27T00:00:00+05:30",
+        deadlineText: "27th March 2026",
+        closingSoon: true
     }
 ]
 
