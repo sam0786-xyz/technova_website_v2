@@ -155,7 +155,7 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                             </thead>
                             <tbody>
                                 {filteredTeams.map((team, index) => {
-                                    const leader = team.hackathon_participants?.find((p: any) => p.role === 'Leader') || team.hackathon_participants?.[0] || {};
+                                    const leader = team.hackathon_participants?.find((p: any) => p.role?.toLowerCase() === 'leader') || team.hackathon_participants?.[0] || {};
                                     const isExpanded = expandedTeam === team.id;
 
                                     return (
@@ -272,15 +272,15 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                                                                     </label>
                                                                     <div className="flex items-center gap-3">
                                                                         <input
-                                                                            type="range" min="1" max="5"
+                                                                            type="range" min="1" max="5" step="0.1"
                                                                             value={scores.idea}
-                                                                            onChange={(e) => setScores({ ...scores, idea: parseInt(e.target.value) })}
+                                                                            onChange={(e) => setScores({ ...scores, idea: parseFloat(e.target.value) })}
                                                                             className="w-full accent-amber-500 flex-1"
                                                                         />
                                                                         <input
-                                                                            type="number" min="1" max="5"
+                                                                            type="number" min="1" max="5" step="0.1"
                                                                             value={scores.idea}
-                                                                            onChange={(e) => setScores({ ...scores, idea: Math.min(5, Math.max(1, parseInt(e.target.value) || 1)) })}
+                                                                            onChange={(e) => setScores({ ...scores, idea: Math.min(5, Math.max(1, parseFloat(e.target.value) || 1)) })}
                                                                             className="w-16 bg-black/50 border border-white/10 rounded px-2 py-1 text-center text-white focus:outline-none focus:border-amber-500"
                                                                         />
                                                                     </div>
@@ -295,15 +295,15 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                                                                     </label>
                                                                     <div className="flex items-center gap-3">
                                                                         <input
-                                                                            type="range" min="1" max="5"
+                                                                            type="range" min="1" max="5" step="0.1"
                                                                             value={scores.tools}
-                                                                            onChange={(e) => setScores({ ...scores, tools: parseInt(e.target.value) })}
+                                                                            onChange={(e) => setScores({ ...scores, tools: parseFloat(e.target.value) })}
                                                                             className="w-full accent-amber-500 flex-1"
                                                                         />
                                                                         <input
-                                                                            type="number" min="1" max="5"
+                                                                            type="number" min="1" max="5" step="0.1"
                                                                             value={scores.tools}
-                                                                            onChange={(e) => setScores({ ...scores, tools: Math.min(5, Math.max(1, parseInt(e.target.value) || 1)) })}
+                                                                            onChange={(e) => setScores({ ...scores, tools: Math.min(5, Math.max(1, parseFloat(e.target.value) || 1)) })}
                                                                             className="w-16 bg-black/50 border border-white/10 rounded px-2 py-1 text-center text-white focus:outline-none focus:border-amber-500"
                                                                         />
                                                                     </div>
@@ -318,15 +318,15 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                                                                     </label>
                                                                     <div className="flex items-center gap-3">
                                                                         <input
-                                                                            type="range" min="1" max="5"
+                                                                            type="range" min="1" max="5" step="0.1"
                                                                             value={scores.impact}
-                                                                            onChange={(e) => setScores({ ...scores, impact: parseInt(e.target.value) })}
+                                                                            onChange={(e) => setScores({ ...scores, impact: parseFloat(e.target.value) })}
                                                                             className="w-full accent-amber-500 flex-1"
                                                                         />
                                                                         <input
-                                                                            type="number" min="1" max="5"
+                                                                            type="number" min="1" max="5" step="0.1"
                                                                             value={scores.impact}
-                                                                            onChange={(e) => setScores({ ...scores, impact: Math.min(5, Math.max(1, parseInt(e.target.value) || 1)) })}
+                                                                            onChange={(e) => setScores({ ...scores, impact: Math.min(5, Math.max(1, parseFloat(e.target.value) || 1)) })}
                                                                             className="w-16 bg-black/50 border border-white/10 rounded px-2 py-1 text-center text-white focus:outline-none focus:border-amber-500"
                                                                         />
                                                                     </div>
@@ -341,15 +341,15 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                                                                     </label>
                                                                     <div className="flex items-center gap-3">
                                                                         <input
-                                                                            type="range" min="1" max="5"
+                                                                            type="range" min="1" max="5" step="0.1"
                                                                             value={scores.sustainability}
-                                                                            onChange={(e) => setScores({ ...scores, sustainability: parseInt(e.target.value) })}
+                                                                            onChange={(e) => setScores({ ...scores, sustainability: parseFloat(e.target.value) })}
                                                                             className="w-full accent-amber-500 flex-1"
                                                                         />
                                                                         <input
-                                                                            type="number" min="1" max="5"
+                                                                            type="number" min="1" max="5" step="0.1"
                                                                             value={scores.sustainability}
-                                                                            onChange={(e) => setScores({ ...scores, sustainability: Math.min(5, Math.max(1, parseInt(e.target.value) || 1)) })}
+                                                                            onChange={(e) => setScores({ ...scores, sustainability: Math.min(5, Math.max(1, parseFloat(e.target.value) || 1)) })}
                                                                             className="w-16 bg-black/50 border border-white/10 rounded px-2 py-1 text-center text-white focus:outline-none focus:border-amber-500"
                                                                         />
                                                                     </div>
@@ -364,15 +364,15 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                                                                     </label>
                                                                     <div className="flex items-center gap-3">
                                                                         <input
-                                                                            type="range" min="1" max="5"
+                                                                            type="range" min="1" max="5" step="0.1"
                                                                             value={scores.feasibility}
-                                                                            onChange={(e) => setScores({ ...scores, feasibility: parseInt(e.target.value) })}
+                                                                            onChange={(e) => setScores({ ...scores, feasibility: parseFloat(e.target.value) })}
                                                                             className="w-full accent-amber-500 flex-1"
                                                                         />
                                                                         <input
-                                                                            type="number" min="1" max="5"
+                                                                            type="number" min="1" max="5" step="0.1"
                                                                             value={scores.feasibility}
-                                                                            onChange={(e) => setScores({ ...scores, feasibility: Math.min(5, Math.max(1, parseInt(e.target.value) || 1)) })}
+                                                                            onChange={(e) => setScores({ ...scores, feasibility: Math.min(5, Math.max(1, parseFloat(e.target.value) || 1)) })}
                                                                             className="w-16 bg-black/50 border border-white/10 rounded px-2 py-1 text-center text-white focus:outline-none focus:border-amber-500"
                                                                         />
                                                                     </div>
@@ -387,15 +387,15 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                                                                     </label>
                                                                     <div className="flex items-center gap-3">
                                                                         <input
-                                                                            type="range" min="1" max="5"
+                                                                            type="range" min="1" max="5" step="0.1"
                                                                             value={scores.communication}
-                                                                            onChange={(e) => setScores({ ...scores, communication: parseInt(e.target.value) })}
+                                                                            onChange={(e) => setScores({ ...scores, communication: parseFloat(e.target.value) })}
                                                                             className="w-full accent-amber-500 flex-1"
                                                                         />
                                                                         <input
-                                                                            type="number" min="1" max="5"
+                                                                            type="number" min="1" max="5" step="0.1"
                                                                             value={scores.communication}
-                                                                            onChange={(e) => setScores({ ...scores, communication: Math.min(5, Math.max(1, parseInt(e.target.value) || 1)) })}
+                                                                            onChange={(e) => setScores({ ...scores, communication: Math.min(5, Math.max(1, parseFloat(e.target.value) || 1)) })}
                                                                             className="w-16 bg-black/50 border border-white/10 rounded px-2 py-1 text-center text-white focus:outline-none focus:border-amber-500"
                                                                         />
                                                                     </div>
