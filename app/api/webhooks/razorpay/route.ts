@@ -13,11 +13,11 @@ export async function POST(req: Request) {
     const signature = headersList.get("x-razorpay-signature")
 
     const expectedSignature = crypto
-        .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET || "test_secret")
+        .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET || "")
         .update(body)
         .digest("hex")
 
-    if (expectedSignature !== signature) {
+    if (!process.env.RAZORPAY_WEBHOOK_SECRET || expectedSignature !== signature) {
         console.error("Invalid Razorpay Signature")
         return new Response("Invalid signature", { status: 400 })
     }

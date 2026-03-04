@@ -6,7 +6,7 @@ import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import jsQR from 'jsqr'
 import {
     CheckCircle, XCircle, Camera, Loader2, Upload, RefreshCw, ArrowLeft,
-    Users, UserCheck, Search, ChevronDown, Clock, QrCode, List, UserPlus
+    Users, UserCheck, Search, ChevronDown, Clock, QrCode, List, UserPlus, LogOut
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -52,6 +52,7 @@ export default function ScannerPage() {
     const [activeTab, setActiveTab] = useState<'scanner' | 'checkins' | 'registered'>('scanner')
     const [showEventDropdown, setShowEventDropdown] = useState(false)
     const [checkingInId, setCheckingInId] = useState<string | null>(null)
+    const [checkingOutId, setCheckingOutId] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<'all' | 'checked' | 'pending'>('all')
 
     // Day filter for multi-day events
@@ -83,7 +84,13 @@ export default function ScannerPage() {
                 const data = await res.json()
                 if (data.events && data.events.length > 0) {
                     setEvents(data.events)
-                    setSelectedEvent(data.events[0].id)
+                    // Restore previously selected event from sessionStorage
+                    const savedEventId = sessionStorage.getItem('scanner_selected_event')
+                    if (savedEventId && data.events.some((e: EventInfo) => e.id === savedEventId)) {
+                        setSelectedEvent(savedEventId)
+                    } else {
+                        setSelectedEvent(data.events[0].id)
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch events:', error)
@@ -196,6 +203,35 @@ export default function ScannerPage() {
             alert('Check-in failed. Please try again.')
         } finally {
             setCheckingInId(null)
+        }
+    }
+
+    // Check-out handler for removing attendees who leave early
+    const handleCheckOut = async (attendeeId: string) => {
+        if (!selectedEvent || checkingOutId) return
+        if (!confirm('Are you sure you want to check out this attendee?')) return
+
+        setCheckingOutId(attendeeId)
+        try {
+            const response = await fetch(`/api/events/${selectedEvent}/checkout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ registrationId: attendeeId })
+            })
+
+            const result = await response.json()
+
+            if (result.success) {
+                fetchAttendees()
+            } else {
+                console.error('Check-out failed:', result.message)
+                alert(result.message || 'Check-out failed. Please try again.')
+            }
+        } catch (error) {
+            console.error('Check-out error:', error)
+            alert('Check-out failed. Please try again.')
+        } finally {
+            setCheckingOutId(null)
         }
     }
 
@@ -592,6 +628,7 @@ export default function ScannerPage() {
                                         key={event.id}
                                         onClick={() => {
                                             setSelectedEvent(event.id)
+                                            sessionStorage.setItem('scanner_selected_event', event.id)
                                             setShowEventDropdown(false)
                                         }}
                                         className={`w-full p-4 text-left hover:bg-white/5 transition-colors ${selectedEvent === event.id ? 'bg-blue-600/20 border-l-4 border-blue-500' : ''}`}
@@ -914,7 +951,19 @@ export default function ScannerPage() {
                                             <p className="font-medium truncate">{attendee.name}</p>
                                             <p className="text-sm text-gray-500 truncate">{attendee.email}</p>
                                         </div>
-                                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                                        <button
+                                            onClick={() => handleCheckOut(attendee.id)}
+                                            disabled={checkingOutId === attendee.id}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex-shrink-0 border border-red-500/30"
+                                            title="Check Out"
+                                        >
+                                            {checkingOutId === attendee.id ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <LogOut className="w-4 h-4" />
+                                            )}
+                                            <span className="hidden sm:inline">Check Out</span>
+                                        </button>
                                     </div>
                                 ))
                             )}
@@ -1042,7 +1091,21 @@ export default function ScannerPage() {
                                                     )}
                                                 </button>
                                             ) : (
-                                                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <CheckCircle className="w-5 h-5 text-green-500" />
+                                                    <button
+                                                        onClick={() => handleCheckOut(attendee.id)}
+                                                        disabled={checkingOutId === attendee.id}
+                                                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium border border-red-500/30"
+                                                        title="Check Out"
+                                                    >
+                                                        {checkingOutId === attendee.id ? (
+                                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                                        ) : (
+                                                            <LogOut className="w-3 h-3" />
+                                                        )}
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     )

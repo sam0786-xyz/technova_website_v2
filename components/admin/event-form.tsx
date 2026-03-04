@@ -24,10 +24,10 @@ export function EventForm({ clubs, event }: EventFormProps) {
     const { toast, showToast, hideToast } = useToast()
 
     // Date/time controlled states for proper syncing
-    const [startTime, setStartTime] = useState(event?.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : "")
-    const [endTime, setEndTime] = useState(event?.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : "")
-    const [startDate, setStartDate] = useState(event?.start_time ? new Date(event.start_time).toISOString().slice(0, 10) : "")
-    const [endDate, setEndDate] = useState(event?.end_time ? new Date(event.end_time).toISOString().slice(0, 10) : "")
+    const [startTime, setStartTime] = useState(event?.start_time ? toDateTimeLocalString(event.start_time) : "")
+    const [endTime, setEndTime] = useState(event?.end_time ? toDateTimeLocalString(event.end_time) : "")
+    const [startDate, setStartDate] = useState(event?.start_time ? toDateTimeLocalString(event.start_time).slice(0, 10) : "")
+    const [endDate, setEndDate] = useState(event?.end_time ? toDateTimeLocalString(event.end_time).slice(0, 10) : "")
     const [dailyStartTime, setDailyStartTime] = useState(event?.daily_start_time?.slice(0, 5) || "")
     const [dailyEndTime, setDailyEndTime] = useState(event?.daily_end_time?.slice(0, 5) || "")
     const [excludedDates, setExcludedDates] = useState<string[]>(event?.excluded_dates || [])

@@ -10,8 +10,10 @@ export default async function AdminEventsPage() {
     const isSuperAdmin = session?.user?.role === 'super_admin'
 
     // Separate regular events from past events
-    const events = allEvents.filter((e: any) => !e.is_past_event && e.status !== 'completed')
-    const pastEvents = allEvents.filter((e: any) => e.is_past_event || e.status === 'completed')
+    // Events are considered "past" if: explicitly marked as past, status is completed, OR end_time has passed
+    const now = new Date()
+    const events = allEvents.filter((e: any) => !e.is_past_event && e.status !== 'completed' && !(e.end_time && new Date(e.end_time) < now))
+    const pastEvents = allEvents.filter((e: any) => e.is_past_event || e.status === 'completed' || (e.end_time && new Date(e.end_time) < now))
 
     return (
         <div className="min-h-screen bg-black p-6 md:p-8">

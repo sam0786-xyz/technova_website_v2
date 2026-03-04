@@ -98,11 +98,26 @@ export async function GET(
 
         // Create check-in map: userId -> { date -> xp }
         const checkinMap = new Map<string, Map<string, number>>()
+
+        // Get event start date string for remapping early check-ins
+        let eventStartDateStr = ''
+        if (event) {
+            const start = new Date(event.start_time)
+            eventStartDateStr = start.toISOString().split('T')[0]
+        }
+
         dailyCheckins?.forEach(c => {
             if (!checkinMap.has(c.user_id)) {
                 checkinMap.set(c.user_id, new Map())
             }
-            checkinMap.get(c.user_id)!.set(c.checkin_date, c.xp_awarded)
+
+            // Fix: If check-in is before event start (early check-in), map it to Day 1
+            let dateKey = c.checkin_date
+            if (eventStartDateStr && c.checkin_date < eventStartDateStr) {
+                dateKey = eventStartDateStr
+            }
+
+            checkinMap.get(c.user_id)!.set(dateKey, c.xp_awarded)
         })
 
         // Map users to registrations

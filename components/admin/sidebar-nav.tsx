@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Calendar, BarChart, Settings, Home, BookOpen } from "lucide-react"
+import { Calendar, BarChart, Settings, Home, BookOpen, Rocket } from "lucide-react"
 
 export function SidebarNav() {
     const pathname = usePathname()
@@ -48,6 +48,16 @@ export function SidebarNav() {
                     }`}
             >
                 <BookOpen className="w-5 h-5" /> Resources
+            </Link>
+
+            <Link
+                href="/hackathon-portal"
+                className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isActive('/hackathon-portal')
+                    ? 'bg-emerald-600/20 text-emerald-400 font-medium border border-emerald-500/30'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
+            >
+                <Rocket className="w-5 h-5 text-emerald-500" /> Hackathon Portal
             </Link>
 
             <div className="pt-4 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
