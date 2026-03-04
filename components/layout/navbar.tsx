@@ -71,10 +71,8 @@ export function Navbar({ user }: NavbarProps) {
                             {/* Hover Menu */}
                             <div className="absolute right-0 top-full pt-2 hidden group-hover:block w-48 z-50">
                                 <div className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-xl py-2 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
-                                    <Link href="/community" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Community</Link>
+                                    <Link href="/community" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Community Hub</Link>
                                     <Link href="/buddy-finder" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Buddy Finder</Link>
-                                    <Link href="/showcase" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Showcase</Link>
-                                    <Link href="/resources" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10">Resources</Link>
                                 </div>
                             </div>
                         </div>
@@ -147,10 +145,8 @@ export function Navbar({ user }: NavbarProps) {
 
                         <div className="border-t border-white/10 my-2 pt-2">
                             <p className="text-xs text-gray-500 px-4 mb-2">DevSpace</p>
-                            <Link href="/community" className="block text-gray-300 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg" onClick={() => setIsOpen(false)}>Community</Link>
+                            <Link href="/community" className="block text-gray-300 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg" onClick={() => setIsOpen(false)}>Community Hub</Link>
                             <Link href="/buddy-finder" className="block text-gray-300 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg" onClick={() => setIsOpen(false)}>Buddy Finder</Link>
-                            <Link href="/showcase" className="block text-gray-300 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg" onClick={() => setIsOpen(false)}>Showcase</Link>
-                            <Link href="/resources" className="block text-gray-300 hover:text-white hover:bg-white/10 py-3 px-4 rounded-lg" onClick={() => setIsOpen(false)}>Resources</Link>
                         </div>
 
                         <div className="border-t border-white/10 my-2 pt-2">

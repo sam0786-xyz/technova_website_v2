@@ -147,7 +147,7 @@ export async function searchBuddies(query?: string, skill?: string) {
     const { data: users, error: usersError } = await supabase
         .schema('next_auth')
         .from('users')
-        .select('id, name, image, role, course, year')
+        .select('id, name, image, role, course, year, email')
         .in('id', userIds)
 
     if (usersError) {
@@ -166,6 +166,7 @@ export async function searchBuddies(query?: string, skill?: string) {
         role: user.role,
         course: user.course,
         year: user.year,
+        email: user.email,
         skills: profilesMap.get(user.id) || []
     }))
 

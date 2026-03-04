@@ -260,6 +260,24 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     Skills & Interests
                 </label>
 
+                <div className="flex gap-2 mb-4">
+                    <div className="flex-1 flex items-center gap-3 p-4 rounded-xl bg-purple-500/10 border border-purple-500/30">
+                        <input
+                            type="checkbox"
+                            checked={skills.includes("Looking for Team")}
+                            onChange={(e) => {
+                                if (e.target.checked) setSkills([...skills, "Looking for Team"])
+                                else setSkills(skills.filter(s => s !== "Looking for Team"))
+                            }}
+                            className="w-5 h-5 rounded border-purple-500/50 bg-black/50 text-purple-600 focus:ring-purple-500/50 cursor-pointer"
+                        />
+                        <div>
+                            <p className="text-sm font-medium text-purple-300">🤝 Looking for Team</p>
+                            <p className="text-xs text-purple-400/80">Turn this on to let others know you are looking for a hackathon or project team.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="flex gap-2">
                     <input
                         type="text"

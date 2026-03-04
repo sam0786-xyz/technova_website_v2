@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Home, ChevronRight, Users, Rocket, HelpCircle, Lightbulb, MessageSquare, PenSquare } from "lucide-react";
+import { Home, ChevronRight, Users, Rocket, HelpCircle, Lightbulb, MessageSquare, PenSquare, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -74,6 +74,40 @@ export default function CommunityPage() {
             {/* Main Content */}
             <section className="py-12 relative">
                 <div className="container mx-auto px-4 max-w-6xl">
+                    {/* DevSpace Portals */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                        <Link href="/showcase" className="group block">
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 hover:border-emerald-500/50 transition-all duration-300 relative overflow-hidden h-full">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all" />
+                                <div className="flex items-start justify-between relative z-10">
+                                    <div>
+                                        <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-110 transition-transform">
+                                            <Rocket className="w-6 h-6" />
+                                        </div>
+                                        <h3 className="text-xl font-bold mb-2 group-hover:text-emerald-400 transition-colors">Project Showcase</h3>
+                                        <p className="text-sm text-gray-400">Explore amazing projects built by the Technova student community.</p>
+                                    </div>
+                                    <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all mt-4" />
+                                </div>
+                            </div>
+                        </Link>
+                        <Link href="/resources" className="group block">
+                            <div className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 hover:border-amber-500/50 transition-all duration-300 relative overflow-hidden h-full">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all" />
+                                <div className="flex items-start justify-between relative z-10">
+                                    <div>
+                                        <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 mb-4 group-hover:scale-110 transition-transform">
+                                            <BookOpen className="w-6 h-6" />
+                                        </div>
+                                        <h3 className="text-xl font-bold mb-2 group-hover:text-amber-400 transition-colors">Academic Resources</h3>
+                                        <p className="text-sm text-gray-400">Access PYQs, notes, and study materials shared by seniors and peers.</p>
+                                    </div>
+                                    <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-amber-400 group-hover:translate-x-1 transition-all mt-4" />
+                                </div>
+                            </div>
+                        </Link>
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Posts Section */}
                         <motion.div
