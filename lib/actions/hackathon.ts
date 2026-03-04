@@ -420,6 +420,13 @@ export async function submitEvaluation(teamId: string, scores: { innovation: num
     const evaluator = await checkEvaluatorAccess()
     if (!evaluator) return { error: "Unauthorized Evaluator Access" }
 
+    // Validate scores (0-10 range)
+    if (scores.innovation < 0 || scores.innovation > 10 ||
+        scores.ui < 0 || scores.ui > 10 ||
+        scores.technical < 0 || scores.technical > 10) {
+        return { error: "Scores must be between 0 and 10." }
+    }
+
     const totalScore = scores.innovation + scores.ui + scores.technical
     const supabase = await getSupabase()
 
