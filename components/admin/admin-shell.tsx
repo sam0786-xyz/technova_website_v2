@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react"
-import { Menu, X } from "lucide-react"
+import { Menu, X, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import { SidebarNav } from "./sidebar-nav"
 
 export function AdminShell({ children, userName, userRole, userImage }: {
@@ -13,26 +13,24 @@ export function AdminShell({ children, userName, userRole, userImage }: {
     const [sidebarOpen, setSidebarOpen] = useState(true)
 
     return (
-        <div className="flex min-h-screen bg-black">
+        <div className="min-h-screen bg-black">
             {/* Mobile overlay */}
             {sidebarOpen && (
                 <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
             )}
 
             {/* Sidebar */}
-            <aside className={`
-                fixed md:sticky top-0 left-0 z-40 h-screen
-                w-64 bg-zinc-900/50 border-r border-white/10 flex flex-col backdrop-blur-xl
-                transition-transform duration-200 ease-in-out
-                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:-translate-x-full'}
-            `}>
+            <aside
+                className={`fixed top-0 left-0 z-40 h-screen w-64 bg-zinc-900/95 border-r border-white/10 flex flex-col backdrop-blur-xl transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+            >
                 <div className="p-6 border-b border-white/10 flex items-center justify-between">
                     <h2 className="font-bold text-xl text-white">Technova Admin</h2>
                     <button
                         onClick={() => setSidebarOpen(false)}
                         className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                        title="Collapse sidebar"
                     >
-                        <X className="w-5 h-5" />
+                        <PanelLeftClose className="w-5 h-5" />
                     </button>
                 </div>
                 <SidebarNav />
@@ -54,15 +52,16 @@ export function AdminShell({ children, userName, userRole, userImage }: {
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 overflow-auto">
-                {/* Toggle button when sidebar is hidden */}
+            {/* Main Content — shifts right when sidebar is open on md+ */}
+            <main className={`min-h-screen transition-all duration-300 ease-in-out ${sidebarOpen ? 'md:ml-64' : 'ml-0'}`}>
+                {/* Toggle button when sidebar is closed */}
                 {!sidebarOpen && (
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-zinc-800 border border-white/10 text-gray-400 hover:text-white hover:bg-zinc-700 transition-colors shadow-lg"
+                        className="fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-zinc-800/90 border border-white/10 text-gray-400 hover:text-white hover:bg-zinc-700 transition-all shadow-lg backdrop-blur-sm"
+                        title="Open sidebar"
                     >
-                        <Menu className="w-5 h-5" />
+                        <PanelLeftOpen className="w-5 h-5" />
                     </button>
                 )}
                 {children}

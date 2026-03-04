@@ -4,7 +4,7 @@ import { UserNav } from "../auth/user-nav"
 
 import Link from "next/link"
 import { useState } from "react"
-import { Menu, X, LayoutDashboard } from "lucide-react"
+import { Menu, X, LayoutDashboard, Rocket } from "lucide-react"
 
 interface NavbarProps {
     user?: {
@@ -36,6 +36,8 @@ export function Navbar({ user }: NavbarProps) {
         { href: "/admin/dashboard", label: "Admin" },
         { href: "/scan", label: "Scanner" },
     ]
+
+    const hackathonLink = { href: "/admin/hackathon", label: "Hackathon Mgmt" }
 
     const isPrivileged = user?.role === 'admin' || user?.role === 'super_admin'
 
@@ -101,6 +103,15 @@ export function Navbar({ user }: NavbarProps) {
                                         {link.label}
                                     </Link>
                                 ))}
+
+                                {isPrivileged && (
+                                    <Link
+                                        href={hackathonLink.href}
+                                        className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 px-3 py-2 rounded-lg transition-all text-sm font-medium"
+                                    >
+                                        <Rocket className="w-3.5 h-3.5" /> {hackathonLink.label}
+                                    </Link>
+                                )}
                             </>
                         )}
 
@@ -172,6 +183,16 @@ export function Navbar({ user }: NavbarProps) {
                                     {link.label}
                                 </Link>
                             ))}
+
+                            {user && isPrivileged && (
+                                <Link
+                                    href={hackathonLink.href}
+                                    className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 py-3 px-4 rounded-lg font-medium"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <Rocket className="w-4 h-4" /> {hackathonLink.label}
+                                </Link>
+                            )}
                         </div>
 
                         {user ? (
