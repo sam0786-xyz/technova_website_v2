@@ -7,6 +7,7 @@ import { FlipbookViewer } from '@/components/hackathon/flipbook-viewer'
 import { VenueCarousel } from '@/components/hackathon/venue-carousel'
 import { HeartPulse, BookOpen, Coins, ShieldAlert, LineChart, Globe, IndianRupee, Award, Star, ListChecks, CalendarDays, CheckCircle2, Circle, Terminal, Plane, Train, TrainFront, Navigation, Map, Cpu, Building2, Timer } from 'lucide-react'
 import { useEffect, useState, MouseEvent } from 'react'
+import LiveDashboardClient from '@/app/(public)/live/live-dashboard'
 
 const REGISTRATION_LINK = "https://docs.google.com/forms/d/e/1FAIpQLScDLjm7HDdkKXJqVIIQr9zp-cG95vnCrdNy2gjEtJtjxaZBXA/viewform"
 
@@ -53,6 +54,7 @@ export default function HackathonPage() {
     const [progress, setProgress] = useState(0)
     const [revealedContacts, setRevealedContacts] = useState<number[]>([])
     const [activeTrack, setActiveTrack] = useState<number | null>(null)
+    const [liveData, setLiveData] = useState<{ settings: any; schedule: any[]; shortlistedTeams: any[] } | null>(null)
 
     const mouseX = useMotionValue(0)
     const mouseY = useMotionValue(0)
@@ -87,6 +89,24 @@ export default function HackathonPage() {
         }, 150)
 
         return () => clearInterval(interval)
+    }, [])
+
+    // Fetch live dashboard data
+    useEffect(() => {
+        async function fetchLiveData() {
+            try {
+                const res = await fetch('/api/hackathon-live')
+                if (res.ok) {
+                    const data = await res.json()
+                    setLiveData(data)
+                }
+            } catch (e) {
+                console.error('Failed to fetch live data', e)
+            }
+        }
+        fetchLiveData()
+        const liveInterval = setInterval(fetchLiveData, 15000)
+        return () => clearInterval(liveInterval)
     }, [])
 
     const timelineEvents = [
@@ -294,6 +314,25 @@ export default function HackathonPage() {
                         </motion.div>
                     </motion.div>
                 </div>
+
+                {/* Live Dashboard Section */}
+                {liveData && (liveData.settings?.is_running || liveData.schedule?.length > 0 || liveData.shortlistedTeams?.length > 0) && (
+                    <div className="mt-24 max-w-7xl mx-auto w-full relative z-20">
+                        <div className="text-center mb-12">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 mb-6 backdrop-blur-md">
+                                <Timer className="w-5 h-5 text-emerald-400 animate-pulse" />
+                                <span className="text-emerald-400 font-bold uppercase tracking-widest text-sm">Live Dashboard</span>
+                            </div>
+                            <h2 className="text-4xl md:text-5xl font-black mb-4">Hackathon <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Live</span></h2>
+                            <p className="text-gray-400 max-w-2xl mx-auto">Real-time timer, schedule, announcements, and results — all in one place.</p>
+                        </div>
+                        <LiveDashboardClient
+                            initialSettings={liveData.settings}
+                            initialSchedule={liveData.schedule}
+                            initialShortlisted={liveData.shortlistedTeams}
+                        />
+                    </div>
+                )}
 
                 {/* Why Sharda / Venue Highlights Section */}
                 <div className="mt-32 max-w-7xl mx-auto w-full relative z-20">
