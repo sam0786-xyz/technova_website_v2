@@ -143,23 +143,33 @@ export async function searchBuddies(query?: string, skill?: string) {
     // Get user IDs from profiles
     const userIds = profiles.map((p: any) => p.id)
 
-    // Fetch user details from next_auth.users
-    const { data: users, error: usersError } = await supabase
-        .schema('next_auth')
-        .from('users')
-        .select('id, name, image, role, course, year, email')
-        .in('id', userIds)
+    // Fetch user details from next_auth.users in chunks to avoid URL length limits
+    const chunkSize = 100;
+    let allUsers: any[] = [];
 
-    if (usersError) {
-        console.error("Search Users Error:", usersError)
-        return []
+    for (let i = 0; i < userIds.length; i += chunkSize) {
+        const chunk = userIds.slice(i, i + chunkSize);
+        const { data: usersChunk, error: usersError } = await supabase
+            .schema('next_auth')
+            .from('users')
+            .select('id, name, image, role, course, year, email')
+            .in('id', chunk);
+
+        if (usersError) {
+            console.error("Search Users Error:", usersError);
+            return [];
+        }
+
+        if (usersChunk) {
+            allUsers = allUsers.concat(usersChunk);
+        }
     }
 
     // Create a map of profiles by id for quick lookup
     const profilesMap = new Map(profiles.map((p: any) => [p.id, p.skills]))
 
     // Combine users with their skills
-    let buddies = (users || []).map((user: any) => ({
+    let buddies = allUsers.map((user: any) => ({
         id: user.id,
         name: user.name,
         image: user.image,
