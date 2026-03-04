@@ -19,18 +19,6 @@ const tabs = [
         color: "purple"
     },
     {
-        name: "Showcase",
-        href: "/showcase",
-        icon: Code,
-        color: "emerald"
-    },
-    {
-        name: "Resources",
-        href: "/resources",
-        icon: BookOpen,
-        color: "amber"
-    },
-    {
         name: "Report Bug",
         href: "/report-bug",
         icon: Bug,
