@@ -3,11 +3,9 @@
 import { motion, useMotionTemplate, useMotionValue } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, ExternalLink, Infinity as InfinityIcon, Zap, Code2, Users, Rocket, Target, Clock, Trophy, Download, ChevronRight } from 'lucide-react'
-import { FlipbookViewer } from '@/components/hackathon/flipbook-viewer'
 import { VenueCarousel } from '@/components/hackathon/venue-carousel'
 import { HeartPulse, BookOpen, Coins, ShieldAlert, LineChart, Globe, IndianRupee, Award, Star, ListChecks, CalendarDays, CheckCircle2, Circle, Terminal, Plane, Train, TrainFront, Navigation, Map, Cpu, Building2, Timer, GraduationCap } from 'lucide-react'
 import { useEffect, useState, MouseEvent } from 'react'
-import LiveDashboardClient from '@/app/(public)/live/live-dashboard'
 
 const REGISTRATION_LINK = "https://docs.google.com/forms/d/e/1FAIpQLScDLjm7HDdkKXJqVIIQr9zp-cG95vnCrdNy2gjEtJtjxaZBXA/viewform"
 
@@ -315,24 +313,28 @@ export default function HackathonPage() {
                     </motion.div>
                 </div>
 
-                {/* Live Dashboard Section */}
-                {liveData && (liveData.settings?.is_running || liveData.schedule?.length > 0 || liveData.shortlistedTeams?.length > 0) && (
-                    <div className="mt-24 max-w-7xl mx-auto w-full relative z-20">
-                        <div className="text-center mb-12">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 mb-6 backdrop-blur-md">
-                                <Timer className="w-5 h-5 text-emerald-400 animate-pulse" />
-                                <span className="text-emerald-400 font-bold uppercase tracking-widest text-sm">Live Dashboard</span>
+                {/* Live Dashboard Button Section */}
+                <div className="mt-24 max-w-7xl mx-auto w-full relative z-20">
+                    <div className="bg-gradient-to-r from-emerald-900/30 to-cyan-900/30 border border-emerald-500/20 rounded-3xl p-8 md:p-12 mb-12 flex flex-col md:flex-row items-center justify-between backdrop-blur-md relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
+
+                        <div className="mb-8 md:mb-0 relative z-10 md:pr-8">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 mb-4 backdrop-blur-md">
+                                <Timer className="w-4 h-4 text-emerald-400 animate-pulse" />
+                                <span className="text-emerald-400 font-bold uppercase tracking-widest text-xs">Event Tracker</span>
                             </div>
-                            <h2 className="text-4xl md:text-5xl font-black mb-4">Hackathon <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Live</span></h2>
-                            <p className="text-gray-400 max-w-2xl mx-auto">Real-time timer, schedule, announcements, and results — all in one place.</p>
+                            <h3 className="text-3xl md:text-4xl font-black text-white mb-2">Hackathon <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Live</span></h3>
+                            <p className="text-gray-400 max-w-xl">Follow the real-time 24-hour countdown, track event schedules, view live announcements, and see shortlisted teams.</p>
                         </div>
-                        <LiveDashboardClient
-                            initialSettings={liveData.settings}
-                            initialSchedule={liveData.schedule}
-                            initialShortlisted={liveData.shortlistedTeams}
-                        />
+
+                        <div className="relative z-10 shrink-0">
+                            <Link href="/hackathon/live" className="group relative inline-flex items-center gap-3 px-8 py-4 bg-emerald-500 text-black font-black rounded-xl hover:bg-emerald-400 hover:scale-105 transition-all outline-none focus:ring-4 focus:ring-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+                                Enter Live Dashboard
+                                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        </div>
                     </div>
-                )}
+                </div>
 
                 {/* Why Sharda / Venue Highlights Section */}
                 <div className="mt-32 max-w-7xl mx-auto w-full relative z-20">
@@ -687,45 +689,58 @@ export default function HackathonPage() {
                             <p className="text-gray-400 max-w-2xl mx-auto">Elevate your brand and connect with top tech talent. Choose a sponsorship tier that aligns with your goals.</p>
                         </div>
 
-                        <div className="grid md:grid-cols-3 gap-6 relative z-10">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
                             {/* Gold Tier */}
-                            <div className="bg-gradient-to-b from-yellow-500/10 to-transparent border border-yellow-500/30 p-6 rounded-2xl">
-                                <h4 className="text-xl font-bold text-yellow-400 mb-2">Gold Sponsor</h4>
-                                <div className="text-3xl font-black text-white mb-4">₹50,000</div>
+                            <div className="bg-gradient-to-b from-yellow-500/10 to-transparent border border-yellow-500/30 p-6 rounded-2xl relative transform lg:-translate-y-4 shadow-2xl">
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">Premium</div>
+                                <h4 className="text-xl font-bold text-yellow-400 mb-2 mt-2">Gold Sponsor</h4>
+                                <div className="text-3xl font-black text-white mb-4">₹1.25 L<span className="text-lg text-yellow-500/50">akhs</span></div>
                                 <ul className="space-y-3 mb-6">
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" /> Prominent Logo Placement</li>
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" /> Keynote Speaking Slot</li>
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" /> Dedicated Booth Area</li>
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" /> Access to Resumes</li>
                                 </ul>
-                                <a href="mailto:ambuj.agarwal@sharda.ac.in?subject=Gold Sponsorship Inquiry" className="block text-center w-full py-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-bold rounded-xl transition-colors border border-yellow-500/50">Inquire Now</a>
+                                <a href="mailto:ambuj.agarwal@sharda.ac.in?subject=Gold Sponsorship Inquiry" className="block text-center w-full py-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-bold rounded-xl transition-colors border border-yellow-500/50 mt-auto">Inquire Now</a>
                             </div>
 
                             {/* Silver Tier */}
-                            <div className="bg-gradient-to-b from-gray-300/10 to-transparent border border-gray-400/30 p-6 rounded-2xl relative transform md:-translate-y-4 shadow-2xl">
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-500 to-gray-400 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest whitespace-nowrap shadow-lg">Most Popular</div>
-                                <h4 className="text-xl font-bold text-gray-300 mb-2 mt-2">Silver Sponsor</h4>
-                                <div className="text-3xl font-black text-white mb-4">₹25,000</div>
-                                <ul className="space-y-3 mb-6">
-                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-gray-400 shrink-0" /> Logo on Banners & Website</li>
-                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-gray-400 shrink-0" /> Distribute Merch/Flyers</li>
-                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-gray-400 shrink-0" /> Mention in PR & Media</li>
-                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-gray-400 shrink-0" /> Recruitment Support</li>
+                            <div className="bg-gradient-to-b from-slate-300/10 to-transparent border border-slate-400/30 p-6 rounded-2xl flex flex-col h-full">
+                                <h4 className="text-xl font-bold text-slate-300 mb-2">Silver Sponsor</h4>
+                                <div className="text-3xl font-black text-white mb-4">₹50,000</div>
+                                <ul className="space-y-3 mb-6 flex-1">
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" /> Logo on Banners & Website</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" /> Distribute Merch/Flyers</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" /> Mention in PR & Media</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" /> Recruitment Support</li>
                                 </ul>
-                                <a href="mailto:ambuj.agarwal@sharda.ac.in?subject=Silver Sponsorship Inquiry" className="block text-center w-full py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-300 font-bold rounded-xl transition-colors border border-gray-400/50">Inquire Now</a>
+                                <a href="mailto:ambuj.agarwal@sharda.ac.in?subject=Silver Sponsorship Inquiry" className="block text-center w-full py-2 bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 font-bold rounded-xl transition-colors border border-slate-400/50 mt-auto">Inquire Now</a>
                             </div>
 
                             {/* Bronze Tier */}
-                            <div className="bg-gradient-to-b from-orange-500/10 to-transparent border border-orange-500/30 p-6 rounded-2xl">
+                            <div className="bg-gradient-to-b from-orange-500/10 to-transparent border border-orange-500/30 p-6 rounded-2xl flex flex-col h-full">
                                 <h4 className="text-xl font-bold text-orange-400 mb-2">Bronze Sponsor</h4>
-                                <div className="text-3xl font-black text-white mb-4">₹10,000</div>
-                                <ul className="space-y-3 mb-6">
+                                <div className="text-3xl font-black text-white mb-4">₹25,000</div>
+                                <ul className="space-y-3 mb-6 flex-1">
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" /> Logo on Website</li>
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" /> Social Media Shoutout</li>
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" /> Certificate of Appreciation</li>
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" /> Special Mentions during Event</li>
                                 </ul>
-                                <a href="mailto:ambuj.agarwal@sharda.ac.in?subject=Bronze Sponsorship Inquiry" className="block text-center w-full py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 font-bold rounded-xl transition-colors border border-orange-500/50">Inquire Now</a>
+                                <a href="mailto:ambuj.agarwal@sharda.ac.in?subject=Bronze Sponsorship Inquiry" className="block text-center w-full py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 font-bold rounded-xl transition-colors border border-orange-500/50 mt-auto">Inquire Now</a>
+                            </div>
+
+                            {/* Custom Tier */}
+                            <div className="bg-gradient-to-b from-purple-500/10 to-transparent border border-purple-500/30 p-6 rounded-2xl flex flex-col h-full bg-black/40 border-dashed backdrop-blur-md">
+                                <h4 className="text-xl font-bold text-purple-400 mb-2">Custom Partner</h4>
+                                <div className="text-2xl font-black text-white mb-4 italic text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Let's Discuss</div>
+                                <ul className="space-y-3 mb-6 flex-1 opacity-80">
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" /> API Sponsor & Bounties</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" /> Workshop Organization</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" /> In-kind Media & Food</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" /> Hardware Provision</li>
+                                </ul>
+                                <a href="mailto:ambuj.agarwal@sharda.ac.in?subject=Custom Sponsorship Inquiry" className="block text-center w-full py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 font-bold rounded-xl transition-colors border border-purple-500/50 mt-auto">Get in Touch</a>
                             </div>
                         </div>
                     </div>
@@ -982,13 +997,6 @@ export default function HackathonPage() {
                 </div>
 
 
-
-                {/* Flipbook Section */}
-                <div className="mt-32 max-w-6xl mx-auto w-full relative z-20 pb-16 border-t border-white/10 pt-16">
-                    <h2 className="text-4xl md:text-5xl font-bold text-center mb-4">Official Brochure</h2>
-                    <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">Prefer reading the original PDF? Flip through the pages below.</p>
-                    <FlipbookViewer />
-                </div>
 
                 {/* FAQ Section */}
                 <div className="mt-32 max-w-4xl mx-auto w-full relative z-20">
