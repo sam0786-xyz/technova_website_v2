@@ -678,11 +678,19 @@ export default function HackathonPage() {
                     <div className="flex flex-wrap justify-center gap-8 mb-16">
                         <div className="bg-white/5 border border-white/10 p-8 rounded-3xl flex flex-col items-center justify-center min-w-[280px] backdrop-blur-sm hover:bg-white/10 transition-colors group">
                             <div className="text-xs font-bold uppercase tracking-widest text-[#a1a1aa] mb-4">Title Sponsor</div>
-                            <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-500 tracking-wider group-hover:scale-105 transition-transform text-center font-serif italic">Ching's Secret</span>
+                            <div className="bg-white rounded-2xl p-4 mb-4 group-hover:scale-105 transition-transform">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="/images/chings-secret-logo.jpg" alt="Ching's Secret" className="h-24 w-auto object-contain" />
+                            </div>
+                            <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-500 tracking-wider text-center">Ching&apos;s Secret</span>
                         </div>
                         <div className="bg-white/5 border border-white/10 p-8 rounded-3xl flex flex-col items-center justify-center min-w-[280px] backdrop-blur-sm hover:bg-white/10 transition-colors group">
                             <div className="text-xs font-bold uppercase tracking-widest text-[#a1a1aa] mb-4">Associate Sponsor</div>
-                            <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 tracking-wider group-hover:scale-105 transition-transform text-center uppercase">PRISMATIX</span>
+                            <div className="bg-white rounded-2xl p-4 mb-4 group-hover:scale-105 transition-transform">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="/images/prismatix-logo.jpg" alt="Prismatix" className="h-24 w-auto object-contain" />
+                            </div>
+                            <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 tracking-wider text-center uppercase">PRISMATIX</span>
                         </div>
                     </div>
 
