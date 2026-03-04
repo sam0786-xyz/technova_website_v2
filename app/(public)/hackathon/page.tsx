@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, ExternalLink, Infinity as InfinityIcon, Zap, Code2, Users, Rocket, Target, Clock, Trophy, Download, ChevronRight } from 'lucide-react'
 import { FlipbookViewer } from '@/components/hackathon/flipbook-viewer'
 import { VenueCarousel } from '@/components/hackathon/venue-carousel'
-import { HeartPulse, BookOpen, Coins, ShieldAlert, LineChart, Globe, IndianRupee, Award, Star, ListChecks, CalendarDays, CheckCircle2, Circle, Terminal, Plane, Train, TrainFront, Navigation, Map, Cpu, Building2, Timer } from 'lucide-react'
+import { HeartPulse, BookOpen, Coins, ShieldAlert, LineChart, Globe, IndianRupee, Award, Star, ListChecks, CalendarDays, CheckCircle2, Circle, Terminal, Plane, Train, TrainFront, Navigation, Map, Cpu, Building2, Timer, GraduationCap } from 'lucide-react'
 import { useEffect, useState, MouseEvent } from 'react'
 import LiveDashboardClient from '@/app/(public)/live/live-dashboard'
 
@@ -557,6 +557,16 @@ export default function HackathonPage() {
                                 subtracks: ["Rural Development & Digital Inclusion", "Women Empowerment & Child Welfare", "Waste Management & Environmental Protection", "Assistive Technologies & Accessibility"],
                                 challenge: ["Solves a pressing social or community problem.", "Uses CSE tools such as apps, AI, IoT, or data platforms.", "Is cost-effective, easy to adopt, and scalable.", "Demonstrates measurable social impact."],
                                 outcome: "A socially impactful solution that promotes inclusive development and community empowerment, contributing to SDG 1, SDG 5, SDG 10, and SDG 17, and supporting the Smart India & Viksit Bharat vision"
+                            },
+                            {
+                                title: "Track 6: School Student Innovation (SCHI)",
+                                icon: GraduationCap,
+                                color: "text-orange-400", border: "border-orange-500/20", bg: "bg-orange-500/5", glow: "group-hover:shadow-[0_0_30px_rgba(249,115,22,0.1)]",
+                                desc: "This track aims to foster creativity and problem-solving skills among school students. Young innovators are encouraged to build out-of-the-box prototypes and solutions addressing everyday problems, demonstrating the power of early-stage STEM education.",
+                                problem: "Empowering Young Minds for Everyday Solutions",
+                                subtracks: ["Smart School & Education Aids", "Eco-friendly & Green Innovations", "Everyday Problem Solving", "Basic Automation & IoT"],
+                                challenge: ["Identifies a relatable everyday problem.", "Proposes a creative, functional solution or prototype.", "Uses basic technology, coding, or electronics.", "Demonstrates original thinking and practical application."],
+                                outcome: "A functional prototype, app, or concept model built by school students that solves a practical problem, promoting STEM learning and SDG 4."
                             }
                         ].map((track, i) => {
                             const isActive = activeTrack === i;
@@ -646,6 +656,78 @@ export default function HackathonPage() {
                                 </motion.div>
                             )
                         })}
+                    </div>
+                </div>
+
+                {/* Sponsors Section */}
+                <div className="mt-32 max-w-6xl mx-auto w-full relative z-20">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl md:text-5xl font-black mb-4">Our Sponsors & Partners</h2>
+                        <p className="text-gray-400 max-w-2xl mx-auto">Backed by industry leaders who believe in fostering innovation and empowering the next generation of creators.</p>
+                    </div>
+
+                    {/* Current Sponsors */}
+                    <div className="flex flex-wrap justify-center gap-8 mb-16">
+                        <div className="bg-white/5 border border-white/10 p-8 rounded-3xl flex flex-col items-center justify-center min-w-[280px] backdrop-blur-sm hover:bg-white/10 transition-colors group">
+                            <div className="text-xs font-bold uppercase tracking-widest text-[#a1a1aa] mb-4">Title Sponsor</div>
+                            <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-500 tracking-wider group-hover:scale-105 transition-transform text-center font-serif italic">Ching's Secret</span>
+                        </div>
+                        <div className="bg-white/5 border border-white/10 p-8 rounded-3xl flex flex-col items-center justify-center min-w-[280px] backdrop-blur-sm hover:bg-white/10 transition-colors group">
+                            <div className="text-xs font-bold uppercase tracking-widest text-[#a1a1aa] mb-4">Associate Sponsor</div>
+                            <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 tracking-wider group-hover:scale-105 transition-transform text-center uppercase">PRISMATIX</span>
+                        </div>
+                    </div>
+
+                    {/* Become a Sponsor */}
+                    <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/20 rounded-3xl p-8 md:p-12 backdrop-blur-md relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
+
+                        <div className="text-center mb-10 relative z-10">
+                            <h3 className="text-3xl font-bold text-white mb-4">Become a Sponsor</h3>
+                            <p className="text-gray-400 max-w-2xl mx-auto">Elevate your brand and connect with top tech talent. Choose a sponsorship tier that aligns with your goals.</p>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-6 relative z-10">
+                            {/* Gold Tier */}
+                            <div className="bg-gradient-to-b from-yellow-500/10 to-transparent border border-yellow-500/30 p-6 rounded-2xl">
+                                <h4 className="text-xl font-bold text-yellow-400 mb-2">Gold Sponsor</h4>
+                                <div className="text-3xl font-black text-white mb-4">₹50,000</div>
+                                <ul className="space-y-3 mb-6">
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" /> Prominent Logo Placement</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" /> Keynote Speaking Slot</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" /> Dedicated Booth Area</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" /> Access to Resumes</li>
+                                </ul>
+                                <a href="mailto:ambuj.agarwal@sharda.ac.in?subject=Gold Sponsorship Inquiry" className="block text-center w-full py-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-bold rounded-xl transition-colors border border-yellow-500/50">Inquire Now</a>
+                            </div>
+
+                            {/* Silver Tier */}
+                            <div className="bg-gradient-to-b from-gray-300/10 to-transparent border border-gray-400/30 p-6 rounded-2xl relative transform md:-translate-y-4 shadow-2xl">
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-500 to-gray-400 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest whitespace-nowrap shadow-lg">Most Popular</div>
+                                <h4 className="text-xl font-bold text-gray-300 mb-2 mt-2">Silver Sponsor</h4>
+                                <div className="text-3xl font-black text-white mb-4">₹25,000</div>
+                                <ul className="space-y-3 mb-6">
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-gray-400 shrink-0" /> Logo on Banners & Website</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-gray-400 shrink-0" /> Distribute Merch/Flyers</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-gray-400 shrink-0" /> Mention in PR & Media</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-gray-400 shrink-0" /> Recruitment Support</li>
+                                </ul>
+                                <a href="mailto:ambuj.agarwal@sharda.ac.in?subject=Silver Sponsorship Inquiry" className="block text-center w-full py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-300 font-bold rounded-xl transition-colors border border-gray-400/50">Inquire Now</a>
+                            </div>
+
+                            {/* Bronze Tier */}
+                            <div className="bg-gradient-to-b from-orange-500/10 to-transparent border border-orange-500/30 p-6 rounded-2xl">
+                                <h4 className="text-xl font-bold text-orange-400 mb-2">Bronze Sponsor</h4>
+                                <div className="text-3xl font-black text-white mb-4">₹10,000</div>
+                                <ul className="space-y-3 mb-6">
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" /> Logo on Website</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" /> Social Media Shoutout</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" /> Certificate of Appreciation</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" /> Special Mentions during Event</li>
+                                </ul>
+                                <a href="mailto:ambuj.agarwal@sharda.ac.in?subject=Bronze Sponsorship Inquiry" className="block text-center w-full py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 font-bold rounded-xl transition-colors border border-orange-500/50">Inquire Now</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
