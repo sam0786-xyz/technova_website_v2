@@ -649,7 +649,7 @@ export async function getPublicShortlistedTeams() {
 // LOGISTICS & QR ACTIONS
 // ==========================================
 
-export async function processHackathonQrScan(participantId: string, actionUrl: 'checkin' | 'food', mealRound?: string) {
+export async function processHackathonQrScan(participantId: string, actionUrl: 'checkin' | 'checkout' | 'food', mealRound?: string) {
     const session = await auth()
     if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized" }
 
@@ -674,7 +674,20 @@ export async function processHackathonQrScan(participantId: string, actionUrl: '
 
         if (error) return { error: error.message }
         revalidatePath('/admin/hackathon')
-        return { success: true, participant, message: "Checked in successfully" }
+        return { success: true, participant, message: `✅ ${participant.name} — Checked in successfully` }
+    }
+
+    if (actionUrl === 'checkout') {
+        if (!participant.is_checked_in) return { message: "Not checked in", participant }
+
+        const { error } = await supabase
+            .from('hackathon_participants')
+            .update({ is_checked_in: false })
+            .eq('id', participantId)
+
+        if (error) return { error: error.message }
+        revalidatePath('/admin/hackathon')
+        return { success: true, participant, message: `👋 ${participant.name} — Checked out successfully` }
     }
 
     if (actionUrl === 'food') {

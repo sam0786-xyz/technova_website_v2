@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { processHackathonQrScan, searchParticipants } from "@/lib/actions/hackathon";
-import { ArrowLeft, Camera, QrCode, CheckCircle, AlertCircle, Coffee, ChevronDown, Search, UserCheck } from "lucide-react";
+import { ArrowLeft, Camera, QrCode, CheckCircle, AlertCircle, Coffee, ChevronDown, Search, UserCheck, LogOut } from "lucide-react";
 
 const MEAL_ROUNDS = [
     "Breakfast - Day 1",
@@ -16,7 +16,7 @@ const MEAL_ROUNDS = [
 ];
 
 export default function HackathonScannerPage() {
-    const [mode, setMode] = useState<'checkin' | 'food'>('checkin');
+    const [mode, setMode] = useState<'checkin' | 'checkout' | 'food'>('checkin');
     const [selectedMeal, setSelectedMeal] = useState(MEAL_ROUNDS[0]);
     const [scanResult, setScanResult] = useState<'success' | 'error' | 'already' | null>(null);
     const [message, setMessage] = useState("");
@@ -153,12 +153,15 @@ export default function HackathonScannerPage() {
             if (result.success) {
                 setMessage(result.message || "Success!");
                 setScanResult('success');
-                // Update local results to reflect change
                 setSearchResults(prev => prev.map(p => p.id === participantId
-                    ? { ...p, is_checked_in: true, food_count: (p.food_count || 0) + (mode === 'food' ? 1 : 0) }
+                    ? {
+                        ...p,
+                        is_checked_in: mode === 'checkout' ? false : (mode === 'checkin' ? true : p.is_checked_in),
+                        food_count: (p.food_count || 0) + (mode === 'food' ? 1 : 0)
+                    }
                     : p));
-            } else if (result.message === "Already checked in") {
-                setMessage("Already checked in.");
+            } else if (result.message === "Already checked in" || result.message === "Not checked in") {
+                setMessage(result.message);
                 setScanResult('already');
             } else {
                 setMessage(result.error || "Failed.");
@@ -190,15 +193,21 @@ export default function HackathonScannerPage() {
                 <div className="flex bg-white/5 p-1 rounded-xl">
                     <button
                         onClick={() => setMode('checkin')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium text-sm transition-colors ${mode === 'checkin' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-xs transition-colors ${mode === 'checkin' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <CheckCircle className="w-4 h-4" /> Check-in
+                        <CheckCircle className="w-3.5 h-3.5" /> Check-in
+                    </button>
+                    <button
+                        onClick={() => setMode('checkout')}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-xs transition-colors ${mode === 'checkout' ? 'bg-rose-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                    >
+                        <LogOut className="w-3.5 h-3.5" /> Check-out
                     </button>
                     <button
                         onClick={() => setMode('food')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium text-sm transition-colors ${mode === 'food' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-xs transition-colors ${mode === 'food' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <Coffee className="w-4 h-4" /> Meal Scan
+                        <Coffee className="w-3.5 h-3.5" /> Meal Scan
                     </button>
                 </div>
 
@@ -236,15 +245,15 @@ export default function HackathonScannerPage() {
                         onClick={() => { setShowSearch(true); stopCamera(); }}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-colors ${showSearch ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <Search className="w-3.5 h-3.5" /> Search & {mode === 'checkin' ? 'Check-in' : 'Log Meal'}
+                        <Search className="w-3.5 h-3.5" /> Search & {mode === 'checkin' ? 'Check-in' : mode === 'checkout' ? 'Check-out' : 'Log Meal'}
                     </button>
                 </div>
 
                 {/* Status message */}
                 {scanResult && showSearch && (
                     <div className={`p-3 rounded-xl text-sm font-medium text-center ${scanResult === 'success' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' :
-                            scanResult === 'already' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20' :
-                                'bg-red-500/20 text-red-400 border border-red-500/20'
+                        scanResult === 'already' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20' :
+                            'bg-red-500/20 text-red-400 border border-red-500/20'
                         }`}>
                         {message}
                     </div>
@@ -291,21 +300,26 @@ export default function HackathonScannerPage() {
                                             <p className="text-[11px] text-gray-600 truncate">{p.email}</p>
                                         </div>
                                         <div className="flex items-center gap-2 flex-shrink-0">
-                                            {mode === 'checkin' && p.is_checked_in && (
-                                                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">✓ In</span>
+                                            {(mode === 'checkin' || mode === 'checkout') && (
+                                                <span className={`text-[10px] font-bold px-2 py-1 rounded ${p.is_checked_in ? 'text-emerald-400 bg-emerald-500/10' : 'text-gray-500 bg-white/5'}`}>
+                                                    {p.is_checked_in ? '✓ In' : '✗ Out'}
+                                                </span>
                                             )}
                                             {mode === 'food' && (
                                                 <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded">🍽 {p.food_count}</span>
                                             )}
                                             <button
                                                 onClick={() => handleManualAction(p.id)}
-                                                disabled={processingId === p.id || (mode === 'checkin' && p.is_checked_in)}
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-40 ${mode === 'checkin'
-                                                        ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                                                        : 'bg-orange-600 hover:bg-orange-500 text-white'
+                                                disabled={processingId === p.id || (mode === 'checkin' && p.is_checked_in) || (mode === 'checkout' && !p.is_checked_in)}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-40 ${mode === 'checkin' ? 'bg-blue-600 hover:bg-blue-500 text-white' :
+                                                    mode === 'checkout' ? 'bg-rose-600 hover:bg-rose-500 text-white' :
+                                                        'bg-orange-600 hover:bg-orange-500 text-white'
                                                     }`}
                                             >
-                                                {processingId === p.id ? '...' : mode === 'checkin' ? (p.is_checked_in ? 'Done' : 'Check In') : 'Log Meal'}
+                                                {processingId === p.id ? '...' :
+                                                    mode === 'checkin' ? (p.is_checked_in ? 'Done' : 'Check In') :
+                                                        mode === 'checkout' ? (!p.is_checked_in ? 'Already Out' : 'Check Out') :
+                                                            'Log Meal'}
                                             </button>
                                         </div>
                                     </div>
