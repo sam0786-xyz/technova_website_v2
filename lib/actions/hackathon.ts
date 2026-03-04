@@ -457,7 +457,8 @@ export async function getTeamsForEvaluation(round: number = 1) {
         `)
 
     if (round === 1) {
-        query = query.in('status', ['pending', 'evaluating', 'shortlisted', 'not_shortlisted']) // All teams basically
+        // Use only valid enum values: pending, evaluating, shortlisted, rejected
+        query = query.in('status', ['pending', 'evaluating', 'shortlisted', 'rejected'])
     } else if (round === 2) {
         query = query.eq('status', 'shortlisted') // Only shortlisted
     }
