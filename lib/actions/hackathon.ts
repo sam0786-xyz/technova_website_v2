@@ -729,3 +729,74 @@ export async function manualCheckInParticipant(participantId: string, isCheckedI
     revalidatePath('/admin/hackathon')
     return { success: true }
 }
+
+// ==========================================
+// DATA DOWNLOADS
+// ==========================================
+
+export async function getCheckedInParticipantsData() {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized", data: [] }
+
+    const supabase = await getSupabase()
+    const { data: participants } = await supabase
+        .from('hackathon_participants')
+        .select('name, email, phone, role, is_checked_in, food_count, hackathon_teams(name, team_code)')
+        .order('is_checked_in', { ascending: false })
+
+    return {
+        data: (participants || []).map((p: any) => ({
+            'Participant Name': p.name,
+            'Email': p.email,
+            'Phone': p.phone || '',
+            'Role': p.role,
+            'Team Name': p.hackathon_teams?.name || '',
+            'Team ID': p.hackathon_teams?.team_code || '',
+            'Checked In': p.is_checked_in ? 'Yes' : 'No',
+            'Meals Taken': p.food_count,
+        }))
+    }
+}
+
+export async function getFoodLogsData() {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized", data: [] }
+
+    const supabase = await getSupabase()
+    const { data: logs } = await supabase
+        .from('hackathon_food_logs')
+        .select('meal_type, scanned_at, hackathon_participants(name, email, phone, hackathon_teams(name, team_code))')
+        .order('scanned_at', { ascending: false })
+
+    return {
+        data: (logs || []).map((log: any) => ({
+            'Participant Name': log.hackathon_participants?.name || '',
+            'Email': log.hackathon_participants?.email || '',
+            'Phone': log.hackathon_participants?.phone || '',
+            'Team Name': log.hackathon_participants?.hackathon_teams?.name || '',
+            'Team ID': log.hackathon_participants?.hackathon_teams?.team_code || '',
+            'Meal Type': log.meal_type || '',
+            'Scanned At': log.scanned_at ? new Date(log.scanned_at).toLocaleString() : '',
+        }))
+    }
+}
+
+// ==========================================
+// SEARCH PARTICIPANTS (for manual check-in)
+// ==========================================
+
+export async function searchParticipants(query: string) {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return []
+
+    if (!query || query.length < 2) return []
+
+    const supabase = await getSupabase()
+    const { data: participants } = await supabase
+        .from('hackathon_participants')
+        .select('id, name, email, phone, role, is_checked_in, food_count, hackathon_teams(name, team_code)')
+        .or(`name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`)
+        .limit(10)
+
+    return participants || []
+}
