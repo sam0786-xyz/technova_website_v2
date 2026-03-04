@@ -55,9 +55,13 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
         setCurrentPage(1);
     }, [searchQuery, selectedTheme]);
 
+    // Extract theme prefix from a team_code (alphabetic portion only, e.g. "AIIS1000" -> "AIIS")
+    const getThemePrefix = (code: string) => (code || '').match(/^[A-Za-z]+/)?.[0]?.toUpperCase() || '';
+
     // Filter by theme + search query (including team_code)
     const filteredTeams = (teams || []).filter(t => {
-        const matchesTheme = selectedTheme === 'ALL' || (t?.team_code || '').toUpperCase().startsWith(selectedTheme);
+        const teamTheme = getThemePrefix(t?.team_code || '');
+        const matchesTheme = selectedTheme === 'ALL' || teamTheme === selectedTheme;
         const query = searchQuery.toLowerCase();
         const matchesSearch = !query ||
             (t?.name || "").toLowerCase().includes(query) ||
@@ -76,20 +80,23 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
         if (theme.code === 'ALL') {
             acc[theme.code] = (teams || []).length;
         } else {
-            acc[theme.code] = (teams || []).filter(t => (t?.team_code || '').toUpperCase().startsWith(theme.code)).length;
+            acc[theme.code] = (teams || []).filter(t => getThemePrefix(t?.team_code || '') === theme.code).length;
         }
         return acc;
     }, {} as Record<string, number>);
 
+    // Allow free typing: store raw string, validate only on blur
     const handleScoreChange = (field: string, value: string) => {
-        const num = parseFloat(value);
-        if (value === '' || value === '.') {
-            setScores({ ...scores, [field]: value as any });
-            return;
-        }
-        if (!isNaN(num)) {
-            const clamped = Math.min(5, Math.max(1, num));
-            setScores({ ...scores, [field]: clamped });
+        setScores({ ...scores, [field]: value as any });
+    };
+
+    const handleScoreBlur = (field: string) => {
+        const raw = (scores as any)[field];
+        const num = parseFloat(raw);
+        if (isNaN(num) || raw === '' || raw === '.') {
+            setScores({ ...scores, [field]: 3 }); // Reset to default
+        } else {
+            setScores({ ...scores, [field]: Math.round(Math.min(5, Math.max(1, num)) * 10) / 10 });
         }
     };
 
@@ -143,12 +150,11 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                 <span className="text-amber-400 font-bold text-lg">{(scores as any)[field]}/5</span>
             </label>
             <input
-                type="number"
-                min="1"
-                max="5"
-                step="0.1"
+                type="text"
+                inputMode="decimal"
                 value={(scores as any)[field]}
                 onChange={(e) => handleScoreChange(field, e.target.value)}
+                onBlur={() => handleScoreBlur(field)}
                 className="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-center text-white text-lg font-bold focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all"
                 placeholder="1.0 - 5.0"
             />
@@ -181,8 +187,8 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                         key={theme.code}
                         onClick={() => setSelectedTheme(theme.code)}
                         className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${selectedTheme === theme.code
-                                ? 'bg-amber-500 text-black border-amber-500 shadow-lg shadow-amber-500/20'
-                                : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+                            ? 'bg-amber-500 text-black border-amber-500 shadow-lg shadow-amber-500/20'
+                            : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
                             }`}
                     >
                         {theme.label}
@@ -443,8 +449,8 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                                             key={page}
                                             onClick={() => setCurrentPage(page)}
                                             className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${currentPage === page
-                                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                                                    : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                                                ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                                                : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                                                 }`}
                                         >
                                             {page}
