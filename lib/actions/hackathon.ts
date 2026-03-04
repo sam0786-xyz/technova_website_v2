@@ -94,8 +94,9 @@ export async function uploadHackathonData(formData: FormData) {
             // Look for patterns like "Leader Name", "Leader Email", "Member 1 Name", "Member 1 Email"
             const participantPairs: { name: string, email: string, phone: string | null, role: string }[] = []
 
-            // Extract leader
-            const leaderNameKey = Object.keys(row).find(k => k.toLowerCase().includes('leader') && (k.toLowerCase().includes('name') || k.toLowerCase().includes('lead'))) || Object.keys(row).find(k => k.toLowerCase() === 'name') || Object.keys(row).find(k => k.toLowerCase().includes('name'))
+            // Extract leader - prioritize columns explicitly mentioning 'leader', exclude 'team name' from fallback
+            const leaderNameKey = Object.keys(row).find(k => k.toLowerCase().includes('leader') && (k.toLowerCase().includes('name') || k.toLowerCase().includes('lead')))
+                || Object.keys(row).find(k => k.toLowerCase().includes('name') && !k.toLowerCase().includes('team') && !k.toLowerCase().includes('idea') && !k.toLowerCase().includes('project'))
 
             const leaderEmailKey = Object.keys(row).find(k => k.toLowerCase().includes('leader') && k.toLowerCase().includes('email')) || Object.keys(row).find(k => k.toLowerCase().includes('email'))
             const leaderPhoneKey = Object.keys(row).find(k => (k.toLowerCase().includes('leader') || !k.toLowerCase().includes('member')) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')))

@@ -551,9 +551,9 @@ export default function HackathonAdminPage() {
                                 <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
                                     <p className="text-sm text-blue-400 font-medium mb-1">Evaluator Portal Link</p>
                                     <p className="text-xs text-gray-400 mb-2">Share this secure link with your evaluators after adding them:</p>
-                                    <div className="flex items-center gap-2 bg-black/50 p-2.5 rounded-lg border border-white/5">
-                                        <code className="text-xs text-amber-400 select-all flex-1">https://www.technovashardauniversity.in/admin/hackathon/evaluate</code>
-                                        <Link href="/admin/hackathon/evaluate" target="_blank" className="text-blue-400 hover:text-blue-300 text-xs underline whitespace-nowrap">
+                                    <div className="flex items-center gap-2 bg-black/50 p-2.5 rounded-lg border border-white/5 overflow-hidden">
+                                        <code className="text-xs text-amber-400 select-all flex-1 truncate overflow-hidden break-all">https://www.technovashardauniversity.in/admin/hackathon/evaluate</code>
+                                        <Link href="/admin/hackathon/evaluate" target="_blank" className="text-blue-400 hover:text-blue-300 text-xs underline whitespace-nowrap flex-shrink-0">
                                             Open Portal
                                         </Link>
                                     </div>
