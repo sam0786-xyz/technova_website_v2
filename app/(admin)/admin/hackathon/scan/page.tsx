@@ -4,10 +4,20 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { processHackathonQrScan } from "@/lib/actions/hackathon";
-import { ArrowLeft, Camera, QrCode, CheckCircle, AlertCircle, Coffee, Settings } from "lucide-react";
+import { ArrowLeft, Camera, QrCode, CheckCircle, AlertCircle, Coffee, ChevronDown } from "lucide-react";
+
+const MEAL_ROUNDS = [
+    "Breakfast - Day 1",
+    "Lunch - Day 1",
+    "Snacks - Day 1",
+    "Dinner - Day 1",
+    "Breakfast - Day 2",
+    "Lunch - Day 2",
+];
 
 export default function HackathonScannerPage() {
     const [mode, setMode] = useState<'checkin' | 'food'>('checkin');
+    const [selectedMeal, setSelectedMeal] = useState(MEAL_ROUNDS[0]);
     const [scanResult, setScanResult] = useState<'success' | 'error' | 'already' | null>(null);
     const [message, setMessage] = useState("");
     const [participantName, setParticipantName] = useState("");
@@ -81,10 +91,8 @@ export default function HackathonScannerPage() {
         }
 
         try {
-            // We expect the QR code to plainly be the participant ID for simplicity on hackathon
             const participantId = decodedText.trim();
-
-            const result = await processHackathonQrScan(participantId, mode);
+            const result = await processHackathonQrScan(participantId, mode, mode === 'food' ? selectedMeal : undefined);
 
             if (result.success) {
                 setScanResult('success');
@@ -116,39 +124,61 @@ export default function HackathonScannerPage() {
 
     return (
         <div className="min-h-screen bg-black text-white p-4">
-            <header className="max-w-md mx-auto py-4 flex items-center justify-between mb-8">
+            <header className="max-w-md mx-auto py-3 flex items-center justify-between mb-4">
                 <Link href="/admin/hackathon" className="text-gray-400 hover:text-white transition-colors">
                     <ArrowLeft className="w-6 h-6" />
                 </Link>
                 <div className="flex items-center gap-2">
-                    <QrCode className="w-6 h-6 text-emerald-400" />
-                    <h1 className="text-xl font-bold">Hackathon Scanner</h1>
+                    <QrCode className="w-5 h-5 text-emerald-400" />
+                    <h1 className="text-lg font-bold">Hackathon Scanner</h1>
                 </div>
-                <div className="w-6" /> {/* Spacer */}
+                <div className="w-6" />
             </header>
 
-            <main className="max-w-md mx-auto space-y-6">
+            <main className="max-w-md mx-auto space-y-4">
                 {/* Mode Selector */}
                 <div className="flex bg-white/5 p-1 rounded-xl">
                     <button
                         onClick={() => setMode('checkin')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-colors ${mode === 'checkin' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium text-sm transition-colors ${mode === 'checkin' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <CheckCircle className="w-5 h-5" /> Check-in
+                        <CheckCircle className="w-4 h-4" /> Check-in
                     </button>
                     <button
                         onClick={() => setMode('food')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-colors ${mode === 'food' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium text-sm transition-colors ${mode === 'food' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <Coffee className="w-5 h-5" /> Food Log
+                        <Coffee className="w-4 h-4" /> Meal Scan
                     </button>
                 </div>
 
+                {/* Meal Round Selector - only visible in food mode */}
+                {mode === 'food' && (
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-3">
+                        <label className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2 block">
+                            Active Meal Round
+                        </label>
+                        <div className="relative">
+                            <select
+                                value={selectedMeal}
+                                onChange={(e) => setSelectedMeal(e.target.value)}
+                                className="w-full bg-black/60 border border-white/20 rounded-lg px-4 py-2.5 text-white text-sm font-medium appearance-none focus:outline-none focus:border-orange-500 cursor-pointer"
+                            >
+                                {MEAL_ROUNDS.map(meal => (
+                                    <option key={meal} value={meal}>{meal}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        </div>
+                        <p className="text-[11px] text-orange-400/60 mt-2">Each participant can only scan once per meal round.</p>
+                    </div>
+                )}
+
                 <div className="text-center">
-                    <p className="text-sm text-gray-400">
+                    <p className="text-xs text-gray-400">
                         {mode === 'checkin'
                             ? "Scan participants' IDs to mark them as arrived."
-                            : "Scan IDs sequentially to track food distribution."}
+                            : `Scanning for: ${selectedMeal}`}
                     </p>
                 </div>
 
@@ -171,7 +201,7 @@ export default function HackathonScannerPage() {
                     {/* Overlay for results */}
                     {scanResult && (
                         <div className={`absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center backdrop-blur-md ${scanResult === 'success' ? 'bg-emerald-500/90' :
-                                scanResult === 'already' ? 'bg-amber-500/90' : 'bg-red-500/90'
+                            scanResult === 'already' ? 'bg-amber-500/90' : 'bg-red-500/90'
                             }`}>
                             {scanResult === 'success' ? <CheckCircle className="w-16 h-16 text-white mb-4 drop-shadow-md" /> :
                                 scanResult === 'already' ? <AlertCircle className="w-16 h-16 text-white mb-4 drop-shadow-md" /> :
@@ -181,7 +211,7 @@ export default function HackathonScannerPage() {
                                 {scanResult === 'success' ? 'SUCCESS' : scanResult === 'already' ? 'ALREADY SCANNED' : 'ERROR'}
                             </h2>
                             {participantName && <p className="text-xl font-bold text-white mb-1">{participantName}</p>}
-                            <p className="text-white/90 font-medium">{message}</p>
+                            <p className="text-white/90 font-medium text-sm">{message}</p>
                         </div>
                     )}
                 </div>
@@ -189,7 +219,7 @@ export default function HackathonScannerPage() {
                 {cameraActive && !scanResult && (
                     <button
                         onClick={stopCamera}
-                        className="w-full py-4 text-center text-gray-400 hover:text-white font-medium transition-colors"
+                        className="w-full py-3 text-center text-gray-400 hover:text-white font-medium transition-colors text-sm"
                     >
                         Stop Camera
                     </button>

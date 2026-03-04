@@ -11,7 +11,7 @@ const THEMES = [
     { code: 'CSAB', label: 'CSAB' },
     { code: 'DSSA', label: 'DSSA' },
     { code: 'SISI', label: 'SISI' },
-    { code: 'SCHII', label: 'SCHII' },
+    { code: 'SCHI', label: 'SCHI' },
 ];
 
 const ITEMS_PER_PAGE = 10;
@@ -143,8 +143,9 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
         }
     };
 
-    const ScoreInput = ({ label, field, description }: { label: string, field: string, description: string }) => (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+    // Render a score input field inline (NOT as a sub-component to avoid focus loss)
+    const renderScoreInput = (label: string, field: string, description: string) => (
+        <div key={field} className="bg-white/5 border border-white/10 rounded-xl p-4">
             <label className="flex items-center justify-between text-sm font-medium text-gray-300 mb-2">
                 {label}
                 <span className="text-amber-400 font-bold text-lg">{(scores as any)[field]}/5</span>
@@ -363,12 +364,12 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                                                                 </div>
 
                                                                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                                                                    <ScoreInput label="Idea (Value/Interest)" field="idea" description="Interesting, Useful, Value Accretive." />
-                                                                    <ScoreInput label="Tools/Technology" field="tools" description="Identification of Necessary Tools & Latest Technology." />
-                                                                    <ScoreInput label="Impact (Scalability)" field="impact" description="Level of impact and scalability." />
-                                                                    <ScoreInput label="Financial Sustainability" field="sustainability" description="Financial Sustainability & Business Viability." />
-                                                                    <ScoreInput label="Technical Feasibility" field="feasibility" description="Technical Feasibility & Implementation." />
-                                                                    <ScoreInput label="Communication" field="communication" description="Presentation, articulation, and clarity." />
+                                                                    {renderScoreInput("Idea (Value/Interest)", "idea", "Interesting, Useful, Value Accretive.")}
+                                                                    {renderScoreInput("Tools/Technology", "tools", "Identification of Necessary Tools & Latest Technology.")}
+                                                                    {renderScoreInput("Impact (Scalability)", "impact", "Level of impact and scalability.")}
+                                                                    {renderScoreInput("Financial Sustainability", "sustainability", "Financial Sustainability & Business Viability.")}
+                                                                    {renderScoreInput("Technical Feasibility", "feasibility", "Technical Feasibility & Implementation.")}
+                                                                    {renderScoreInput("Communication", "communication", "Presentation, articulation, and clarity.")}
                                                                 </div>
 
                                                                 <div className="space-y-3 mb-6">

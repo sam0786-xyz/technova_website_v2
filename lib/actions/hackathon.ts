@@ -649,7 +649,7 @@ export async function getPublicShortlistedTeams() {
 // LOGISTICS & QR ACTIONS
 // ==========================================
 
-export async function processHackathonQrScan(participantId: string, actionUrl: 'checkin' | 'food') {
+export async function processHackathonQrScan(participantId: string, actionUrl: 'checkin' | 'food', mealRound?: string) {
     const session = await auth()
     if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized" }
 
@@ -658,7 +658,7 @@ export async function processHackathonQrScan(participantId: string, actionUrl: '
     // Verify participant
     const { data: participant } = await supabase
         .from('hackathon_participants')
-        .select('*')
+        .select('*, hackathon_teams(name, team_code)')
         .eq('id', participantId)
         .single()
 
@@ -678,11 +678,25 @@ export async function processHackathonQrScan(participantId: string, actionUrl: '
     }
 
     if (actionUrl === 'food') {
+        const mealType = mealRound || 'default'
+
+        // Check if this participant already scanned for this meal round
+        const { data: existingLog } = await supabase
+            .from('hackathon_food_logs')
+            .select('id')
+            .eq('participant_id', participantId)
+            .eq('meal_type', mealType)
+            .maybeSingle()
+
+        if (existingLog) {
+            return { error: `${participant.name} has already scanned for "${mealType}". Each participant can only scan once per meal round.` }
+        }
+
         const { error: logError } = await supabase
             .from('hackathon_food_logs')
             .insert({
                 participant_id: participantId,
-                scanned_by: session.user.id
+                meal_type: mealType,
             })
 
         if (logError) return { error: logError.message }
@@ -694,7 +708,7 @@ export async function processHackathonQrScan(participantId: string, actionUrl: '
 
         if (updateError) return { error: updateError.message }
 
-        return { success: true, participant, message: `Food logged successfully! (Total meals: ${participant.food_count + 1})` }
+        return { success: true, participant, message: `✅ ${participant.name} — "${mealType}" logged! (Total meals: ${participant.food_count + 1})` }
     }
 
     return { error: "Invalid action" }
