@@ -44,12 +44,30 @@ export async function uploadHackathonData(formData: FormData) {
         let participantsAdded = 0
 
         for (const row of data as any[]) {
-            // Find team name and idea
-            const teamNameKey = Object.keys(row).find(k => k.toLowerCase().includes('team name'))
-            const ideaKey = Object.keys(row).find(k => k.toLowerCase().includes('idea') || k.toLowerCase().includes('project title'))
+            // Find team name and idea using strict matching (strip non-alphanumeric whitespace)
+            const cleanStr = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            const teamName = teamNameKey ? row[teamNameKey] : `Team ${Math.floor(Math.random() * 10000)}`
+            const teamNameKey = Object.keys(row).find(k => {
+                const clean = cleanStr(k);
+                return clean.includes('teamname') || clean.includes('nameofteam') || clean === 'team';
+            })
+            const ideaKey = Object.keys(row).find(k => {
+                const clean = cleanStr(k);
+                return clean.includes('idea') || clean.includes('projecttitle') || clean.includes('title') || clean.includes('solution');
+            })
+            const teamCodeKey = Object.keys(row).find(k => {
+                const clean = cleanStr(k);
+                return clean.includes('teamid') || clean.includes('code');
+            })
+            const objectiveKey = Object.keys(row).find(k => {
+                const clean = cleanStr(k);
+                return clean.includes('synopsis') || clean.includes('objective') || clean.includes('description');
+            })
+
+            const teamCode = teamCodeKey ? String(row[teamCodeKey]) : null
+            const teamName = teamNameKey ? row[teamNameKey] : `Team ${teamCode || Math.floor(Math.random() * 10000)}`
             const ideaTitle = ideaKey ? row[ideaKey] : 'TBD'
+            const projectObjective = objectiveKey ? row[objectiveKey] : null
 
             if (!teamName) continue;
 
@@ -59,6 +77,8 @@ export async function uploadHackathonData(formData: FormData) {
                 .insert({
                     name: teamName,
                     idea_title: ideaTitle,
+                    team_code: teamCode,
+                    project_objective: projectObjective,
                     status: 'pending'
                 })
                 .select()
@@ -72,15 +92,19 @@ export async function uploadHackathonData(formData: FormData) {
 
             // Find members (leader + members)
             // Look for patterns like "Leader Name", "Leader Email", "Member 1 Name", "Member 1 Email"
-            const participantPairs: { name: string, email: string, role: string }[] = []
+            const participantPairs: { name: string, email: string, phone: string | null, role: string }[] = []
 
             // Extract leader
-            const leaderNameKey = Object.keys(row).find(k => k.toLowerCase().includes('leader name'))
-            const leaderEmailKey = Object.keys(row).find(k => k.toLowerCase().includes('leader email'))
+            const leaderNameKey = Object.keys(row).find(k => k.toLowerCase().includes('leader') && (k.toLowerCase().includes('name') || k.toLowerCase().includes('lead'))) || Object.keys(row).find(k => k.toLowerCase() === 'name') || Object.keys(row).find(k => k.toLowerCase().includes('name'))
+
+            const leaderEmailKey = Object.keys(row).find(k => k.toLowerCase().includes('leader') && k.toLowerCase().includes('email')) || Object.keys(row).find(k => k.toLowerCase().includes('email'))
+            const leaderPhoneKey = Object.keys(row).find(k => (k.toLowerCase().includes('leader') || !k.toLowerCase().includes('member')) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')))
+
             if (leaderNameKey && leaderEmailKey && row[leaderNameKey] && row[leaderEmailKey]) {
                 participantPairs.push({
                     name: row[leaderNameKey],
                     email: row[leaderEmailKey],
+                    phone: leaderPhoneKey ? String(row[leaderPhoneKey]) : null,
                     role: 'Leader'
                 })
             }
@@ -89,11 +113,13 @@ export async function uploadHackathonData(formData: FormData) {
             for (let i = 1; i <= 4; i++) {
                 const memberNameKey = Object.keys(row).find(k => k.toLowerCase().includes(`member ${i} name`) || k.toLowerCase().includes(`team member ${i} name`))
                 const memberEmailKey = Object.keys(row).find(k => k.toLowerCase().includes(`member ${i} email`) || k.toLowerCase().includes(`team member ${i} email`))
+                const memberPhoneKey = Object.keys(row).find(k => (k.toLowerCase().includes(`member ${i} `) || k.toLowerCase().includes(`team member ${i} `)) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')))
 
                 if (memberNameKey && memberEmailKey && row[memberNameKey] && row[memberEmailKey]) {
                     participantPairs.push({
                         name: row[memberNameKey],
                         email: row[memberEmailKey],
+                        phone: memberPhoneKey ? String(row[memberPhoneKey]) : null,
                         role: 'Member'
                     })
                 }
@@ -105,6 +131,7 @@ export async function uploadHackathonData(formData: FormData) {
                     team_id: team.id,
                     name: p.name,
                     email: p.email,
+                    phone: p.phone,
                     role: p.role,
                     is_checked_in: false,
                     food_count: 0
@@ -128,6 +155,30 @@ export async function uploadHackathonData(formData: FormData) {
     } catch (error: any) {
         console.error("Upload Error:", error)
         return { error: "Failed to process file: " + error.message }
+    }
+}
+
+export async function deleteAllHackathonTeams() {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
+        throw new Error("Unauthorized")
+    }
+
+    try {
+        const supabase = await getSupabase()
+        // Delete all teams. Cascading deletes will remove participants and evaluations.
+        const { error } = await supabase
+            .from('hackathon_teams')
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000') // Dummy condition to delete all rows
+
+        if (error) throw error
+
+        revalidatePath('/admin/hackathon')
+        return { success: true, message: "All teams have been successfully deleted." }
+    } catch (error: any) {
+        console.error("Delete All Teams Error:", error)
+        return { error: "Failed to delete teams: " + error.message }
     }
 }
 
@@ -386,86 +437,182 @@ export async function checkEvaluatorAccess() {
     return data || null
 }
 
-export async function getTeamsForEvaluation() {
+export async function getTeamsForEvaluation(round: number = 1) {
+    const session = await auth()
+    if (!session || !session.user) return []
+    const isAdmin = session.user.role === 'admin' || session.user.role === 'super_admin'
+
     const evaluator = await checkEvaluatorAccess()
-    if (!evaluator) return []
+    if (!evaluator && !isAdmin) return []
 
     const supabase = await getSupabase()
 
     // Fetch teams that are in 'evaluating' or 'pending' state
-    const { data: teams } = await supabase
+    let query = supabase
         .from('hackathon_teams')
         .select(`
-            id, name, idea_title, table_number, status, total_score,
-            hackathon_participants (name, role),
-            hackathon_evaluations (evaluator_id, total_score)
+            id, name, idea_title, project_objective, team_code, table_number, status, total_score,
+            hackathon_participants (name, email, phone, role),
+            hackathon_evaluations (evaluator_id, total_score, evaluation_round)
         `)
-        .in('status', ['pending', 'evaluating'])
-        .order('created_at', { ascending: true })
+
+    if (round === 1) {
+        query = query.in('status', ['pending', 'evaluating', 'shortlisted', 'not_shortlisted']) // All teams basically
+    } else if (round === 2) {
+        query = query.eq('status', 'shortlisted') // Only shortlisted
+    }
+
+    const { data: teams, error } = await query.order('created_at', { ascending: true })
+
+    if (error) {
+        console.error("Supabase Error in getTeamsForEvaluation:", error);
+        return [];
+    }
+
 
     if (!teams) return []
 
-    // Map to indicate if this specific evaluator has already scored this team
+    // Map to indicate if this specific evaluator has already scored this team for this round
     return teams.map(team => {
-        const myEval = team.hackathon_evaluations.find((e: any) => e.evaluator_id === evaluator.id)
+        const evaluations = team.hackathon_evaluations || [];
+        const myEval = evaluator ? evaluations.find((e: any) => e.evaluator_id === evaluator.id && e.evaluation_round === round) : null;
+
+        // Calculate the total score for this SPECIFIC round by summing all evaluations matching this round
+        const roundSpecificEvals = evaluations.filter((e: any) => e.evaluation_round === round);
+        const roundSpecificTotal = roundSpecificEvals.reduce((acc: number, curr: any) => acc + Number(curr.total_score), 0);
+
         return {
             ...team,
+            total_score: roundSpecificTotal, // Override generic total score with ROUND SPECIFIC total score
             has_evaluated: !!myEval,
             my_score: myEval ? myEval.total_score : null
         }
     })
 }
 
-export async function submitEvaluation(teamId: string, scores: { innovation: number, ui: number, technical: number, feedback: string }) {
+export type EvaluationScores = {
+    idea: number;
+    tools: number;
+    impact: number;
+    sustainability: number;
+    feasibility: number;
+    communication: number;
+    feedback: string;
+}
+
+export async function submitEvaluation(teamId: string, round: number, scores: EvaluationScores) {
     const evaluator = await checkEvaluatorAccess()
     if (!evaluator) return { error: "Unauthorized Evaluator Access" }
 
-    // Validate scores (0-10 range)
-    if (scores.innovation < 0 || scores.innovation > 10 ||
-        scores.ui < 0 || scores.ui > 10 ||
-        scores.technical < 0 || scores.technical > 10) {
-        return { error: "Scores must be between 0 and 10." }
+    // Validate scores (1-5 range for 6 factors)
+    const scoreValues = [scores.idea, scores.tools, scores.impact, scores.sustainability, scores.feasibility, scores.communication];
+    if (scoreValues.some(s => s < 1 || s > 5)) {
+        return { error: "Scores must be between 1 and 5 for each category." }
     }
 
-    const totalScore = scores.innovation + scores.ui + scores.technical
+    const totalScore = scoreValues.reduce((a, b) => a + b, 0);
     const supabase = await getSupabase()
 
-    // Insert Evaluation
+    // Check if evaluation is open
+    const { data: settings } = await supabase.from('hackathon_settings').select('evaluation_open').limit(1).maybeSingle()
+    if (!settings?.evaluation_open) {
+        return { error: "Evaluation period is currently closed. You can no longer submit scores." }
+    }
+
+    // Insert Evaluation for the specific round
     const { error: evalError } = await supabase
         .from('hackathon_evaluations')
         .insert({
             team_id: teamId,
             evaluator_id: evaluator.id,
-            score_innovation: scores.innovation,
-            score_ui: scores.ui,
-            score_technical: scores.technical,
+            evaluation_round: round,
+            score_idea: scores.idea,
+            score_tools: scores.tools,
+            score_impact: scores.impact,
+            score_sustainability: scores.sustainability,
+            score_feasibility: scores.feasibility,
+            score_communication: scores.communication,
             total_score: totalScore,
             feedback: scores.feedback
         })
 
-    if (evalError) return { error: evalError.code === '23505' ? "You have already evaluated this team." : evalError.message }
+    if (evalError) return { error: evalError.code === '23505' ? `You have already evaluated this team for Round ${round}.` : evalError.message }
 
-    // Aggregate all scores for this team to update the teams table
+    // Aggregate all scores for this team to update the teams table for the specific round
     const { data: allEvals } = await supabase
         .from('hackathon_evaluations')
-        .select('total_score')
+        .select('total_score, evaluation_round')
         .eq('team_id', teamId)
 
     if (allEvals) {
-        const teamTotal = allEvals.reduce((acc, curr) => acc + Number(curr.total_score), 0)
+        const round1Total = allEvals.filter(e => e.evaluation_round === 1).reduce((acc, curr) => acc + Number(curr.total_score), 0);
+        const round2Total = allEvals.filter(e => e.evaluation_round === 2).reduce((acc, curr) => acc + Number(curr.total_score), 0);
+
+        // We'll update the total_score to reflect the CURRENT round so sorting works out of the box for the generic Dashboard stats
+        // But optimally, we should just use the specific round total 
+        const teamTotal = round === 1 ? round1Total : round2Total;
 
         await supabase
             .from('hackathon_teams')
             .update({
-                total_score: teamTotal,
-                status: 'evaluating' // automatically move pending teams to evaluating
+                total_score: teamTotal, // Holds the active round's total
+                status: 'evaluating'
             })
             .eq('id', teamId)
     }
 
-    revalidatePath('/evaluate')
+    revalidatePath('/admin/hackathon/evaluate')
     revalidatePath('/admin/hackathon')
     return { success: true }
+}
+
+export async function toggleEvaluationPeriod(isOpen: boolean) {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
+        return { error: "Unauthorized" }
+    }
+
+    const supabase = await getSupabase()
+    const { data: existing } = await supabase.from('hackathon_settings').select('id').limit(1).maybeSingle()
+
+    if (existing) {
+        const { error } = await supabase.from('hackathon_settings').update({
+            evaluation_open: isOpen
+        }).eq('id', existing.id)
+        if (error) return { error: error.message }
+    } else {
+        const { error } = await supabase.from('hackathon_settings').insert({
+            duration_hours: 24,
+            evaluation_open: isOpen
+        })
+        if (error) return { error: error.message }
+    }
+
+    revalidatePath('/admin/hackathon')
+    return { success: true }
+}
+
+export async function getTeamEvaluations(teamId: string, round: number) {
+    const session = await auth()
+    if (!session || !session.user) return []
+    const isAdmin = session.user.role === 'admin' || session.user.role === 'super_admin'
+
+    const evaluator = await checkEvaluatorAccess()
+    if (!evaluator && !isAdmin) return []
+
+    const supabase = await getSupabase()
+
+    const { data: evaluations } = await supabase
+        .from('hackathon_evaluations')
+        .select(`
+            id, total_score, score_idea, score_tools, score_impact, score_sustainability, score_feasibility, score_communication, feedback, evaluation_round, created_at,
+            hackathon_evaluators (name, email)
+        `)
+        .eq('team_id', teamId)
+        .eq('evaluation_round', round)
+        .order('created_at', { ascending: false })
+
+    return evaluations || []
 }
 
 export async function getPublicShortlistedTeams() {

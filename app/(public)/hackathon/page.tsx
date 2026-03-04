@@ -206,9 +206,15 @@ export default function HackathonPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8 }}
                     >
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 mb-8 backdrop-blur-md">
-                            <Zap className="w-5 h-5 text-purple-400" />
-                            <span className="text-purple-400 font-bold uppercase tracking-widest text-sm">Registrations Open</span>
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 backdrop-blur-md">
+                                <Zap className="w-5 h-5 text-purple-400" />
+                                <span className="text-purple-400 font-bold uppercase tracking-widest text-sm">Registrations Open</span>
+                            </div>
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 backdrop-blur-md shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                <Award className="w-5 h-5 text-amber-500" />
+                                <span className="text-amber-500 font-bold uppercase tracking-widest text-sm">8th Edition</span>
+                            </div>
                         </div>
 
                         <h1 className="text-6xl md:text-8xl font-black tracking-tight mb-6 leading-[1.1] relative">
