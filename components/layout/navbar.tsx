@@ -37,7 +37,7 @@ export function Navbar({ user }: NavbarProps) {
         { href: "/scan", label: "Scanner" },
     ]
 
-    const hackathonLink = { href: "/admin/hackathon", label: "Hackathon Mgmt" }
+    const hackathonLink = { href: "/hackathon-portal", label: "Hackathon Portal" }
 
     const isPrivileged = user?.role === 'admin' || user?.role === 'super_admin'
 
@@ -104,7 +104,7 @@ export function Navbar({ user }: NavbarProps) {
                                     </Link>
                                 ))}
 
-                                {isPrivileged && (
+                                {user && (
                                     <Link
                                         href={hackathonLink.href}
                                         className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 px-3 py-2 rounded-lg transition-all text-sm font-medium"
@@ -184,7 +184,7 @@ export function Navbar({ user }: NavbarProps) {
                                 </Link>
                             ))}
 
-                            {user && isPrivileged && (
+                            {user && (
                                 <Link
                                     href={hackathonLink.href}
                                     className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 py-3 px-4 rounded-lg font-medium"

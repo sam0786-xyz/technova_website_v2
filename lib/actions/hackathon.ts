@@ -651,7 +651,12 @@ export async function getPublicShortlistedTeams() {
 
 export async function processHackathonQrScan(participantId: string, actionUrl: 'checkin' | 'checkout' | 'food', mealRound?: string) {
     const session = await auth()
-    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized" }
+    if (!session || !session.user) return { error: "Unauthorized" }
+
+    // Allow super_admin, admin, or volunteers
+    const isAdmin = session.user.role === 'admin' || session.user.role === 'super_admin'
+    const volunteer = await checkVolunteerAccess()
+    if (!isAdmin && !volunteer) return { error: "Unauthorized" }
 
     const supabase = await getSupabase()
 
@@ -800,7 +805,12 @@ export async function getFoodLogsData() {
 
 export async function searchParticipants(query: string) {
     const session = await auth()
-    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return []
+    if (!session || !session.user) return []
+
+    // Allow super_admin, admin, or volunteers
+    const isAdmin = session.user.role === 'admin' || session.user.role === 'super_admin'
+    const volunteer = await checkVolunteerAccess()
+    if (!isAdmin && !volunteer) return []
 
     if (!query || query.length < 2) return []
 
@@ -812,4 +822,114 @@ export async function searchParticipants(query: string) {
         .limit(10)
 
     return participants || []
+}
+
+// ==========================================
+// VOLUNTEER MANAGEMENT
+// ==========================================
+
+export async function checkVolunteerAccess() {
+    const session = await auth()
+    if (!session || !session.user || !session.user.email) return null
+
+    const supabase = await getSupabase()
+    const { data } = await supabase
+        .from('hackathon_volunteers')
+        .select('id, name')
+        .eq('email', session.user.email)
+        .single()
+
+    return data || null
+}
+
+export async function getVolunteers() {
+    const session = await auth()
+    if (!session || session.user.role !== 'super_admin') return []
+
+    const supabase = await getSupabase()
+    const { data: volunteers } = await supabase
+        .from('hackathon_volunteers')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+    return volunteers || []
+}
+
+export async function addVolunteer(email: string, name: string = 'Volunteer') {
+    const session = await auth()
+    if (!session || session.user.role !== 'super_admin') return { error: 'Unauthorized' }
+
+    const supabase = await getSupabase()
+    const { error } = await supabase
+        .from('hackathon_volunteers')
+        .insert({ email: email.trim().toLowerCase(), name: name.trim() })
+
+    if (error) {
+        if (error.code === '23505') return { error: "Volunteer already exists" }
+        return { error: error.message }
+    }
+    revalidatePath('/hackathon-portal')
+    return { success: true }
+}
+
+export async function removeVolunteer(id: string) {
+    const session = await auth()
+    if (!session || session.user.role !== 'super_admin') return { error: 'Unauthorized' }
+
+    const supabase = await getSupabase()
+    const { error } = await supabase
+        .from('hackathon_volunteers')
+        .delete()
+        .eq('id', id)
+
+    if (error) return { error: error.message }
+    revalidatePath('/hackathon-portal')
+    return { success: true }
+}
+
+// ==========================================
+// HACKATHON ROLE CHECK (for portal access)
+// ==========================================
+
+export type HackathonRole = 'organizer' | 'evaluator' | 'volunteer' | 'none'
+
+export async function checkHackathonRole(): Promise<{ role: HackathonRole, user: any }> {
+    const session = await auth()
+    if (!session || !session.user) return { role: 'none', user: null }
+
+    // Super admins are organizers
+    if (session.user.role === 'super_admin') {
+        return { role: 'organizer', user: session.user }
+    }
+
+    // Check evaluator table
+    const evaluator = await checkEvaluatorAccess()
+    if (evaluator) return { role: 'evaluator', user: session.user }
+
+    // Check volunteer table
+    const volunteer = await checkVolunteerAccess()
+    if (volunteer) return { role: 'volunteer', user: session.user }
+
+    return { role: 'none', user: session.user }
+}
+
+// Check if an email has hackathon access (for login gating)
+export async function isHackathonEmail(email: string): Promise<boolean> {
+    const supabase = await getSupabase()
+
+    const { data: evaluator } = await supabase
+        .from('hackathon_evaluators')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .single()
+
+    if (evaluator) return true
+
+    const { data: volunteer } = await supabase
+        .from('hackathon_volunteers')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .single()
+
+    return !!volunteer
 }

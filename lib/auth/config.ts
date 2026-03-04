@@ -38,8 +38,19 @@ export const config = {
           return false
         }
 
-        const allowed = isEmailAllowed(email)
-        return allowed
+        // First check standard allowed emails
+        if (isEmailAllowed(email)) return true
+
+        // Then check if they're a hackathon evaluator or volunteer
+        try {
+          const { isHackathonEmail } = await import("@/lib/actions/hackathon")
+          const isHackathon = await isHackathonEmail(email)
+          if (isHackathon) return true
+        } catch {
+          // If table doesn't exist yet, gracefully fall through
+        }
+
+        return false
       }
       return true
     },
