@@ -649,7 +649,7 @@ export async function getPublicShortlistedTeams() {
 // LOGISTICS & QR ACTIONS
 // ==========================================
 
-export async function processHackathonQrScan(participantId: string, actionUrl: 'checkin' | 'food') {
+export async function processHackathonQrScan(participantId: string, actionUrl: 'checkin' | 'checkout' | 'food', mealRound?: string) {
     const session = await auth()
     if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized" }
 
@@ -658,7 +658,7 @@ export async function processHackathonQrScan(participantId: string, actionUrl: '
     // Verify participant
     const { data: participant } = await supabase
         .from('hackathon_participants')
-        .select('*')
+        .select('*, hackathon_teams(name, team_code)')
         .eq('id', participantId)
         .single()
 
@@ -674,15 +674,42 @@ export async function processHackathonQrScan(participantId: string, actionUrl: '
 
         if (error) return { error: error.message }
         revalidatePath('/admin/hackathon')
-        return { success: true, participant, message: "Checked in successfully" }
+        return { success: true, participant, message: `✅ ${participant.name} — Checked in successfully` }
+    }
+
+    if (actionUrl === 'checkout') {
+        if (!participant.is_checked_in) return { message: "Not checked in", participant }
+
+        const { error } = await supabase
+            .from('hackathon_participants')
+            .update({ is_checked_in: false })
+            .eq('id', participantId)
+
+        if (error) return { error: error.message }
+        revalidatePath('/admin/hackathon')
+        return { success: true, participant, message: `👋 ${participant.name} — Checked out successfully` }
     }
 
     if (actionUrl === 'food') {
+        const mealType = mealRound || 'default'
+
+        // Check if this participant already scanned for this meal round
+        const { data: existingLog } = await supabase
+            .from('hackathon_food_logs')
+            .select('id')
+            .eq('participant_id', participantId)
+            .eq('meal_type', mealType)
+            .maybeSingle()
+
+        if (existingLog) {
+            return { error: `${participant.name} has already scanned for "${mealType}". Each participant can only scan once per meal round.` }
+        }
+
         const { error: logError } = await supabase
             .from('hackathon_food_logs')
             .insert({
                 participant_id: participantId,
-                scanned_by: session.user.id
+                meal_type: mealType,
             })
 
         if (logError) return { error: logError.message }
@@ -694,7 +721,7 @@ export async function processHackathonQrScan(participantId: string, actionUrl: '
 
         if (updateError) return { error: updateError.message }
 
-        return { success: true, participant, message: `Food logged successfully! (Total meals: ${participant.food_count + 1})` }
+        return { success: true, participant, message: `✅ ${participant.name} — "${mealType}" logged! (Total meals: ${participant.food_count + 1})` }
     }
 
     return { error: "Invalid action" }
@@ -714,4 +741,75 @@ export async function manualCheckInParticipant(participantId: string, isCheckedI
 
     revalidatePath('/admin/hackathon')
     return { success: true }
+}
+
+// ==========================================
+// DATA DOWNLOADS
+// ==========================================
+
+export async function getCheckedInParticipantsData() {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized", data: [] }
+
+    const supabase = await getSupabase()
+    const { data: participants } = await supabase
+        .from('hackathon_participants')
+        .select('name, email, phone, role, is_checked_in, food_count, hackathon_teams(name, team_code)')
+        .order('is_checked_in', { ascending: false })
+
+    return {
+        data: (participants || []).map((p: any) => ({
+            'Participant Name': p.name,
+            'Email': p.email,
+            'Phone': p.phone || '',
+            'Role': p.role,
+            'Team Name': p.hackathon_teams?.name || '',
+            'Team ID': p.hackathon_teams?.team_code || '',
+            'Checked In': p.is_checked_in ? 'Yes' : 'No',
+            'Meals Taken': p.food_count,
+        }))
+    }
+}
+
+export async function getFoodLogsData() {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized", data: [] }
+
+    const supabase = await getSupabase()
+    const { data: logs } = await supabase
+        .from('hackathon_food_logs')
+        .select('meal_type, scanned_at, hackathon_participants(name, email, phone, hackathon_teams(name, team_code))')
+        .order('scanned_at', { ascending: false })
+
+    return {
+        data: (logs || []).map((log: any) => ({
+            'Participant Name': log.hackathon_participants?.name || '',
+            'Email': log.hackathon_participants?.email || '',
+            'Phone': log.hackathon_participants?.phone || '',
+            'Team Name': log.hackathon_participants?.hackathon_teams?.name || '',
+            'Team ID': log.hackathon_participants?.hackathon_teams?.team_code || '',
+            'Meal Type': log.meal_type || '',
+            'Scanned At': log.scanned_at ? new Date(log.scanned_at).toLocaleString() : '',
+        }))
+    }
+}
+
+// ==========================================
+// SEARCH PARTICIPANTS (for manual check-in)
+// ==========================================
+
+export async function searchParticipants(query: string) {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return []
+
+    if (!query || query.length < 2) return []
+
+    const supabase = await getSupabase()
+    const { data: participants } = await supabase
+        .from('hackathon_participants')
+        .select('id, name, email, phone, role, is_checked_in, food_count, hackathon_teams(name, team_code)')
+        .or(`name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`)
+        .limit(10)
+
+    return participants || []
 }

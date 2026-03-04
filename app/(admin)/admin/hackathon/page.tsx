@@ -5,9 +5,10 @@ import {
     uploadHackathonData, getHackathonTeams, deleteAllHackathonTeams,
     getEvaluators, addEvaluator, removeEvaluator,
     getHackathonSettings, startTimer, stopTimer, pushAnnouncement, clearAnnouncement,
-    getSchedule, addScheduleItem, deleteScheduleItem, updateTeamStatus, toggleEvaluationPeriod
+    getSchedule, addScheduleItem, deleteScheduleItem, updateTeamStatus, toggleEvaluationPeriod,
+    getCheckedInParticipantsData, getFoodLogsData
 } from "@/lib/actions/hackathon";
-import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star } from "lucide-react";
+import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import EvaluatorDashboardClient from "./evaluate/client";
@@ -215,23 +216,70 @@ export default function HackathonAdminPage() {
         }
     };
 
+    const downloadCSV = (data: any[], filename: string) => {
+        if (!data || data.length === 0) {
+            setMessage({ type: 'error', text: 'No data to download.' });
+            return;
+        }
+        const headers = Object.keys(data[0]);
+        const csvContent = [
+            headers.join(','),
+            ...data.map(row => headers.map(h => `"${String(row[h] || '').replace(/"/g, '""')}"`).join(','))
+        ].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+    };
+
+    const handleDownloadCheckIn = async () => {
+        const result = await getCheckedInParticipantsData();
+        if (result.error) {
+            setMessage({ type: 'error', text: result.error });
+        } else {
+            downloadCSV(result.data, `checkin_data_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+    };
+
+    const handleDownloadFoodLogs = async () => {
+        const result = await getFoodLogsData();
+        if (result.error) {
+            setMessage({ type: 'error', text: result.error });
+        } else {
+            downloadCSV(result.data, `food_logs_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+    };
+
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
+            <div className="flex flex-col gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400">
+                    <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400">
                         Hackathon Management
                     </h1>
-                    <p className="text-gray-400 mt-2">Manage teams, evaluators, logistics, and the 24hr live timer.</p>
+                    <p className="text-gray-400 mt-1 md:mt-2 text-sm md:text-base">Manage teams, evaluators, logistics, and the 24hr live timer.</p>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-3 flex-wrap">
                     <Link
                         href="/admin/hackathon/scan"
-                        className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-white px-6 py-3 rounded-xl font-medium transition-colors w-fit shadow-xl"
+                        className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-medium transition-colors w-fit shadow-xl text-sm md:text-base"
                     >
-                        <QrCode className="w-5 h-5 text-emerald-400" /> Open Logistics Scanner
+                        <QrCode className="w-4 h-4 md:w-5 md:h-5 text-emerald-400" /> Logistics Scanner
                     </Link>
+                    <button
+                        onClick={handleDownloadCheckIn}
+                        className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/20 text-blue-400 px-4 py-2.5 rounded-xl font-medium transition-colors text-sm"
+                    >
+                        <Download className="w-4 h-4" /> Check-in Data
+                    </button>
+                    <button
+                        onClick={handleDownloadFoodLogs}
+                        className="flex items-center gap-2 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/20 text-orange-400 px-4 py-2.5 rounded-xl font-medium transition-colors text-sm"
+                    >
+                        <Download className="w-4 h-4" /> Food Logs
+                    </button>
                 </div>
             </div>
 
@@ -242,18 +290,18 @@ export default function HackathonAdminPage() {
                         <p className="text-sm">{message.text}</p>
                     </div>
                 )}
-                <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-xl mb-8 flex flex-wrap h-auto gap-2">
-                    <TabsTrigger value="teams" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg px-6 py-2.5">
-                        <Users className="w-4 h-4 mr-2" /> Teams & Import
+                <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-xl mb-6 md:mb-8 flex overflow-x-auto h-auto gap-1 md:gap-2">
+                    <TabsTrigger value="teams" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                        <Users className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Teams & Import
                     </TabsTrigger>
-                    <TabsTrigger value="evaluators" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 rounded-lg px-6 py-2.5">
-                        <CheckCircle className="w-4 h-4 mr-2" /> Evaluators & Grading
+                    <TabsTrigger value="evaluators" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                        <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Evaluators & Grading
                     </TabsTrigger>
-                    <TabsTrigger value="timer" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 rounded-lg px-6 py-2.5">
-                        <Clock className="w-4 h-4 mr-2" /> Timer & Live
+                    <TabsTrigger value="timer" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                        <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Timer & Live
                     </TabsTrigger>
-                    <TabsTrigger value="schedule" className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400 rounded-lg px-6 py-2.5">
-                        <Calendar className="w-4 h-4 mr-2" /> Schedule
+                    <TabsTrigger value="schedule" className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                        <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Schedule
                     </TabsTrigger>
                 </TabsList>
 
