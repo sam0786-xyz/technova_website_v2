@@ -94,17 +94,32 @@ export async function uploadHackathonData(formData: FormData) {
             // Look for patterns like "Leader Name", "Leader Email", "Member 1 Name", "Member 1 Email"
             const participantPairs: { name: string, email: string, phone: string | null, role: string }[] = []
 
-            // Extract leader - prioritize columns explicitly mentioning 'leader', exclude 'team name' from fallback
-            const leaderNameKey = Object.keys(row).find(k => k.toLowerCase().includes('leader') && (k.toLowerCase().includes('name') || k.toLowerCase().includes('lead')))
-                || Object.keys(row).find(k => k.toLowerCase().includes('name') && !k.toLowerCase().includes('team') && !k.toLowerCase().includes('idea') && !k.toLowerCase().includes('project'))
+            // Extract leader - match actual column headers like "Team Lead Name", "Leader Name", "Name", etc.
+            const leaderNameKey = Object.keys(row).find(k => {
+                const lower = k.toLowerCase();
+                // Matches: "Team Lead Name", "Leader Name", "Lead Name", "team leader name"
+                return lower.includes('lead') && lower.includes('name');
+            }) || Object.keys(row).find(k => {
+                const lower = k.toLowerCase();
+                // Fallback: any 'name' column that isn't the team name or project columns
+                return (lower === 'name') || (lower.includes('name') && !lower.includes('team name') && !lower.includes('idea') && !lower.includes('project'));
+            })
 
-            const leaderEmailKey = Object.keys(row).find(k => k.toLowerCase().includes('leader') && k.toLowerCase().includes('email')) || Object.keys(row).find(k => k.toLowerCase().includes('email'))
-            const leaderPhoneKey = Object.keys(row).find(k => (k.toLowerCase().includes('leader') || !k.toLowerCase().includes('member')) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')))
+            // Match "Email", "Leader Email", etc.
+            const leaderEmailKey = Object.keys(row).find(k => k.toLowerCase().includes('lead') && k.toLowerCase().includes('email'))
+                || Object.keys(row).find(k => k.toLowerCase() === 'email')
+                || Object.keys(row).find(k => k.toLowerCase().includes('email') && !k.toLowerCase().includes('member'))
 
-            if (leaderNameKey && leaderEmailKey && row[leaderNameKey] && row[leaderEmailKey]) {
+            // Match "Mobile Number", "Phone", "Contact", "Leader Phone", etc.
+            const leaderPhoneKey = Object.keys(row).find(k => {
+                const lower = k.toLowerCase();
+                return lower.includes('mobile') || lower.includes('phone') || lower.includes('contact');
+            })
+
+            if (leaderNameKey && row[leaderNameKey]) {
                 participantPairs.push({
                     name: row[leaderNameKey],
-                    email: row[leaderEmailKey],
+                    email: leaderEmailKey && row[leaderEmailKey] ? row[leaderEmailKey] : '',
                     phone: leaderPhoneKey ? String(row[leaderPhoneKey]) : null,
                     role: 'Leader'
                 })
