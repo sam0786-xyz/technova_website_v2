@@ -2,14 +2,15 @@
 
 import { useState, useRef, useEffect } from "react";
 import {
-    uploadHackathonData, getHackathonTeams,
+    uploadHackathonData, getHackathonTeams, deleteAllHackathonTeams,
     getEvaluators, addEvaluator, removeEvaluator,
     getHackathonSettings, startTimer, stopTimer, pushAnnouncement, clearAnnouncement,
-    getSchedule, addScheduleItem, deleteScheduleItem, updateTeamStatus
+    getSchedule, addScheduleItem, deleteScheduleItem, updateTeamStatus, toggleEvaluationPeriod
 } from "@/lib/actions/hackathon";
-import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail } from "lucide-react";
+import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
+import EvaluatorDashboardClient from "./evaluate/client";
 
 export default function HackathonAdminPage() {
     const [uploading, setUploading] = useState(false);
@@ -22,6 +23,7 @@ export default function HackathonAdminPage() {
     const [evalEmail, setEvalEmail] = useState("");
     const [announcement, setAnnouncement] = useState("");
     const [sendingQr, setSendingQr] = useState(false);
+    const [deletingTeams, setDeletingTeams] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -72,6 +74,27 @@ export default function HackathonAdminPage() {
             setMessage({ type: 'error', text: error.message || 'An unexpected error occurred.' });
         } finally {
             setUploading(false);
+        }
+    };
+
+    const handleDeleteAllTeams = async () => {
+        if (!confirm("🚨 WARNING 🚨\n\nThis will permanently delete ALL teams, evaluations, and participants from this hackathon. This cannot be undone.\n\nAre you absolutely sure you want to proceed?")) return;
+
+        setDeletingTeams(true);
+        setMessage(null);
+
+        try {
+            const res = await deleteAllHackathonTeams();
+            if (res.error) {
+                setMessage({ type: 'error', text: res.error });
+            } else {
+                setMessage({ type: 'success', text: "All teams have been successfully cleared." });
+                loadData();
+            }
+        } catch (error: any) {
+            setMessage({ type: 'error', text: error.message || "Failed to delete teams." });
+        } finally {
+            setDeletingTeams(false);
         }
     };
 
@@ -149,6 +172,19 @@ export default function HackathonAdminPage() {
         }
     };
 
+    const handleToggleEvaluationPeriod = async () => {
+        const newState = !settings?.evaluation_open;
+        if (!confirm(`Are you sure you want to ${newState ? 'OPEN' : 'CLOSE'} the evaluation period?`)) return;
+
+        const res = await toggleEvaluationPeriod(newState);
+        if (res.error) {
+            setMessage({ type: 'error', text: res.error });
+        } else {
+            setMessage({ type: 'success', text: `Evaluation period ${newState ? 'OPENED' : 'CLOSED'}.` });
+            loadData();
+        }
+    };
+
     const handleAddSchedule = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -189,12 +225,14 @@ export default function HackathonAdminPage() {
                     <p className="text-gray-400 mt-2">Manage teams, evaluators, logistics, and the 24hr live timer.</p>
                 </div>
 
-                <Link
-                    href="/admin/hackathon/scan"
-                    className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-white px-6 py-3 rounded-xl font-medium transition-colors w-fit shadow-xl"
-                >
-                    <QrCode className="w-5 h-5 text-emerald-400" /> Open Logistics Scanner
-                </Link>
+                <div className="flex gap-4">
+                    <Link
+                        href="/admin/hackathon/scan"
+                        className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-white px-6 py-3 rounded-xl font-medium transition-colors w-fit shadow-xl"
+                    >
+                        <QrCode className="w-5 h-5 text-emerald-400" /> Open Logistics Scanner
+                    </Link>
+                </div>
             </div>
 
             <Tabs defaultValue="teams" className="w-full">
@@ -209,7 +247,7 @@ export default function HackathonAdminPage() {
                         <Users className="w-4 h-4 mr-2" /> Teams & Import
                     </TabsTrigger>
                     <TabsTrigger value="evaluators" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 rounded-lg px-6 py-2.5">
-                        <CheckCircle className="w-4 h-4 mr-2" /> Evaluators
+                        <CheckCircle className="w-4 h-4 mr-2" /> Evaluators & Grading
                     </TabsTrigger>
                     <TabsTrigger value="timer" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 rounded-lg px-6 py-2.5">
                         <Clock className="w-4 h-4 mr-2" /> Timer & Live
@@ -248,7 +286,7 @@ export default function HackathonAdminPage() {
                                 </div>
                                 <button
                                     type="submit"
-                                    disabled={uploading}
+                                    disabled={uploading || deletingTeams}
                                     className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                                 >
                                     {uploading ? (
@@ -260,6 +298,29 @@ export default function HackathonAdminPage() {
                                         "Upload & Sync Teams"
                                     )}
                                 </button>
+
+                                {teams.length > 0 && (
+                                    <div className="pt-4 border-t border-white/10 mt-4">
+                                        <button
+                                            type="button"
+                                            onClick={handleDeleteAllTeams}
+                                            disabled={uploading || deletingTeams}
+                                            className="w-full bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-500 font-medium py-2 text-sm rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                                        >
+                                            {deletingTeams ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                                                    Deleting All Teams...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Trash2 className="w-4 h-4" /> Clear All Teams Data
+                                                </>
+                                            )}
+                                        </button>
+                                        <p className="text-xs text-center text-red-400 mt-2">Danger: Deletes all teams & scores.</p>
+                                    </div>
+                                )}
                             </form>
                         </div>
 
@@ -326,51 +387,122 @@ export default function HackathonAdminPage() {
                                         <p className="text-gray-400">No teams found. Import a file to get started.</p>
                                     </div>
                                 ) : (
-                                    <div className="grid gap-4">
-                                        {teams.map((team) => (
-                                            <div key={team.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
-                                                <div className="flex justify-between items-start mb-2 flex-col sm:flex-row gap-2">
-                                                    <div>
-                                                        <h3 className="font-semibold text-white text-lg flex items-center gap-3">
-                                                            {team.name}
-                                                            {team.total_score > 0 && (
-                                                                <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                                                                    Score: {team.total_score}
-                                                                </span>
-                                                            )}
-                                                        </h3>
-                                                        <p className="text-sm text-gray-400 flex items-center gap-2">
-                                                            <Cpu className="w-4 h-4" /> {team.idea_title}
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <button
-                                                            onClick={() => handleToggleShortlist(team.id, team.status)}
-                                                            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors border ${team.status === 'shortlisted'
-                                                                ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/30'
-                                                                : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10'
-                                                                }`}
-                                                        >
-                                                            {team.status === 'shortlisted' ? '★ Shortlisted' : 'Mark Shortlisted'}
-                                                        </button>
-                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium border w-fit ${team.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                                            team.status === 'evaluating' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                                                                team.status === 'shortlisted' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                                                    'bg-red-500/10 text-red-400 border-red-500/20'
-                                                            }`}>
-                                                            {team.status.toUpperCase()}
-                                                        </span>
-                                                    </div>
+                                    <div className="space-y-8">
+                                        <div className="flex flex-col gap-6">
+                                            <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center justify-center text-center">
+                                                <Users className="w-12 h-12 text-gray-500 mb-4 opacity-50" />
+                                                <p className="text-gray-400 text-sm max-w-sm">
+                                                    Team Details are now managed securely inside the <strong className="text-white">Evaluators & Grading</strong> tab. Here is the imported overview:
+                                                </p>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="p-6 rounded-xl bg-blue-500/10 border border-blue-500/20 flex flex-col items-center justify-center text-center">
+                                                    <h3 className="text-3xl font-bold text-blue-400 mb-2">{teams.length}</h3>
+                                                    <p className="text-xs font-semibold text-blue-400/80 uppercase tracking-wide">Total Teams</p>
                                                 </div>
-                                                <div className="mt-4 pt-4 border-t border-white/5 flex gap-2 flex-wrap">
-                                                    {team.hackathon_participants?.map((p: any) => (
-                                                        <div key={p.id} className="px-2 py-1 rounded bg-zinc-800 text-xs text-gray-300">
-                                                            {p.name} <span className="text-gray-500">({p.role})</span>
-                                                        </div>
-                                                    ))}
+                                                <div className="p-6 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col items-center justify-center text-center">
+                                                    <h3 className="text-3xl font-bold text-amber-400 mb-2">{teams.filter(t => t.status === 'pending').length}</h3>
+                                                    <p className="text-xs font-semibold text-amber-400/80 uppercase tracking-wide">Pending</p>
+                                                </div>
+                                                <div className="p-6 rounded-xl bg-purple-500/10 border border-purple-500/20 flex flex-col items-center justify-center text-center">
+                                                    <h3 className="text-3xl font-bold text-purple-400 mb-2">{teams.filter(t => t.status === 'evaluating').length}</h3>
+                                                    <p className="text-xs font-semibold text-purple-400/80 uppercase tracking-wide">Evaluating</p>
+                                                </div>
+                                                <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col items-center justify-center text-center">
+                                                    <h3 className="text-3xl font-bold text-emerald-400 mb-2">{teams.filter(t => t.status === 'shortlisted').length}</h3>
+                                                    <p className="text-xs font-semibold text-emerald-400/80 uppercase tracking-wide">Shortlisted</p>
                                                 </div>
                                             </div>
-                                        ))}
+                                        </div>
+
+                                        {/* Final Evaluation Results Table */}
+                                        <div className="mt-8">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                                    <Star className="w-5 h-5 text-amber-500" />
+                                                    Final Evaluation Results
+                                                </h3>
+                                                <div className="text-sm text-gray-400">
+                                                    Sorted by Highest Score
+                                                </div>
+                                            </div>
+
+                                            <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5 shadow-2xl">
+                                                <table className="w-full text-sm text-left text-gray-400">
+                                                    <thead className="text-xs text-gray-400 uppercase bg-black/40 border-b border-white/10">
+                                                        <tr>
+                                                            <th className="px-4 py-4 font-semibold">Rank</th>
+                                                            <th className="px-4 py-4 font-semibold">Team Name</th>
+                                                            <th className="px-4 py-4 font-semibold">Project Title</th>
+                                                            <th className="px-4 py-4 font-semibold text-center">Round 1 Score</th>
+                                                            <th className="px-4 py-4 font-semibold text-center">Round 2 Score</th>
+                                                            <th className="px-4 py-4 font-semibold">Status</th>
+                                                            <th className="px-4 py-4 font-semibold text-right">Shortlist Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {[...teams].sort((a, b) => {
+                                                            const totalScoreA = (b.hackathon_evaluations || []).reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
+                                                            const totalScoreB = (a.hackathon_evaluations || []).reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
+                                                            return totalScoreA - totalScoreB;
+                                                        }).map((team, index) => (
+                                                            <tr key={team.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                                <td className="px-4 py-4">
+                                                                    <span className={`w-8 h-8 flex items-center justify-center rounded-full font-bold ${index === 0 ? 'bg-amber-500/20 text-amber-500' : index === 1 ? 'bg-gray-300/20 text-gray-300' : index === 2 ? 'bg-amber-700/20 text-amber-600' : 'bg-white/5 text-gray-400'}`}>
+                                                                        {index + 1}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-4 font-bold text-white">
+                                                                    {team.name}
+                                                                    <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
+                                                                        <span className="font-mono text-amber-500">{team.team_code}</span>
+                                                                        <span>•</span>
+                                                                        <span>Leader: {team.hackathon_participants?.find((p: any) => p.role === 'Leader')?.name || 'Unknown'}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-4 py-4 font-medium text-emerald-400 max-w-xs truncate" title={team.project_objective}>
+                                                                    {team.idea_title}
+                                                                </td>
+                                                                <td className="px-4 py-4 font-mono text-center">
+                                                                    {(() => {
+                                                                        const r1 = team.hackathon_evaluations?.filter((e: any) => e.evaluation_round === 1) || [];
+                                                                        const total = r1.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
+                                                                        return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"}>{total > 0 ? total : '-'}</span>;
+                                                                    })()}
+                                                                </td>
+                                                                <td className="px-4 py-4 font-mono text-center border-l border-white/5">
+                                                                    {(() => {
+                                                                        const r2 = team.hackathon_evaluations?.filter((e: any) => e.evaluation_round === 2) || [];
+                                                                        const total = r2.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
+                                                                        return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"}>{total > 0 ? total : '-'}</span>;
+                                                                    })()}
+                                                                </td>
+                                                                <td className="px-4 py-4">
+                                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border w-fit ${team.status === 'pending' ? 'bg-gray-500/10 text-gray-400 border-gray-500/20' :
+                                                                        team.status === 'evaluating' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                                                                            team.status === 'shortlisted' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                                                                'bg-red-500/10 text-red-400 border-red-500/20'
+                                                                        }`}>
+                                                                        {team.status.toUpperCase()}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-4 text-right">
+                                                                    <button
+                                                                        onClick={() => handleToggleShortlist(team.id, team.status)}
+                                                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${team.status === 'shortlisted'
+                                                                            ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/30'
+                                                                            : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                                                                            }`}
+                                                                    >
+                                                                        {team.status === 'shortlisted' ? 'Remove from Shortlist' : 'Mark as Shortlisted'}
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -379,51 +511,91 @@ export default function HackathonAdminPage() {
                 </TabsContent>
 
                 {/* Evaluators Tab */}
-                <TabsContent value="evaluators" className="mt-0 border border-zinc-800 bg-zinc-900/50 rounded-2xl p-6 shadow-xl backdrop-blur-xl">
-                    <div className="flex flex-col md:flex-row gap-8">
-                        <div className="flex-1 max-w-md">
-                            <h2 className="text-xl font-bold text-white mb-2">Evaluator Management</h2>
-                            <p className="text-gray-400 text-sm mb-6">Add evaluator emails here so they can securely access the evaluation portal to score teams. They will log in using this email.</p>
-
-                            <form onSubmit={handleAddEvaluator} className="flex gap-3">
-                                <input
-                                    type="email"
-                                    value={evalEmail}
-                                    onChange={(e) => setEvalEmail(e.target.value)}
-                                    placeholder="Evaluator Email (e.g. judge@company.com)"
-                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 focus:outline-none focus:border-amber-500 text-white"
-                                    required
-                                />
-                                <button type="submit" className="bg-amber-600 hover:bg-amber-500 px-6 py-2 rounded-xl text-white font-medium transition-colors whitespace-nowrap">
-                                    Add
-                                </button>
-                            </form>
+                <TabsContent value="evaluators" className="mt-0 space-y-8">
+                    {/* Evaluation Period Toggle */}
+                    <div className="border border-zinc-800 bg-zinc-900/50 rounded-2xl p-6 shadow-xl backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div>
+                            <h2 className="text-xl font-bold text-white mb-1">Global Evaluation Period</h2>
+                            <p className="text-gray-400 text-sm">When open, evaluators can submit scores. When closed, they can only view final peer-reviewed results.</p>
                         </div>
+                        <button
+                            onClick={handleToggleEvaluationPeriod}
+                            className={`px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${settings?.evaluation_open
+                                ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                                : 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                                }`}
+                        >
+                            {settings?.evaluation_open ? 'PERIOD IS OPEN' : 'PERIOD IS CLOSED'}
+                        </button>
+                    </div>
 
-                        <div className="flex-1 border-l border-white/10 pl-0 md:pl-8">
-                            <h3 className="text-lg font-semibold text-white mb-4">Current Evaluators</h3>
-                            {evaluators.length === 0 ? (
-                                <p className="text-gray-500 text-sm italic">No evaluators added yet.</p>
-                            ) : (
-                                <div className="space-y-3">
-                                    {evaluators.map(ev => (
-                                        <div key={ev.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
-                                            <div>
-                                                <p className="font-medium text-white">{ev.name}</p>
-                                                <p className="text-xs text-gray-400">{ev.email}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => handleRemoveEvaluator(ev.id)}
-                                                className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
-                                                title="Remove Evaluator"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
+                    <div className="border border-zinc-800 bg-zinc-900/50 rounded-2xl p-6 shadow-xl backdrop-blur-xl">
+                        <div className="flex flex-col md:flex-row gap-8">
+                            <div className="flex-1 max-w-md">
+                                <h2 className="text-xl font-bold text-white mb-2">Evaluator Management</h2>
+                                <p className="text-gray-400 text-sm mb-6">Add evaluator emails here so they can securely access the evaluation portal to score teams. They will log in using this email.</p>
+
+                                <form onSubmit={handleAddEvaluator} className="flex gap-3">
+                                    <input
+                                        type="email"
+                                        value={evalEmail}
+                                        onChange={(e) => setEvalEmail(e.target.value)}
+                                        placeholder="Evaluator Email (e.g. judge@company.com)"
+                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 focus:outline-none focus:border-amber-500 text-white"
+                                        required
+                                    />
+                                    <button type="submit" className="bg-amber-600 hover:bg-amber-500 px-6 py-2 rounded-xl text-white font-medium transition-colors whitespace-nowrap">
+                                        Add
+                                    </button>
+                                </form>
+                                <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                                    <p className="text-sm text-blue-400 font-medium mb-1">Evaluator Portal Link</p>
+                                    <p className="text-xs text-gray-400 mb-2">Share this secure link with your evaluators after adding them:</p>
+                                    <div className="flex items-center gap-2 bg-black/50 p-2.5 rounded-lg border border-white/5">
+                                        <code className="text-xs text-amber-400 select-all flex-1">https://www.technovashardauniversity.in/admin/hackathon/evaluate</code>
+                                        <Link href="/admin/hackathon/evaluate" target="_blank" className="text-blue-400 hover:text-blue-300 text-xs underline whitespace-nowrap">
+                                            Open Portal
+                                        </Link>
+                                    </div>
                                 </div>
-                            )}
+                            </div>
+
+                            <div className="flex-1 border-l border-white/10 pl-0 md:pl-8">
+                                <h3 className="text-lg font-semibold text-white mb-4">Current Evaluators</h3>
+                                {evaluators.length === 0 ? (
+                                    <p className="text-gray-500 text-sm italic">No evaluators added yet.</p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {evaluators.map(ev => (
+                                            <div key={ev.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                                                <div>
+                                                    <p className="font-medium text-white">{ev.name}</p>
+                                                    <p className="text-xs text-gray-400">{ev.email}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleRemoveEvaluator(ev.id)}
+                                                    className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                                                    title="Remove Evaluator"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
+                    </div>
+
+                    <div className="border border-zinc-800 bg-zinc-900/50 rounded-2xl p-6 shadow-xl backdrop-blur-xl">
+                        <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
+                            <Star className="w-6 h-6 text-amber-500" />
+                            <div>
+                                <h2 className="text-xl font-bold text-white">Evaluate Teams</h2>
+                                <p className="text-sm text-gray-400">Score teams based on the 6-point rubric. You must be added as an evaluator above first.</p>
+                            </div>
+                        </div>
+                        <EvaluatorDashboardClient initialTeams={[]} evaluationOpen={settings?.evaluation_open ?? false} />
                     </div>
                 </TabsContent>
 
@@ -510,8 +682,6 @@ export default function HackathonAdminPage() {
                                             <option value="Activity">Activity</option>
                                             <option value="Meal">Meal</option>
                                             <option value="Evaluation">Evaluation</option>
-                                            <option value="Pitch">Pitch</option>
-                                            <option value="Deadline">Deadline</option>
                                         </select>
                                     </div>
                                 </div>
@@ -576,6 +746,6 @@ export default function HackathonAdminPage() {
                     </div>
                 </TabsContent>
             </Tabs>
-        </div>
+        </div >
     );
 }
