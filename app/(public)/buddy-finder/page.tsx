@@ -4,7 +4,7 @@ import { searchBuddies } from "@/lib/actions/profile";
 import { BuddyCard } from "@/components/buddy/BuddyCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Home, ChevronRight, Users, UserPlus, Sparkles } from "lucide-react";
+import { Search, Home, ChevronRight, Users, UserPlus, Sparkles, UsersRound, Filter } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useEffect, useState, Suspense } from "react";
@@ -17,6 +17,7 @@ function BuddyFinderContent() {
 
     const [buddies, setBuddies] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [lookingForTeam, setLookingForTeam] = useState(false);
 
     useEffect(() => {
         async function fetchBuddies() {
@@ -27,6 +28,13 @@ function BuddyFinderContent() {
         }
         fetchBuddies();
     }, [query, skill]);
+
+    // Filter results client-side for "Looking for Team"
+    const filteredBuddies = lookingForTeam
+        ? buddies.filter(b => b.skills?.includes("Looking for Team"))
+        : buddies;
+
+    const lookingForTeamCount = buddies.filter(b => b.skills?.includes("Looking for Team")).length;
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -88,6 +96,57 @@ function BuddyFinderContent() {
             {/* Search & Results */}
             <section className="py-12">
                 <div className="container mx-auto px-4 max-w-6xl">
+
+                    {/* Hackathon Team-Finding Banner */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-emerald-900/30 via-emerald-800/20 to-teal-900/30 border border-emerald-500/20 backdrop-blur-xl"
+                    >
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                                    <UsersRound className="w-5 h-5 text-emerald-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white text-sm">Looking for a Hackathon Team?</h3>
+                                    <p className="text-emerald-400/80 text-xs mt-0.5">
+                                        {lookingForTeamCount > 0
+                                            ? `${lookingForTeamCount} student${lookingForTeamCount !== 1 ? 's' : ''} currently looking for teammates!`
+                                            : "Add 'Looking for Team' to your skills in your profile to appear here!"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 w-full sm:w-auto">
+                                <button
+                                    onClick={() => setLookingForTeam(!lookingForTeam)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap ${
+                                        lookingForTeam
+                                            ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:bg-emerald-400'
+                                            : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25'
+                                    }`}
+                                >
+                                    <UsersRound className="w-4 h-4" />
+                                    {lookingForTeam ? 'Showing Teammates' : 'Find Teammates'}
+                                    {lookingForTeamCount > 0 && (
+                                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${
+                                            lookingForTeam ? 'bg-white/20' : 'bg-emerald-500/30'
+                                        }`}>
+                                            {lookingForTeamCount}
+                                        </span>
+                                    )}
+                                </button>
+                                {!lookingForTeam && (
+                                    <Link href="/profile/edit" className="sm:hidden">
+                                        <Button size="sm" variant="outline" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-xs">
+                                            Mark Yourself
+                                        </Button>
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+                    </motion.div>
+
                     {/* Search Box */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -112,13 +171,31 @@ function BuddyFinderContent() {
                         </form>
                     </motion.div>
 
+                    {/* Active Filter Pill */}
+                    {lookingForTeam && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="mb-6 flex items-center gap-2"
+                        >
+                            <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Active Filter:</span>
+                            <button
+                                onClick={() => setLookingForTeam(false)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-sm font-medium hover:bg-emerald-500/30 transition-colors"
+                            >
+                                🤝 Looking for Team
+                                <span className="ml-1 text-emerald-300 hover:text-white">✕</span>
+                            </button>
+                        </motion.div>
+                    )}
+
                     {/* Results */}
                     {loading ? (
                         <div className="text-center py-20">
                             <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                             <p className="text-gray-400">Finding buddies...</p>
                         </div>
-                    ) : buddies.length === 0 ? (
+                    ) : filteredBuddies.length === 0 ? (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -127,35 +204,59 @@ function BuddyFinderContent() {
                             <div className="w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center text-purple-400 mx-auto mb-6">
                                 <Users className="w-8 h-8" />
                             </div>
-                            <h3 className="text-2xl font-bold mb-2">No Buddies Found</h3>
-                            <p className="text-gray-400 max-w-md mx-auto mb-6">
-                                No active buddies found matching your criteria. Try adjusting your search or be the first to update your profile!
-                            </p>
-                            <Link href="/profile/edit">
-                                <Button className="bg-purple-600 hover:bg-purple-500">
-                                    <Sparkles className="w-4 h-4 mr-2" />
-                                    Create Your Profile
-                                </Button>
-                            </Link>
+                            {lookingForTeam ? (
+                                <>
+                                    <h3 className="text-2xl font-bold mb-2">No One Looking for a Team Yet</h3>
+                                    <p className="text-gray-400 max-w-md mx-auto mb-6">
+                                        Be the first! Go to your profile and add &quot;Looking for Team&quot; to your skills so others can find you.
+                                    </p>
+                                    <Link href="/profile/edit">
+                                        <Button className="bg-emerald-600 hover:bg-emerald-500">
+                                            <UserPlus className="w-4 h-4 mr-2" />
+                                            Update My Profile
+                                        </Button>
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <h3 className="text-2xl font-bold mb-2">No Buddies Found</h3>
+                                    <p className="text-gray-400 max-w-md mx-auto mb-6">
+                                        No active buddies found matching your criteria. Try adjusting your search or be the first to update your profile!
+                                    </p>
+                                    <Link href="/profile/edit">
+                                        <Button className="bg-purple-600 hover:bg-purple-500">
+                                            <Sparkles className="w-4 h-4 mr-2" />
+                                            Create Your Profile
+                                        </Button>
+                                    </Link>
+                                </>
+                            )}
                         </motion.div>
                     ) : (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                        >
-                            {buddies.map((buddy: any, idx: number) => (
-                                <motion.div
-                                    key={buddy.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                >
-                                    <BuddyCard buddy={buddy} />
-                                </motion.div>
-                            ))}
-                        </motion.div>
+                        <>
+                            {/* Results count */}
+                            <div className="mb-4 text-sm text-gray-500">
+                                Showing {filteredBuddies.length} {filteredBuddies.length === 1 ? 'buddy' : 'buddies'}
+                                {lookingForTeam && ' looking for a team'}
+                            </div>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                            >
+                                {filteredBuddies.map((buddy: any, idx: number) => (
+                                    <motion.div
+                                        key={buddy.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                    >
+                                        <BuddyCard buddy={buddy} />
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+                        </>
                     )}
                 </div>
             </section>
