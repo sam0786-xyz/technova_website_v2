@@ -4,11 +4,100 @@ import { searchBuddies } from "@/lib/actions/profile";
 import { BuddyCard } from "@/components/buddy/BuddyCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Home, ChevronRight, Users, UserPlus, Sparkles } from "lucide-react";
+import { Search, Home, ChevronRight, Users, UserPlus, Sparkles, UsersRound, Filter, X, Rocket, Eye, Handshake, Trophy, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+
+// Profile completion popup component
+function ProfilePopup({ onClose }: { onClose: () => void }) {
+    return (
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                onClick={onClose}
+            >
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                    className="relative w-full max-w-lg mx-auto rounded-3xl overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {/* Gradient border effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-blue-500 to-emerald-500 opacity-50" />
+                    <div className="relative m-[1px] bg-zinc-950 rounded-3xl p-8">
+                        {/* Close button */}
+                        <button
+                            onClick={onClose}
+                            className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        {/* Emoji + Header */}
+                        <div className="text-center mb-6">
+                            <div className="text-5xl mb-4">🚀</div>
+                            <h2 className="text-2xl font-black text-white mb-2">
+                                Complete Your Profile!
+                            </h2>
+                            <p className="text-gray-400 text-sm">
+                                Stand out and find the perfect hackathon team
+                            </p>
+                        </div>
+
+                        {/* Advantages */}
+                        <div className="space-y-3 mb-8">
+                            <div className="flex items-start gap-3 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                                <Eye className="w-5 h-5 text-purple-400 mt-0.5 shrink-0" />
+                                <div>
+                                    <p className="text-white text-sm font-semibold">Get Discovered</p>
+                                    <p className="text-gray-400 text-xs">Your profile appears in search results — others can find you by skills, name, or interests</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                                <Handshake className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                                <div>
+                                    <p className="text-white text-sm font-semibold">Find Hackathon Teammates</p>
+                                    <p className="text-gray-400 text-xs">Add &quot;Looking for Team&quot; to your skills and connect with students who need team members</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                                <Trophy className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+                                <div>
+                                    <p className="text-white text-sm font-semibold">Build Your Network</p>
+                                    <p className="text-gray-400 text-xs">Connect with peers who share your tech stack for projects, study groups, and future collaborations</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* CTA Buttons */}
+                        <div className="space-y-3">
+                            <Link href="/profile/edit" className="block">
+                                <Button className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold text-base shadow-[0_0_30px_rgba(147,51,234,0.3)] hover:shadow-[0_0_40px_rgba(147,51,234,0.5)] transition-all">
+                                    <Rocket className="w-5 h-5 mr-2" />
+                                    Complete My Profile
+                                    <ArrowRight className="w-4 h-4 ml-2" />
+                                </Button>
+                            </Link>
+                            <button
+                                onClick={onClose}
+                                className="w-full text-center text-sm text-gray-500 hover:text-gray-300 transition-colors py-2"
+                            >
+                                I&apos;ll do it later
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    );
+}
 
 function BuddyFinderContent() {
     const searchParams = useSearchParams();
@@ -17,6 +106,23 @@ function BuddyFinderContent() {
 
     const [buddies, setBuddies] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [lookingForTeam, setLookingForTeam] = useState(false);
+    const [showPopup, setShowPopup] = useState(false);
+
+    useEffect(() => {
+        // Show popup once per session
+        const dismissed = sessionStorage.getItem('buddy-popup-dismissed');
+        if (!dismissed) {
+            // Small delay so page loads first
+            const timer = setTimeout(() => setShowPopup(true), 1500);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
+    const handleClosePopup = () => {
+        setShowPopup(false);
+        sessionStorage.setItem('buddy-popup-dismissed', 'true');
+    };
 
     useEffect(() => {
         async function fetchBuddies() {
@@ -28,8 +134,17 @@ function BuddyFinderContent() {
         fetchBuddies();
     }, [query, skill]);
 
+    // Filter results client-side for "Looking for Team"
+    const filteredBuddies = lookingForTeam
+        ? buddies.filter(b => b.skills?.includes("Looking for Team"))
+        : buddies;
+
+    const lookingForTeamCount = buddies.filter(b => b.skills?.includes("Looking for Team")).length;
+
     return (
         <div className="min-h-screen bg-black text-white">
+            {/* Profile Completion Popup */}
+            {showPopup && <ProfilePopup onClose={handleClosePopup} />}
             {/* Hero Section */}
             <section className="relative py-20 overflow-hidden">
                 {/* Background Effects */}
@@ -88,6 +203,55 @@ function BuddyFinderContent() {
             {/* Search & Results */}
             <section className="py-12">
                 <div className="container mx-auto px-4 max-w-6xl">
+
+                    {/* Hackathon Team-Finding Banner */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-emerald-900/30 via-emerald-800/20 to-teal-900/30 border border-emerald-500/20 backdrop-blur-xl"
+                    >
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                                    <UsersRound className="w-5 h-5 text-emerald-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white text-sm">Looking for a Hackathon Team?</h3>
+                                    <p className="text-emerald-400/80 text-xs mt-0.5">
+                                        {lookingForTeamCount > 0
+                                            ? `${lookingForTeamCount} student${lookingForTeamCount !== 1 ? 's' : ''} currently looking for teammates!`
+                                            : "Add 'Looking for Team' to your skills in your profile to appear here!"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 w-full sm:w-auto">
+                                <button
+                                    onClick={() => setLookingForTeam(!lookingForTeam)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap ${lookingForTeam
+                                            ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:bg-emerald-400'
+                                            : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25'
+                                        }`}
+                                >
+                                    <UsersRound className="w-4 h-4" />
+                                    {lookingForTeam ? 'Showing Teammates' : 'Find Teammates'}
+                                    {lookingForTeamCount > 0 && (
+                                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${lookingForTeam ? 'bg-white/20' : 'bg-emerald-500/30'
+                                            }`}>
+                                            {lookingForTeamCount}
+                                        </span>
+                                    )}
+                                </button>
+                                {!lookingForTeam && (
+                                    <Link href="/profile/edit" className="sm:hidden">
+                                        <Button size="sm" variant="outline" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-xs">
+                                            Mark Yourself
+                                        </Button>
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+                    </motion.div>
+
                     {/* Search Box */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -112,13 +276,31 @@ function BuddyFinderContent() {
                         </form>
                     </motion.div>
 
+                    {/* Active Filter Pill */}
+                    {lookingForTeam && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="mb-6 flex items-center gap-2"
+                        >
+                            <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Active Filter:</span>
+                            <button
+                                onClick={() => setLookingForTeam(false)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-sm font-medium hover:bg-emerald-500/30 transition-colors"
+                            >
+                                🤝 Looking for Team
+                                <span className="ml-1 text-emerald-300 hover:text-white">✕</span>
+                            </button>
+                        </motion.div>
+                    )}
+
                     {/* Results */}
                     {loading ? (
                         <div className="text-center py-20">
                             <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                             <p className="text-gray-400">Finding buddies...</p>
                         </div>
-                    ) : buddies.length === 0 ? (
+                    ) : filteredBuddies.length === 0 ? (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -127,35 +309,59 @@ function BuddyFinderContent() {
                             <div className="w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center text-purple-400 mx-auto mb-6">
                                 <Users className="w-8 h-8" />
                             </div>
-                            <h3 className="text-2xl font-bold mb-2">No Buddies Found</h3>
-                            <p className="text-gray-400 max-w-md mx-auto mb-6">
-                                No active buddies found matching your criteria. Try adjusting your search or be the first to update your profile!
-                            </p>
-                            <Link href="/profile/edit">
-                                <Button className="bg-purple-600 hover:bg-purple-500">
-                                    <Sparkles className="w-4 h-4 mr-2" />
-                                    Create Your Profile
-                                </Button>
-                            </Link>
+                            {lookingForTeam ? (
+                                <>
+                                    <h3 className="text-2xl font-bold mb-2">No One Looking for a Team Yet</h3>
+                                    <p className="text-gray-400 max-w-md mx-auto mb-6">
+                                        Be the first! Go to your profile and add &quot;Looking for Team&quot; to your skills so others can find you.
+                                    </p>
+                                    <Link href="/profile/edit">
+                                        <Button className="bg-emerald-600 hover:bg-emerald-500">
+                                            <UserPlus className="w-4 h-4 mr-2" />
+                                            Update My Profile
+                                        </Button>
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <h3 className="text-2xl font-bold mb-2">No Buddies Found</h3>
+                                    <p className="text-gray-400 max-w-md mx-auto mb-6">
+                                        No active buddies found matching your criteria. Try adjusting your search or be the first to update your profile!
+                                    </p>
+                                    <Link href="/profile/edit">
+                                        <Button className="bg-purple-600 hover:bg-purple-500">
+                                            <Sparkles className="w-4 h-4 mr-2" />
+                                            Create Your Profile
+                                        </Button>
+                                    </Link>
+                                </>
+                            )}
                         </motion.div>
                     ) : (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                        >
-                            {buddies.map((buddy: any, idx: number) => (
-                                <motion.div
-                                    key={buddy.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                >
-                                    <BuddyCard buddy={buddy} />
-                                </motion.div>
-                            ))}
-                        </motion.div>
+                        <>
+                            {/* Results count */}
+                            <div className="mb-4 text-sm text-gray-500">
+                                Showing {filteredBuddies.length} {filteredBuddies.length === 1 ? 'buddy' : 'buddies'}
+                                {lookingForTeam && ' looking for a team'}
+                            </div>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                            >
+                                {filteredBuddies.map((buddy: any, idx: number) => (
+                                    <motion.div
+                                        key={buddy.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                    >
+                                        <BuddyCard buddy={buddy} />
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+                        </>
                     )}
                 </div>
             </section>
