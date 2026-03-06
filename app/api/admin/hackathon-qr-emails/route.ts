@@ -14,8 +14,24 @@ function getSupabase() {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-function buildQrEmailHtml(participantName: string, teamName: string, participantId: string) {
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(participantId)}`
+function buildTeamQrEmailHtml(teamName: string, leaderName: string, members: { name: string, id: string }[]) {
+    // Generate stacked QR codes for everyone
+    const qrBlocks = members.map(m => {
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(m.id)}`
+        return `
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            <tr>
+                <td align="center" style="padding:24px; background:#1a1a1a; border-radius:16px; border:1px solid #333;">
+                    <h3 style="margin:0 0 16px; color:#fff; font-size:18px;">${m.name}'s QR Code</h3>
+                    <img src="${qrUrl}" alt="${m.name}'s QR Code" width="220" height="220" style="display:block; border-radius:8px; margin-bottom:12px;" />
+                    <p style="margin:0; color:#6b7280; font-size:11px; font-family:monospace; word-break:break-all;">
+                        ID: ${m.id}
+                    </p>
+                </td>
+            </tr>
+        </table>
+        `
+    }).join('')
 
     return `
     <!DOCTYPE html>
@@ -36,7 +52,7 @@ function buildQrEmailHtml(participantName: string, teamName: string, participant
                                     🚀 Technova Hackathon
                                 </h1>
                                 <p style="margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px;">
-                                    Your Personal QR Code for Check-in & Meals
+                                    Team QR Codes for Check-in & Meals
                                 </p>
                             </td>
                         </tr>
@@ -45,11 +61,11 @@ function buildQrEmailHtml(participantName: string, teamName: string, participant
                         <tr>
                             <td style="padding:40px;">
                                 <p style="color:#e5e7eb; font-size:16px; margin:0 0 8px;">
-                                    Hi <strong style="color:#fff;">${participantName}</strong>,
+                                    Hi <strong style="color:#fff;">${leaderName}</strong>,
                                 </p>
                                 <p style="color:#9ca3af; font-size:14px; margin:0 0 32px; line-height:1.6;">
-                                    Welcome to the Technova Hackathon! Below is your personal QR code for <strong style="color:#fff;">Team ${teamName}</strong>. 
-                                    Please keep this email handy — you'll need to show this QR code during:
+                                    Welcome to the Technova Hackathon! Below are the personal QR codes for everyone in <strong style="color:#fff;">Team ${teamName}</strong>. 
+                                    As the team lead, please ensure your members have their respective QR codes ready during:
                                 </p>
                                 
                                 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
@@ -70,20 +86,11 @@ function buildQrEmailHtml(participantName: string, teamName: string, participant
                                     </tr>
                                 </table>
                                 
-                                <!-- QR Code -->
-                                <table width="100%" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td align="center" style="padding:32px; background:#1a1a1a; border-radius:16px; border:1px solid #333;">
-                                            <img src="${qrUrl}" alt="Your QR Code" width="250" height="250" style="display:block; border-radius:8px; margin-bottom:16px;" />
-                                            <p style="margin:0; color:#6b7280; font-size:11px; font-family:monospace; word-break:break-all;">
-                                                ID: ${participantId}
-                                            </p>
-                                        </td>
-                                    </tr>
-                                </table>
+                                <!-- QR Codes List -->
+                                ${qrBlocks}
                                 
                                 <p style="color:#6b7280; font-size:12px; margin:24px 0 0; text-align:center; line-height:1.5;">
-                                    💡 <strong style="color:#9ca3af;">Tip:</strong> Screenshot this QR code or save this email for quick access on hackathon day. You can also add it to your phone's photo gallery for easy scanning.
+                                    💡 <strong style="color:#9ca3af;">Tip:</strong> You can forward this email to your teammates or have them screenshot their individual QR codes for quick access on hackathon day.
                                 </p>
                             </td>
                         </tr>
@@ -112,12 +119,12 @@ export async function POST() {
 
     const supabase = getSupabase()
 
-    // Get all participants with their team info
+    // Get all participants with their team info (including roles to find the leader)
     const { data: teams, error: teamsError } = await supabase
         .from('hackathon_teams')
         .select(`
             id, name,
-            hackathon_participants (id, name, email)
+            hackathon_participants (id, name, email, role)
         `)
 
     if (teamsError || !teams) {
@@ -130,45 +137,54 @@ export async function POST() {
 
     for (const team of teams) {
         const participants = (team as any).hackathon_participants || []
+        if (participants.length === 0) continue
 
-        for (const participant of participants) {
-            if (!participant.email) {
-                failed++
-                errors.push(`${participant.name}: no email`)
-                continue
-            }
+        // 1. Find the best email to send to. Prefer the Leader's email.
+        const leader = participants.find((p: any) => p.role?.toLowerCase() === 'leader' && p.email)
+            || participants.find((p: any) => p.email) // Fallback to anyone with an email
 
-            // Rate limit: ~1.5 req/sec to stay safe with Resend
-            if (sent > 0) {
-                await delay(700)
-            }
+        if (!leader || !leader.email) {
+            failed++
+            errors.push(`Team ${team.name}: No valid email found for any member.`)
+            continue
+        }
 
-            let retries = 2
-            while (retries > 0) {
-                try {
-                    const html = buildQrEmailHtml(participant.name, team.name, participant.id)
+        // 2. Prepare the member list for QR generation
+        const qrMembers = participants.map((p: any) => ({
+            name: p.name,
+            id: p.id
+        }))
 
-                    await resend.emails.send({
-                        from: 'Technova <noreply@technovashardauniversity.in>',
-                        to: participant.email,
-                        subject: `🎫 Your Hackathon QR Code — ${participant.name} (${team.name})`,
-                        html
-                    })
+        // Rate limit: ~1.5 req/sec to stay safe with Resend
+        if (sent > 0) {
+            await delay(700)
+        }
 
-                    sent++
-                    console.log(`[QR Email] Sent ${sent} — ${participant.name} (${participant.email})`)
+        let retries = 2
+        while (retries > 0) {
+            try {
+                const html = buildTeamQrEmailHtml(team.name, leader.name, qrMembers)
+
+                await resend.emails.send({
+                    from: 'Technova <noreply@technovashardauniversity.in>',
+                    to: leader.email,
+                    subject: `🎫 Your Team's Hackathon QR Codes — Team ${team.name}`,
+                    html
+                })
+
+                sent++
+                console.log(`[QR Email] Sent 1 bundled email for Team ${team.name} to ${leader.email} (${qrMembers.length} codes)`)
+                break
+            } catch (err: any) {
+                retries--
+                if (err?.statusCode === 429 && retries > 0) {
+                    console.log(`[QR Email] Rate limited, waiting 2s...`)
+                    await delay(2000)
+                } else {
+                    console.error(`[QR Email] Failed: ${leader.email} for Team ${team.name}`, err?.message || err)
+                    failed++
+                    errors.push(`Team ${team.name}: ${err?.message || 'unknown error'}`)
                     break
-                } catch (err: any) {
-                    retries--
-                    if (err?.statusCode === 429 && retries > 0) {
-                        console.log(`[QR Email] Rate limited, waiting 2s...`)
-                        await delay(2000)
-                    } else {
-                        console.error(`[QR Email] Failed: ${participant.email}`, err?.message || err)
-                        failed++
-                        errors.push(`${participant.name}: ${err?.message || 'unknown error'}`)
-                        break
-                    }
                 }
             }
         }
@@ -176,8 +192,9 @@ export async function POST() {
 
     return NextResponse.json({
         success: true,
-        sent,
+        sent, // This is now 'Teams Emailed'
         failed,
-        errors: errors.slice(0, 10) // Return first 10 errors max
+        errors: errors.slice(0, 10)
     })
 }
+

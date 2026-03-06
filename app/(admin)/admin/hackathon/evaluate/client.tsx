@@ -23,7 +23,7 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
     const [selectedTheme, setSelectedTheme] = useState("ALL");
     const [currentPage, setCurrentPage] = useState(1);
     const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
-    const [scores, setScores] = useState({ idea: 3, tools: 3, impact: 3, sustainability: 3, feasibility: 3, communication: 3, feedback: "" });
+    const [scores, setScores] = useState({ panelName: "Panel 1", idea: 3, tools: 3, impact: 3, sustainability: 3, feasibility: 3, communication: 3, feedback: "" });
     const [submitting, setSubmitting] = useState(false);
     const [loadingTeams, setLoadingTeams] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -105,7 +105,7 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
             setExpandedTeam(null);
         } else {
             setExpandedTeam(teamId);
-            setScores({ idea: 3, tools: 3, impact: 3, sustainability: 3, feasibility: 3, communication: 3, feedback: "" });
+            setScores(prev => ({ ...prev, idea: 3, tools: 3, impact: 3, sustainability: 3, feasibility: 3, communication: 3, feedback: "" }));
             setMessage(null);
 
             if (!evaluationOpen) {
@@ -358,9 +358,23 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                                                                     <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{team.project_objective || 'No detailed objective provided by the team.'}</p>
                                                                 </div>
 
-                                                                <div className="mb-8 text-sm text-gray-400 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-4 shadow-lg">
-                                                                    <Star className="w-6 h-6 text-amber-500 flex-shrink-0 animate-pulse mt-0.5" />
-                                                                    <p>You are evaluating <strong className="text-amber-400 text-lg">{team.name}</strong>. Enter scores from <strong className="text-white">1.0 to 5.0</strong> for each category. This cannot be undone once submitted.</p>
+                                                                <div className="mb-8 text-sm text-gray-400 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex flex-col items-start gap-4 shadow-lg">
+                                                                    <div className="flex items-start gap-4">
+                                                                        <Star className="w-6 h-6 text-amber-500 flex-shrink-0 animate-pulse mt-0.5" />
+                                                                        <p>You are evaluating <strong className="text-amber-400 text-lg">{team.name}</strong>. Enter scores from <strong className="text-white">1.0 to 5.0</strong> for each category. This cannot be undone once submitted.</p>
+                                                                    </div>
+                                                                    <div className="w-full flex items-center gap-4 mt-2 pt-4 border-t border-amber-500/20">
+                                                                        <label className="font-bold text-amber-500">Evaluation Panel:</label>
+                                                                        <select
+                                                                            value={scores.panelName}
+                                                                            onChange={(e) => setScores({ ...scores, panelName: e.target.value })}
+                                                                            className="bg-black/50 border border-amber-500/30 rounded-lg px-4 py-2 text-white font-medium focus:outline-none focus:border-amber-500"
+                                                                        >
+                                                                            {Array.from({ length: 10 }, (_, i) => (
+                                                                                <option key={i} value={`Panel ${i + 1}`}>Panel {i + 1}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
                                                                 </div>
 
                                                                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">

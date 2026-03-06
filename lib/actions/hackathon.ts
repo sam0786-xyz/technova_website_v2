@@ -131,10 +131,10 @@ export async function uploadHackathonData(formData: FormData) {
                 const memberEmailKey = Object.keys(row).find(k => k.toLowerCase().includes(`member ${i} email`) || k.toLowerCase().includes(`team member ${i} email`))
                 const memberPhoneKey = Object.keys(row).find(k => (k.toLowerCase().includes(`member ${i} `) || k.toLowerCase().includes(`team member ${i} `)) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')))
 
-                if (memberNameKey && memberEmailKey && row[memberNameKey] && row[memberEmailKey]) {
+                if (memberNameKey && row[memberNameKey]) {
                     participantPairs.push({
                         name: row[memberNameKey],
-                        email: row[memberEmailKey],
+                        email: (memberEmailKey && row[memberEmailKey]) ? row[memberEmailKey] : '',
                         phone: memberPhoneKey ? String(row[memberPhoneKey]) : null,
                         role: 'Member'
                     })
@@ -173,6 +173,91 @@ export async function uploadHackathonData(formData: FormData) {
         return { error: "Failed to process file: " + error.message }
     }
 }
+
+export async function addHackathonTeamManually(data: {
+    teamName: string,
+    ideaTitle: string,
+    teamCode?: string,
+    projectObjective?: string,
+    leader: { name: string, email: string, phone: string },
+    members: { name: string, email?: string, phone?: string }[]
+}) {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
+        return { error: "Unauthorized" }
+    }
+
+    try {
+        const supabase = await getSupabase()
+
+        // 1. Insert Team
+        const { data: team, error: teamError } = await supabase
+            .from('hackathon_teams')
+            .insert({
+                name: data.teamName,
+                idea_title: data.ideaTitle || 'TBD',
+                team_code: data.teamCode || null,
+                project_objective: data.projectObjective || null,
+                status: 'pending'
+            })
+            .select()
+            .single()
+
+        if (teamError || !team) {
+            return { error: teamError?.message || "Failed to create team" }
+        }
+
+        // 2. Prepare Participants
+        const participantsToInsert = []
+
+        // Leader
+        if (data.leader && data.leader.name) {
+            participantsToInsert.push({
+                team_id: team.id,
+                name: data.leader.name,
+                email: data.leader.email,
+                phone: data.leader.phone,
+                role: 'Leader',
+                is_checked_in: false,
+                food_count: 0
+            })
+        }
+
+        // Members
+        if (data.members && data.members.length > 0) {
+            for (const member of data.members) {
+                if (member.name && member.name.trim() !== "") {
+                    participantsToInsert.push({
+                        team_id: team.id,
+                        name: member.name,
+                        email: member.email || '',
+                        phone: member.phone || null,
+                        role: 'Member',
+                        is_checked_in: false,
+                        food_count: 0
+                    })
+                }
+            }
+        }
+
+        // 3. Insert Participants
+        if (participantsToInsert.length > 0) {
+            const { error: partError } = await supabase
+                .from('hackathon_participants')
+                .insert(participantsToInsert)
+
+            if (partError) {
+                return { error: "Team created, but failed to add members: " + partError.message }
+            }
+        }
+
+        revalidatePath('/admin/hackathon')
+        return { success: true, message: "Team created successfully" }
+    } catch (error: any) {
+        return { error: "An unexpected error occurred: " + error.message }
+    }
+}
+
 
 export async function deleteAllHackathonTeams() {
     const session = await auth()
@@ -494,9 +579,16 @@ export async function getTeamsForEvaluation(round: number = 1) {
         const evaluations = team.hackathon_evaluations || [];
         const myEval = evaluator ? evaluations.find((e: any) => e.evaluator_id === evaluator.id && e.evaluation_round === round) : null;
 
-        // Calculate the total score for this SPECIFIC round by summing all evaluations matching this round
+        // Calculate the total score for this SPECIFIC round
+        // Now using Average instead of Sum, so multiple panels evaluating the same team won't inflate scores over teams evaluated by fewer panels
         const roundSpecificEvals = evaluations.filter((e: any) => e.evaluation_round === round);
-        const roundSpecificTotal = roundSpecificEvals.reduce((acc: number, curr: any) => acc + Number(curr.total_score), 0);
+
+        let roundSpecificTotal = 0;
+        if (roundSpecificEvals.length > 0) {
+            const sum = roundSpecificEvals.reduce((acc: number, curr: any) => acc + Number(curr.total_score), 0);
+            // Return average, rounded to 1 decimal place
+            roundSpecificTotal = Math.round((sum / roundSpecificEvals.length) * 10) / 10;
+        }
 
         return {
             ...team,
@@ -515,6 +607,7 @@ export type EvaluationScores = {
     feasibility: number;
     communication: number;
     feedback: string;
+    panelName: string;
 }
 
 export async function submitEvaluation(teamId: string, round: number, scores: EvaluationScores) {
@@ -550,7 +643,8 @@ export async function submitEvaluation(teamId: string, round: number, scores: Ev
             score_feasibility: scores.feasibility,
             score_communication: scores.communication,
             total_score: totalScore,
-            feedback: scores.feedback
+            feedback: scores.feedback,
+            panel_name: scores.panelName || 'Panel 1'
         })
 
     if (evalError) return { error: evalError.code === '23505' ? `You have already evaluated this team for Round ${round}.` : evalError.message }
@@ -562,17 +656,21 @@ export async function submitEvaluation(teamId: string, round: number, scores: Ev
         .eq('team_id', teamId)
 
     if (allEvals) {
-        const round1Total = allEvals.filter(e => e.evaluation_round === 1).reduce((acc, curr) => acc + Number(curr.total_score), 0);
-        const round2Total = allEvals.filter(e => e.evaluation_round === 2).reduce((acc, curr) => acc + Number(curr.total_score), 0);
+        const round1Evals = allEvals.filter(e => e.evaluation_round === 1);
+        const round1Sum = round1Evals.reduce((acc, curr) => acc + Number(curr.total_score), 0);
+        const round1Avg = round1Evals.length > 0 ? Math.round((round1Sum / round1Evals.length) * 10) / 10 : 0;
 
-        // We'll update the total_score to reflect the CURRENT round so sorting works out of the box for the generic Dashboard stats
-        // But optimally, we should just use the specific round total 
-        const teamTotal = round === 1 ? round1Total : round2Total;
+        const round2Evals = allEvals.filter(e => e.evaluation_round === 2);
+        const round2Sum = round2Evals.reduce((acc, curr) => acc + Number(curr.total_score), 0);
+        const round2Avg = round2Evals.length > 0 ? Math.round((round2Sum / round2Evals.length) * 10) / 10 : 0;
+
+        // We update the total_score to reflect the AVERAGE score of the CURRENT round so sorting works out of the box in the generic dashboard.
+        const teamTotal = round === 1 ? round1Avg : round2Avg;
 
         await supabase
             .from('hackathon_teams')
             .update({
-                total_score: teamTotal, // Holds the active round's total
+                total_score: teamTotal, // Holds the active round's total (Averaged across panels)
                 status: 'evaluating'
             })
             .eq('id', teamId)
@@ -855,14 +953,14 @@ export async function getVolunteers() {
     return volunteers || []
 }
 
-export async function addVolunteer(email: string, name: string = 'Volunteer') {
+export async function addVolunteer(email: string, name: string = 'Volunteer', teamName: string = 'Registration & Stage Team') {
     const session = await auth()
     if (!session || session.user.role !== 'super_admin') return { error: 'Unauthorized' }
 
     const supabase = await getSupabase()
     const { error } = await supabase
         .from('hackathon_volunteers')
-        .insert({ email: email.trim().toLowerCase(), name: name.trim() })
+        .insert({ email: email.trim().toLowerCase(), name: name.trim(), team_name: teamName })
 
     if (error) {
         if (error.code === '23505') return { error: "Volunteer already exists" }
