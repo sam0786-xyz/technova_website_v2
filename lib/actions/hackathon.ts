@@ -54,7 +54,7 @@ export async function uploadHackathonData(formData: FormData) {
             })
             const ideaKey = Object.keys(row).find(k => {
                 const clean = cleanStr(k);
-                return clean.includes('idea') || clean.includes('projecttitle') || clean.includes('title') || clean.includes('solution');
+                return clean.includes('idea') || clean.includes('projecttitle') || clean.includes('title') || clean.includes('solution') || clean.includes('theme');
             })
             const teamCodeKey = Object.keys(row).find(k => {
                 const clean = cleanStr(k);
@@ -66,11 +66,12 @@ export async function uploadHackathonData(formData: FormData) {
             })
 
             const teamCode = teamCodeKey ? String(row[teamCodeKey]) : null
-            const teamName = teamNameKey ? row[teamNameKey] : `Team ${teamCode || Math.floor(Math.random() * 10000)}`
-            const ideaTitle = ideaKey ? row[ideaKey] : 'TBD'
-            const projectObjective = objectiveKey ? row[objectiveKey] : null
-
-            if (!teamName) continue;
+            let teamName = (teamNameKey && row[teamNameKey]) ? String(row[teamNameKey]).trim() : '';
+            if (!teamName) {
+                teamName = `Team ${teamCode || Math.floor(Math.random() * 10000)}`
+            }
+            const ideaTitle = (ideaKey && row[ideaKey]) ? String(row[ideaKey]).trim() : 'TBD'
+            const projectObjective = (objectiveKey && row[objectiveKey]) ? String(row[objectiveKey]).trim() : null
 
             // Insert Team
             const { data: team, error: teamError } = await supabase
@@ -98,45 +99,42 @@ export async function uploadHackathonData(formData: FormData) {
             // Extract leader - match actual column headers like "Team Lead Name", "Leader Name", "Name", etc.
             const leaderNameKey = Object.keys(row).find(k => {
                 const lower = k.toLowerCase();
-                // Matches: "Team Lead Name", "Leader Name", "Lead Name", "team leader name"
                 return lower.includes('lead') && lower.includes('name');
             }) || Object.keys(row).find(k => {
                 const lower = k.toLowerCase();
-                // Fallback: any 'name' column that isn't the team name or project columns
-                return (lower === 'name') || (lower.includes('name') && !lower.includes('team name') && !lower.includes('idea') && !lower.includes('project'));
+                return (lower === 'name') || (lower.includes('name') && !lower.includes('team name') && !lower.includes('idea') && !lower.includes('project') && !lower.includes('member'));
             })
 
-            // Match "Email", "Leader Email", etc.
             const leaderEmailKey = Object.keys(row).find(k => k.toLowerCase().includes('lead') && k.toLowerCase().includes('email'))
                 || Object.keys(row).find(k => k.toLowerCase() === 'email')
                 || Object.keys(row).find(k => k.toLowerCase().includes('email') && !k.toLowerCase().includes('member'))
 
-            // Match "Mobile Number", "Phone", "Contact", "Leader Phone", etc.
             const leaderPhoneKey = Object.keys(row).find(k => {
                 const lower = k.toLowerCase();
-                return lower.includes('mobile') || lower.includes('phone') || lower.includes('contact');
+                return (lower.includes('mobile') || lower.includes('phone') || lower.includes('contact')) && !lower.includes('member');
             })
 
-            if (leaderNameKey && row[leaderNameKey]) {
-                participantPairs.push({
-                    name: row[leaderNameKey],
-                    email: leaderEmailKey && row[leaderEmailKey] ? row[leaderEmailKey] : '',
-                    phone: leaderPhoneKey ? String(row[leaderPhoneKey]) : null,
-                    role: 'Leader'
-                })
-            }
+            participantPairs.push({
+                name: (leaderNameKey && row[leaderNameKey]) ? String(row[leaderNameKey]).trim() : 'Unknown Leader',
+                email: (leaderEmailKey && row[leaderEmailKey]) ? String(row[leaderEmailKey]).trim() : '',
+                phone: (leaderPhoneKey && row[leaderPhoneKey]) ? String(row[leaderPhoneKey]).trim() : null,
+                role: 'Leader'
+            })
 
             // Extract members (up to 4 members typically)
             for (let i = 1; i <= 4; i++) {
-                const memberNameKey = Object.keys(row).find(k => k.toLowerCase().includes(`member ${i} name`) || k.toLowerCase().includes(`team member ${i} name`))
-                const memberEmailKey = Object.keys(row).find(k => k.toLowerCase().includes(`member ${i} email`) || k.toLowerCase().includes(`team member ${i} email`))
-                const memberPhoneKey = Object.keys(row).find(k => (k.toLowerCase().includes(`member ${i} `) || k.toLowerCase().includes(`team member ${i} `)) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')))
+                const memberNameKey = Object.keys(row).find(k => k.toLowerCase().includes(`member ${i}`) && k.toLowerCase().includes('name'))
+                    || Object.keys(row).find(k => k.toLowerCase().includes(`member${i}`) && k.toLowerCase().includes('name'))
+                const memberEmailKey = Object.keys(row).find(k => k.toLowerCase().includes(`member ${i}`) && k.toLowerCase().includes('email'))
+                    || Object.keys(row).find(k => k.toLowerCase().includes(`member${i}`) && k.toLowerCase().includes('email'))
+                const memberPhoneKey = Object.keys(row).find(k => k.toLowerCase().includes(`member ${i}`) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')))
+                    || Object.keys(row).find(k => k.toLowerCase().includes(`member${i}`) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')))
 
                 if (memberNameKey && row[memberNameKey]) {
                     participantPairs.push({
-                        name: row[memberNameKey],
-                        email: (memberEmailKey && row[memberEmailKey]) ? row[memberEmailKey] : '',
-                        phone: memberPhoneKey ? String(row[memberPhoneKey]) : null,
+                        name: String(row[memberNameKey]).trim(),
+                        email: (memberEmailKey && row[memberEmailKey]) ? String(row[memberEmailKey]).trim() : '',
+                        phone: (memberPhoneKey && row[memberPhoneKey]) ? String(row[memberPhoneKey]).trim() : null,
                         role: 'Member'
                     })
                 }
