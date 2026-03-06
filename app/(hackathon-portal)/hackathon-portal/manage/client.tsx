@@ -8,9 +8,9 @@ import {
     getSchedule, addScheduleItem, deleteScheduleItem, updateTeamStatus, toggleEvaluationPeriod,
     getCheckedInParticipantsData, getFoodLogsData,
     getVolunteers, addVolunteer, removeVolunteer,
-    addHackathonTeamManually
+    addHackathonTeamManually, updateHackathonTeamDetails, updateCustomMeals
 } from "@/lib/actions/hackathon";
-import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Utensils } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import EvaluatorDashboardClient from "@/app/(admin)/admin/hackathon/evaluate/client";
@@ -38,6 +38,19 @@ export default function HackathonManageClient() {
     const [deletingTeams, setDeletingTeams] = useState(false);
     const [showManualAdd, setShowManualAdd] = useState(false);
     const [addingManualMode, setAddingManualMode] = useState(false);
+
+    // Team Edit states
+    const [editingTeam, setEditingTeam] = useState<any>(null);
+    const [editFormData, setEditFormData] = useState({
+        teamName: '',
+        ideaTitle: '',
+        teamCode: '',
+        projectObjective: ''
+    });
+
+    const [customMeals, setCustomMeals] = useState<string[]>(["Breakfast - Day 1", "Lunch - Day 1", "Snacks - Day 1", "Dinner - Day 1", "Breakfast - Day 2", "Lunch - Day 2"]);
+    const [newMeal, setNewMeal] = useState("");
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -58,6 +71,9 @@ export default function HackathonManageClient() {
         setVolunteers(volunteersData);
         setSettings(settingsData);
         setSchedule(scheduleData);
+        if (settingsData?.custom_meals && Array.isArray(settingsData.custom_meals)) {
+            setCustomMeals(settingsData.custom_meals);
+        }
         setLoading(false);
     }
 
@@ -126,6 +142,36 @@ export default function HackathonManageClient() {
             loadData();
         }
         setAddingManualMode(false);
+    };
+
+    async function handleUpdateTeam(e: React.FormEvent) {
+        e.preventDefault();
+        if (!editingTeam) return;
+
+        setMessage(null);
+        try {
+            const res = await updateHackathonTeamDetails(editingTeam.id, editFormData);
+            if (res.error) {
+                setMessage({ type: 'error', text: res.error });
+            } else {
+                setMessage({ type: 'success', text: "Team updated successfully." });
+                setEditingTeam(null);
+                loadData();
+            }
+        } catch (err: any) {
+            setMessage({ type: 'error', text: err.message || "Failed to update team." });
+        }
+    }
+
+    const handleSaveMeals = async () => {
+        setMessage(null);
+        try {
+            const res = await updateCustomMeals(customMeals);
+            if (res.error) setMessage({ type: 'error', text: res.error });
+            else setMessage({ type: 'success', text: "Meal rounds updated successfully." });
+        } catch (e: any) {
+            setMessage({ type: 'error', text: e.message || "Failed to save meal rounds." });
+        }
     };
 
     const handleDeleteAllTeams = async () => {
@@ -575,8 +621,25 @@ export default function HackathonManageClient() {
                                                                                 {index + 1}
                                                                             </span>
                                                                         </td>
-                                                                        <td className="px-4 py-4 font-bold text-white">
-                                                                            {team.name}
+                                                                        <td className="px-4 py-4 font-bold text-white relative group">
+                                                                            <div className="flex items-center gap-2">
+                                                                                {team.name}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setEditFormData({
+                                                                                            teamName: team.name,
+                                                                                            ideaTitle: team.idea_title,
+                                                                                            teamCode: team.team_code || '',
+                                                                                            projectObjective: team.project_objective || ''
+                                                                                        });
+                                                                                        setEditingTeam(team);
+                                                                                    }}
+                                                                                    className="opacity-0 group-hover:opacity-100 p-1 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded transition-all"
+                                                                                    title="Edit Team"
+                                                                                >
+                                                                                    <Edit className="w-3.5 h-3.5" />
+                                                                                </button>
+                                                                            </div>
                                                                             <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                                                                                 <span className="font-mono text-amber-500">{team.team_code}</span>
                                                                                 <span>•</span>
@@ -661,6 +724,48 @@ export default function HackathonManageClient() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Edit Team Modal */}
+                            {editingTeam && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+                                    <div className="relative w-full max-w-xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl">
+                                        <div className="flex items-center justify-between p-6 border-b border-white/10 bg-zinc-900/90 rounded-t-2xl">
+                                            <h3 className="text-xl font-semibold text-white">Edit Team Details</h3>
+                                            <button onClick={() => setEditingTeam(null)} className="text-gray-400 hover:text-white transition-colors">
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                        <form onSubmit={handleUpdateTeam} className="p-6 space-y-6">
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="block text-xs text-gray-400 mb-1">Team Name</label>
+                                                    <input required type="text" value={editFormData.teamName} onChange={e => setEditFormData({ ...editFormData, teamName: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-400 mb-1">Team Code</label>
+                                                    <input type="text" value={editFormData.teamCode} onChange={e => setEditFormData({ ...editFormData, teamCode: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-400 mb-1">Idea / Project Title</label>
+                                                    <input required type="text" value={editFormData.ideaTitle} onChange={e => setEditFormData({ ...editFormData, ideaTitle: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-400 mb-1">Project Objective</label>
+                                                    <textarea value={editFormData.projectObjective} onChange={e => setEditFormData({ ...editFormData, projectObjective: e.target.value })} rows={3} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white resize-none" />
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-end gap-3 pt-6 border-t border-white/10">
+                                                <button type="button" onClick={() => setEditingTeam(null)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 transition-colors">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit" className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 transition-colors">
+                                                    Save Changes
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Manual Add Modal */}
                             {showManualAdd && (
@@ -997,6 +1102,62 @@ export default function HackathonManageClient() {
                                     </div>
                                 )}
                             </div>
+
+                            <div className="pt-6 border-t border-white/10 text-left">
+                                <label className="block text-sm font-semibold text-white mb-2 flex items-center gap-2">
+                                    <Utensils className="w-4 h-4 text-orange-400" /> Meal Rounds Definition
+                                </label>
+                                <p className="text-xs text-gray-400 mb-4">Define exactly which meals food volunteers can scan for. This syncs directly to all volunteers' Verify & Track page.</p>
+
+                                <div className="space-y-2 mb-4">
+                                    {customMeals.map((meal, idx) => (
+                                        <div key={idx} className="flex items-center justify-between bg-white/5 border border-white/10 px-3 py-2 rounded-lg">
+                                            <span className="text-sm font-medium text-orange-100">{meal}</span>
+                                            <button
+                                                onClick={() => setCustomMeals(customMeals.filter((_, i) => i !== idx))}
+                                                className="text-red-400 hover:text-red-300 p-1 bg-red-500/10 rounded transition-colors"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {customMeals.length === 0 && (
+                                        <p className="text-xs text-gray-500 italic py-2 text-center border border-dashed border-white/10 rounded-lg">No meals defined.</p>
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={newMeal}
+                                        onChange={(e) => setNewMeal(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && newMeal.trim() !== '') {
+                                                if (!customMeals.includes(newMeal.trim())) setCustomMeals([...customMeals, newMeal.trim()]);
+                                                setNewMeal('');
+                                            }
+                                        }}
+                                        placeholder="e.g. Day 3 Breakfast"
+                                        className="flex-1 bg-black border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-orange-500"
+                                    />
+                                    <button
+                                        onClick={() => {
+                                            if (newMeal.trim() !== '' && !customMeals.includes(newMeal.trim())) {
+                                                setCustomMeals([...customMeals, newMeal.trim()]);
+                                                setNewMeal('');
+                                            }
+                                        }}
+                                        className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+                                    >
+                                        Add
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={handleSaveMeals}
+                                    className="w-full bg-white/10 hover:bg-white/20 py-2.5 rounded-xl text-white mt-4 font-bold transition-colors border border-white/5"
+                                >
+                                    Save Defined Meals
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </TabsContent>
@@ -1084,6 +1245,6 @@ export default function HackathonManageClient() {
                     </div>
                 </TabsContent>
             </Tabs>
-        </div >
+        </div>
     );
 }

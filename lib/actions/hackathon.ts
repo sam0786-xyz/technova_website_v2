@@ -174,6 +174,42 @@ export async function uploadHackathonData(formData: FormData) {
     }
 }
 
+export async function updateHackathonTeamDetails(teamId: string, data: {
+    teamName: string,
+    ideaTitle: string,
+    teamCode?: string,
+    projectObjective?: string
+}) {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
+        return { error: "Unauthorized" }
+    }
+
+    try {
+        const supabase = await getSupabase()
+        const { error } = await supabase
+            .from('hackathon_teams')
+            .update({
+                name: data.teamName,
+                idea_title: data.ideaTitle || 'TBD',
+                team_code: data.teamCode || null,
+                project_objective: data.projectObjective || null,
+            })
+            .eq('id', teamId)
+
+        if (error) {
+            return { error: error.message || "Failed to update team details" }
+        }
+
+        revalidatePath('/admin/hackathon')
+        revalidatePath('/hackathon-portal')
+        return { success: true }
+    } catch (e: any) {
+        return { error: e.message }
+    }
+}
+
+
 export async function addHackathonTeamManually(data: {
     teamName: string,
     ideaTitle: string,
@@ -405,6 +441,26 @@ export async function startTimer(durationHours: number = 24) {
 
     revalidatePath('/admin/hackathon')
     revalidatePath('/live')
+    return { success: true }
+}
+
+export async function updateCustomMeals(meals: string[]) {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized" }
+
+    const supabase = await getSupabase()
+    const { data: existing } = await supabase.from('hackathon_settings').select('id').limit(1).maybeSingle()
+
+    if (existing) {
+        const { error } = await supabase.from('hackathon_settings').update({ custom_meals: meals }).eq('id', existing.id)
+        if (error) return { error: error.message }
+    } else {
+        const { error } = await supabase.from('hackathon_settings').insert({ custom_meals: meals })
+        if (error) return { error: error.message }
+    }
+
+    revalidatePath('/admin/hackathon')
+    revalidatePath('/hackathon-portal')
     return { success: true }
 }
 
