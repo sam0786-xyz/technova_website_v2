@@ -1022,6 +1022,8 @@ export default function HackathonPage() {
                     <div className="space-y-4">
                         {[
                             { q: "Who can participate?", a: "Students of B.Tech and all bachelor degree programs." },
+                            { q: "Can we form teams with students from other colleges or departments?", a: "Cross colleges team is not allowed, but cross departments are allowed and other department students can participate also." },
+                            { q: "Can a student be part of multiple teams?", a: "A student can be part of 2 teams, but if more than one of their teams is selected for the final offline round, the student must choose only one team to represent." },
                             { q: "What is the team size?", a: "2–5 members recommended." },
                             { q: "Is the hackathon online or offline?", a: "The Grand Finale is fully on-site (offline) at Sharda University." },
                             { q: "What is the evaluation basis?", a: "Innovation, feasibility, technical depth, impact, and demonstration quality." },
@@ -1029,13 +1031,16 @@ export default function HackathonPage() {
                             { q: "What should teams bring?", a: "Laptops, chargers, stationery, ID cards, and personal essentials." },
                             { q: "Will accommodation be provided?", a: "Yes. Hostel accommodation will be provided to needful participants arriving the night before the hackathon." }
                         ].map((faq, i) => (
-                            <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors group">
-                                <h4 className="text-lg font-bold text-white mb-2 group-hover:text-purple-400 transition-colors flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
-                                    {faq.q}
-                                </h4>
-                                <p className="text-gray-400 pl-4">{faq.a}</p>
-                            </div>
+                            <details key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors group cursor-pointer [&_summary::-webkit-details-marker]:hidden">
+                                <summary className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors flex items-center justify-between list-none">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                        {faq.q}
+                                    </div>
+                                    <span className="text-purple-500/50 transition-transform group-open:rotate-180">▼</span>
+                                </summary>
+                                <p className="text-gray-400 mt-4 pl-5 border-l-2 border-purple-500/30 line-relaxed">{faq.a}</p>
+                            </details>
                         ))}
                     </div>
                 </div>

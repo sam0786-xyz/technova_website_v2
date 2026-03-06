@@ -7,28 +7,37 @@ import {
     getHackathonSettings, startTimer, stopTimer, pushAnnouncement, clearAnnouncement,
     getSchedule, addScheduleItem, deleteScheduleItem, updateTeamStatus, toggleEvaluationPeriod,
     getCheckedInParticipantsData, getFoodLogsData,
-    getVolunteers, addVolunteer, removeVolunteer
+    getVolunteers, addVolunteer, removeVolunteer,
+    addHackathonTeamManually
 } from "@/lib/actions/hackathon";
-import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck } from "lucide-react";
+import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import EvaluatorDashboardClient from "@/app/(admin)/admin/hackathon/evaluate/client";
 
+const ITEMS_PER_PAGE = 10;
+
 export default function HackathonManageClient() {
+    const [currentPage, setCurrentPage] = useState(1);
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [teams, setTeams] = useState<any[]>([]);
     const [evaluators, setEvaluators] = useState<any[]>([]);
     const [volunteers, setVolunteers] = useState<any[]>([]);
     const [settings, setSettings] = useState<any>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedTheme, setSelectedTheme] = useState("ALL");
     const [schedule, setSchedule] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [evalEmail, setEvalEmail] = useState("");
     const [volEmail, setVolEmail] = useState("");
     const [volName, setVolName] = useState("");
+    const [volTeam, setVolTeam] = useState("Registration & Stage Team");
     const [announcement, setAnnouncement] = useState("");
     const [sendingQr, setSendingQr] = useState(false);
     const [deletingTeams, setDeletingTeams] = useState(false);
+    const [showManualAdd, setShowManualAdd] = useState(false);
+    const [addingManualMode, setAddingManualMode] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -82,6 +91,41 @@ export default function HackathonManageClient() {
         } finally {
             setUploading(false);
         }
+    };
+
+    const handleAddManualTeam = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setAddingManualMode(true);
+        setMessage(null);
+
+        const formData = new FormData(e.currentTarget);
+
+        const data = {
+            teamName: formData.get('teamName') as string,
+            ideaTitle: formData.get('ideaTitle') as string,
+            teamCode: formData.get('teamCode') as string || undefined,
+            leader: {
+                name: formData.get('leaderName') as string,
+                email: formData.get('leaderEmail') as string,
+                phone: formData.get('leaderPhone') as string
+            },
+            members: [
+                { name: formData.get('m1Name') as string, email: formData.get('m1Email') as string, phone: formData.get('m1Phone') as string },
+                { name: formData.get('m2Name') as string, email: formData.get('m2Email') as string, phone: formData.get('m2Phone') as string },
+                { name: formData.get('m3Name') as string, email: formData.get('m3Email') as string, phone: formData.get('m3Phone') as string },
+                { name: formData.get('m4Name') as string, email: formData.get('m4Email') as string, phone: formData.get('m4Phone') as string },
+            ].filter(m => m.name && m.name.trim() !== '')
+        };
+
+        const res = await addHackathonTeamManually(data);
+        if (res.error) {
+            setMessage({ type: 'error', text: res.error });
+        } else {
+            setMessage({ type: 'success', text: "Team added manually!" });
+            setShowManualAdd(false);
+            loadData();
+        }
+        setAddingManualMode(false);
     };
 
     const handleDeleteAllTeams = async () => {
@@ -356,6 +400,23 @@ export default function HackathonManageClient() {
                                     )}
                                 </button>
 
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => window.open('/api/admin/hackathon-template', '_blank')}
+                                        className="flex-1 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 font-medium py-2 rounded-xl transition-all text-sm flex justify-center items-center gap-2"
+                                    >
+                                        <Download className="w-4 h-4" /> Download Template
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowManualAdd(true)}
+                                        className="flex-1 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 font-medium py-2 rounded-xl transition-all text-sm flex justify-center items-center gap-2"
+                                    >
+                                        <Plus className="w-4 h-4" /> Add Manually
+                                    </button>
+                                </div>
+
                                 {teams.length > 0 && (
                                     <div className="pt-4 border-t border-white/10 mt-4">
                                         <button
@@ -498,71 +559,190 @@ export default function HackathonManageClient() {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {[...teams].sort((a, b) => {
-                                                            const totalScoreA = (b.hackathon_evaluations || []).reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                            const totalScoreB = (a.hackathon_evaluations || []).reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                            return totalScoreA - totalScoreB;
-                                                        }).map((team, index) => (
-                                                            <tr key={team.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                                                <td className="px-4 py-4">
-                                                                    <span className={`w-8 h-8 flex items-center justify-center rounded-full font-bold ${index === 0 ? 'bg-amber-500/20 text-amber-500' : index === 1 ? 'bg-gray-300/20 text-gray-300' : index === 2 ? 'bg-amber-700/20 text-amber-600' : 'bg-white/5 text-gray-400'}`}>
-                                                                        {index + 1}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="px-4 py-4 font-bold text-white">
-                                                                    {team.name}
-                                                                    <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
-                                                                        <span className="font-mono text-amber-500">{team.team_code}</span>
-                                                                        <span>•</span>
-                                                                        <span>Leader: {team.hackathon_participants?.find((p: any) => p.role === 'Leader')?.name || 'Unknown'}</span>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-4 py-4 font-medium text-emerald-400 max-w-xs truncate" title={team.project_objective}>
-                                                                    {team.idea_title}
-                                                                </td>
-                                                                <td className="px-4 py-4 font-mono text-center">
-                                                                    {(() => {
-                                                                        const r1 = team.hackathon_evaluations?.filter((e: any) => e.evaluation_round === 1) || [];
-                                                                        const total = r1.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                                        return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"}>{total > 0 ? total : '-'}</span>;
-                                                                    })()}
-                                                                </td>
-                                                                <td className="px-4 py-4 font-mono text-center border-l border-white/5">
-                                                                    {(() => {
-                                                                        const r2 = team.hackathon_evaluations?.filter((e: any) => e.evaluation_round === 2) || [];
-                                                                        const total = r2.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                                        return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"}>{total > 0 ? total : '-'}</span>;
-                                                                    })()}
-                                                                </td>
-                                                                <td className="px-4 py-4">
-                                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border w-fit ${team.status === 'pending' ? 'bg-gray-500/10 text-gray-400 border-gray-500/20' :
-                                                                        team.status === 'evaluating' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                                                                            team.status === 'shortlisted' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                                                                'bg-red-500/10 text-red-400 border-red-500/20'
-                                                                        }`}>
-                                                                        {team.status.toUpperCase()}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="px-4 py-4 text-right">
-                                                                    <button
-                                                                        onClick={() => handleToggleShortlist(team.id, team.status)}
-                                                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${team.status === 'shortlisted'
-                                                                            ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/30'
-                                                                            : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                                                                            }`}
-                                                                    >
-                                                                        {team.status === 'shortlisted' ? 'Remove from Shortlist' : 'Mark as Shortlisted'}
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
+                                                        {(() => {
+                                                            const sortedTeams = [...teams].sort((a, b) => {
+                                                                const totalScoreA = (b.hackathon_evaluations || []).reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
+                                                                const totalScoreB = (a.hackathon_evaluations || []).reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
+                                                                return totalScoreA - totalScoreB;
+                                                            });
+                                                            const paginatedTeams = sortedTeams.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+                                                            return paginatedTeams.map((team, i) => {
+                                                                const index = (currentPage - 1) * ITEMS_PER_PAGE + i;
+                                                                return (
+                                                                    <tr key={team.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                                        <td className="px-4 py-4">
+                                                                            <span className={`w-8 h-8 flex items-center justify-center rounded-full font-bold ${index === 0 ? 'bg-amber-500/20 text-amber-500' : index === 1 ? 'bg-gray-300/20 text-gray-300' : index === 2 ? 'bg-amber-700/20 text-amber-600' : 'bg-white/5 text-gray-400'}`}>
+                                                                                {index + 1}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td className="px-4 py-4 font-bold text-white">
+                                                                            {team.name}
+                                                                            <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
+                                                                                <span className="font-mono text-amber-500">{team.team_code}</span>
+                                                                                <span>•</span>
+                                                                                <span>Leader: {team.hackathon_participants?.find((p: any) => p.role === 'Leader')?.name || 'Unknown'}</span>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td className="px-4 py-4 font-medium text-emerald-400 max-w-xs truncate" title={team.project_objective}>
+                                                                            {team.idea_title}
+                                                                        </td>
+                                                                        <td className="px-4 py-4 font-mono text-center">
+                                                                            {(() => {
+                                                                                const r1 = team.hackathon_evaluations?.filter((e: any) => e.evaluation_round === 1) || [];
+                                                                                const total = r1.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
+                                                                                return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"}>{total > 0 ? total : '-'}</span>;
+                                                                            })()}
+                                                                        </td>
+                                                                        <td className="px-4 py-4 font-mono text-center border-l border-white/5">
+                                                                            {(() => {
+                                                                                const r2 = team.hackathon_evaluations?.filter((e: any) => e.evaluation_round === 2) || [];
+                                                                                const total = r2.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
+                                                                                return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"}>{total > 0 ? total : '-'}</span>;
+                                                                            })()}
+                                                                        </td>
+                                                                        <td className="px-4 py-4">
+                                                                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium border w-fit ${team.status === 'pending' ? 'bg-gray-500/10 text-gray-400 border-gray-500/20' :
+                                                                                team.status === 'evaluating' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                                                                                    team.status === 'shortlisted' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                                                                        'bg-red-500/10 text-red-400 border-red-500/20'
+                                                                                }`}>
+                                                                                {team.status.toUpperCase()}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td className="px-4 py-4 text-right">
+                                                                            <button
+                                                                                onClick={() => handleToggleShortlist(team.id, team.status)}
+                                                                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${team.status === 'shortlisted'
+                                                                                    ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/30'
+                                                                                    : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                                                                                    }`}
+                                                                            >
+                                                                                {team.status === 'shortlisted' ? 'Remove from Shortlist' : 'Mark as Shortlisted'}
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            });
+                                                        })()}
                                                     </tbody>
                                                 </table>
                                             </div>
+
+                                            {/* Pagination Controls */}
+                                            {(() => {
+                                                const totalPages = Math.ceil(teams.length / ITEMS_PER_PAGE);
+                                                if (totalPages <= 1) return null;
+                                                return (
+                                                    <div className="flex items-center justify-between mt-6 bg-white/5 border border-white/10 rounded-xl p-4">
+                                                        <span className="text-sm text-gray-400">
+                                                            Showing <span className="text-white font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-white font-medium">{Math.min(currentPage * ITEMS_PER_PAGE, teams.length)}</span> of <span className="text-white font-medium">{teams.length}</span> teams
+                                                        </span>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                                disabled={currentPage === 1}
+                                                                className="p-2 rounded-lg bg-black/50 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                                            >
+                                                                <ChevronLeft className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                                disabled={currentPage === totalPages}
+                                                                className="p-2 rounded-lg bg-black/50 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                                            >
+                                                                <ChevronRight className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
                                         </div>
                                     </div>
                                 )}
                             </div>
+
+                            {/* Manual Add Modal */}
+                            {showManualAdd && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+                                    <div className="relative w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl my-8">
+                                        <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-white/10 bg-zinc-900/90 backdrop-blur-md rounded-t-2xl">
+                                            <h3 className="text-xl font-semibold text-white">Add Team Manually</h3>
+                                            <button onClick={() => setShowManualAdd(false)} className="text-gray-400 hover:text-white transition-colors">
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                        <form onSubmit={handleAddManualTeam} className="p-6 space-y-6">
+                                            <div className="space-y-4">
+                                                <h4 className="text-sm font-medium text-emerald-400 border-b border-white/10 pb-2">Team Details</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Team Name *</label>
+                                                        <input required type="text" name="teamName" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Team Code (Optional)</label>
+                                                        <input type="text" name="teamCode" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-xs text-gray-400 mb-1">Idea / Project Title *</label>
+                                                        <input required type="text" name="ideaTitle" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <h4 className="text-sm font-medium text-blue-400 border-b border-white/10 pb-2">Team Leader</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Name *</label>
+                                                        <input required type="text" name="leaderName" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Email *</label>
+                                                        <input required type="email" name="leaderEmail" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Phone *</label>
+                                                        <input required type="tel" name="leaderPhone" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <h4 className="text-sm font-medium text-purple-400 border-b border-white/10 pb-2">Team Members (Optional)</h4>
+                                                {[1, 2, 3, 4].map((num) => (
+                                                    <div key={num} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-3 bg-white/5 rounded-xl border border-white/5">
+                                                        <div>
+                                                            <label className="block text-xs text-gray-400 mb-1">Member {num} Name</label>
+                                                            <input type="text" name={`m${num}Name`} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs text-gray-400 mb-1">Email</label>
+                                                            <input type="email" name={`m${num}Email`} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs text-gray-400 mb-1">Phone</label>
+                                                            <input type="tel" name={`m${num}Phone`} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="sticky bottom-0 bg-zinc-900 border-t border-white/10 pt-4 pb-2 pb-safe">
+                                                <button
+                                                    type="submit"
+                                                    disabled={addingManualMode}
+                                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                                                >
+                                                    {addingManualMode ? "Adding..." : "Add Team"}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
+
                         </div>
                     </div>
                 </TabsContent>
@@ -666,7 +846,7 @@ export default function HackathonManageClient() {
                             <form onSubmit={async (e) => {
                                 e.preventDefault();
                                 if (!volEmail) return;
-                                const res = await addVolunteer(volEmail, volName || 'Volunteer');
+                                const res = await addVolunteer(volEmail, volName || 'Volunteer', volTeam);
                                 if (res.error) {
                                     setMessage({ type: 'error', text: res.error });
                                 } else {
@@ -676,13 +856,27 @@ export default function HackathonManageClient() {
                                     loadData();
                                 }
                             }} className="space-y-3">
-                                <input
-                                    type="text"
-                                    value={volName}
-                                    onChange={(e) => setVolName(e.target.value)}
-                                    placeholder="Volunteer Name"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 text-white"
-                                />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <input
+                                        type="text"
+                                        value={volName}
+                                        onChange={(e) => setVolName(e.target.value)}
+                                        placeholder="Volunteer Name"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 text-white"
+                                    />
+                                    <select
+                                        value={volTeam}
+                                        onChange={(e) => setVolTeam(e.target.value)}
+                                        className="w-full bg-black border border-white/10 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 text-white"
+                                    >
+                                        <option value="Registration & Stage Team">Registration & Stage Team</option>
+                                        <option value="Media Team">Media Team</option>
+                                        <option value="Hospitality Team">Hospitality Team</option>
+                                        <option value="Food Team">Food Team</option>
+                                        <option value="Judging & Evaluation Team">Judging & Evaluation Team</option>
+                                        <option value="Discipline & ERT Team">Discipline & ERT Team</option>
+                                    </select>
+                                </div>
                                 <div className="flex gap-3">
                                     <input
                                         type="email"
@@ -718,7 +912,14 @@ export default function HackathonManageClient() {
                                     {volunteers.map((v: any) => (
                                         <div key={v.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
                                             <div>
-                                                <p className="font-medium text-white">{v.name}</p>
+                                                <p className="font-medium text-white flex items-center gap-2">
+                                                    {v.name}
+                                                    {v.team_name && (
+                                                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] uppercase tracking-wider font-bold">
+                                                            {v.team_name}
+                                                        </span>
+                                                    )}
+                                                </p>
                                                 <p className="text-xs text-gray-400">{v.email}</p>
                                             </div>
                                             <button
