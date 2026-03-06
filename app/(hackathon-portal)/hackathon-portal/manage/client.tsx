@@ -45,7 +45,9 @@ export default function HackathonManageClient() {
         teamName: '',
         ideaTitle: '',
         teamCode: '',
-        projectObjective: ''
+        projectObjective: '',
+        leader: { id: '', name: '', email: '', phone: '' },
+        members: [{ id: '', name: '', email: '', phone: '' }, { id: '', name: '', email: '', phone: '' }, { id: '', name: '', email: '', phone: '' }, { id: '', name: '', email: '', phone: '' }]
     });
 
     const [customMeals, setCustomMeals] = useState<string[]>(["Breakfast - Day 1", "Lunch - Day 1", "Snacks - Day 1", "Dinner - Day 1", "Breakfast - Day 2", "Lunch - Day 2"]);
@@ -626,11 +628,21 @@ export default function HackathonManageClient() {
                                                                                 {team.name}
                                                                                 <button
                                                                                     onClick={() => {
+                                                                                        const participants = team.hackathon_participants || [];
+                                                                                        const leader = participants.find((p: any) => p.role === 'Leader') || { id: '', name: '', email: '', phone: '' };
+                                                                                        const members = participants.filter((p: any) => p.role === 'Member');
+
+                                                                                        // Pad members to 4
+                                                                                        const paddedMembers = [...members];
+                                                                                        while (paddedMembers.length < 4) paddedMembers.push({ id: '', name: '', email: '', phone: '' });
+
                                                                                         setEditFormData({
                                                                                             teamName: team.name,
                                                                                             ideaTitle: team.idea_title,
                                                                                             teamCode: team.team_code || '',
-                                                                                            projectObjective: team.project_objective || ''
+                                                                                            projectObjective: team.project_objective || '',
+                                                                                            leader,
+                                                                                            members: paddedMembers.slice(0, 4)
                                                                                         });
                                                                                         setEditingTeam(team);
                                                                                     }}
@@ -754,6 +766,57 @@ export default function HackathonManageClient() {
                                                     <textarea value={editFormData.projectObjective} onChange={e => setEditFormData({ ...editFormData, projectObjective: e.target.value })} rows={3} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white resize-none" />
                                                 </div>
                                             </div>
+
+                                            <div className="space-y-4 pt-4 border-t border-white/10">
+                                                <h4 className="text-sm font-medium text-blue-400 pb-2">Edit Team Leader</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Name *</label>
+                                                        <input required type="text" value={editFormData.leader.name} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, name: e.target.value } })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Email *</label>
+                                                        <input required type="email" value={editFormData.leader.email} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, email: e.target.value } })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Phone *</label>
+                                                        <input required type="tel" value={editFormData.leader.phone} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, phone: e.target.value } })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4 pt-4 border-t border-white/10">
+                                                <h4 className="text-sm font-medium text-blue-400 pb-2">Edit Members (Optional)</h4>
+                                                {editFormData.members.map((member, idx) => (
+                                                    <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white/5 p-3 rounded-lg border border-white/5">
+                                                        <div>
+                                                            <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">M{idx + 1} Name</label>
+                                                            <input type="text" value={member.name} onChange={e => {
+                                                                const newMembers = [...editFormData.members];
+                                                                newMembers[idx].name = e.target.value;
+                                                                setEditFormData({ ...editFormData, members: newMembers });
+                                                            }} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">M{idx + 1} Email</label>
+                                                            <input type="email" value={member.email} onChange={e => {
+                                                                const newMembers = [...editFormData.members];
+                                                                newMembers[idx].email = e.target.value;
+                                                                setEditFormData({ ...editFormData, members: newMembers });
+                                                            }} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">M{idx + 1} Phone</label>
+                                                            <input type="tel" value={member.phone} onChange={e => {
+                                                                const newMembers = [...editFormData.members];
+                                                                newMembers[idx].phone = e.target.value;
+                                                                setEditFormData({ ...editFormData, members: newMembers });
+                                                            }} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
                                             <div className="flex justify-end gap-3 pt-6 border-t border-white/10">
                                                 <button type="button" onClick={() => setEditingTeam(null)} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 transition-colors">
                                                     Cancel
