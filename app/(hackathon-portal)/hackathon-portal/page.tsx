@@ -31,7 +31,7 @@ export default async function HackathonPortalHub() {
                 iconColor: "text-blue-400",
             },
             {
-                title: "Logistics Scanner",
+                title: "Verify & Track",
                 desc: "QR scan for check-in, checkout, and meals",
                 href: "/hackathon-portal/scan",
                 icon: QrCode,
@@ -67,7 +67,7 @@ export default async function HackathonPortalHub() {
     // Volunteer gets scanner
     if (role === 'volunteer') {
         cards.push({
-            title: "Logistics Scanner",
+            title: "Verify & Track",
             desc: "QR scan for check-in, checkout, and meals",
             href: "/hackathon-portal/scan",
             icon: QrCode,

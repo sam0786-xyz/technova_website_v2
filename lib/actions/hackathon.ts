@@ -4,6 +4,7 @@ import { createClient as createServerClient } from "@supabase/supabase-js"
 import { auth } from "@/lib/auth"
 import * as xlsx from 'xlsx'
 import { revalidatePath } from "next/cache"
+import { Resend } from "resend"
 
 async function getSupabase() {
     return createServerClient(
@@ -173,6 +174,93 @@ export async function uploadHackathonData(formData: FormData) {
         return { error: "Failed to process file: " + error.message }
     }
 }
+
+export async function updateHackathonTeamDetails(teamId: string, data: {
+    teamName: string,
+    ideaTitle: string,
+    teamCode?: string,
+    projectObjective?: string,
+    leader?: { id?: string, name: string, email: string, phone: string },
+    members?: { id?: string, name: string, email?: string, phone?: string }[]
+}) {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
+        return { error: "Unauthorized" }
+    }
+
+    try {
+        const supabase = await getSupabase()
+
+        // 1. Update Team Info
+        const { error } = await supabase
+            .from('hackathon_teams')
+            .update({
+                name: data.teamName,
+                idea_title: data.ideaTitle || 'TBD',
+                team_code: data.teamCode || null,
+                project_objective: data.projectObjective || null,
+            })
+            .eq('id', teamId)
+
+        if (error) {
+            return { error: error.message || "Failed to update team details" }
+        }
+
+        // 2. Clear existing participants for this team
+        await supabase.from('hackathon_participants').delete().eq('team_id', teamId)
+
+        // 3. Prepare Participants to re-insert
+        const participantsToInsert = []
+
+        // Leader
+        if (data.leader && data.leader.name) {
+            participantsToInsert.push({
+                team_id: teamId,
+                name: data.leader.name,
+                email: data.leader.email,
+                phone: data.leader.phone,
+                role: 'Leader',
+                is_checked_in: false,
+                food_count: 0
+            })
+        }
+
+        // Members
+        if (data.members && data.members.length > 0) {
+            for (const member of data.members) {
+                if (member.name && member.name.trim() !== "") {
+                    participantsToInsert.push({
+                        team_id: teamId,
+                        name: member.name,
+                        email: member.email || '',
+                        phone: member.phone || null,
+                        role: 'Member',
+                        is_checked_in: false,
+                        food_count: 0
+                    })
+                }
+            }
+        }
+
+        // 4. Re-insert Participants
+        if (participantsToInsert.length > 0) {
+            const { error: partError } = await supabase
+                .from('hackathon_participants')
+                .insert(participantsToInsert)
+
+            if (partError) {
+                return { error: "Team updated, but failed to reconstruct members: " + partError.message }
+            }
+        }
+
+        revalidatePath('/admin/hackathon')
+        revalidatePath('/hackathon-portal')
+        return { success: true }
+    } catch (e: any) {
+        return { error: e.message }
+    }
+}
+
 
 export async function addHackathonTeamManually(data: {
     teamName: string,
@@ -345,6 +433,28 @@ export async function addEvaluator(email: string, name: string = 'Evaluator') {
         return { error: error.message }
     }
 
+    if (process.env.RESEND_API_KEY) {
+        try {
+            const resend = new Resend(process.env.RESEND_API_KEY)
+            await resend.emails.send({
+                from: "TechNova Hackathon <no-reply@technovashardauniversity.in>",
+                to: email,
+                subject: "You have been invited as an Evaluator - TechNova",
+                html: `
+                    <h2>Welcome to TechNova Hackathon</h2>
+                    <p>Hi ${name},</p>
+                    <p>You have been invited to act as an evaluator for the upcoming TechNova Hackathon.</p>
+                    <p>You can access the evaluator portal using this link: <a href="https://www.technovashardauniversity.in/hackathon-portal/evaluate">https://www.technovashardauniversity.in/hackathon-portal/evaluate</a></p>
+                    <p>Please log in using this email address (<strong>${email}</strong>) to view the teams and submit your scores.</p>
+                    <br/>
+                    <p>Best regards,<br/>The TechNova Team</p>
+                `
+            })
+        } catch (e) {
+            console.error("Failed to send evaluator email", e);
+        }
+    }
+
     revalidatePath('/admin/hackathon')
     return { success: true }
 }
@@ -405,6 +515,26 @@ export async function startTimer(durationHours: number = 24) {
 
     revalidatePath('/admin/hackathon')
     revalidatePath('/live')
+    return { success: true }
+}
+
+export async function updateCustomMeals(meals: string[]) {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized" }
+
+    const supabase = await getSupabase()
+    const { data: existing } = await supabase.from('hackathon_settings').select('id').limit(1).maybeSingle()
+
+    if (existing) {
+        const { error } = await supabase.from('hackathon_settings').update({ custom_meals: meals }).eq('id', existing.id)
+        if (error) return { error: error.message }
+    } else {
+        const { error } = await supabase.from('hackathon_settings').insert({ custom_meals: meals })
+        if (error) return { error: error.message }
+    }
+
+    revalidatePath('/admin/hackathon')
+    revalidatePath('/hackathon-portal')
     return { success: true }
 }
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { processHackathonQrScan, searchParticipants } from "@/lib/actions/hackathon";
 import { ArrowLeft, Camera, QrCode, CheckCircle, AlertCircle, Coffee, ChevronDown, Search, UserCheck, LogOut } from "lucide-react";
+import { createClient } from "@/supabase/client";
 
 const MEAL_ROUNDS = [
     "Breakfast - Day 1",
@@ -16,7 +17,8 @@ const MEAL_ROUNDS = [
 ];
 
 export default function HackathonScannerClient({ portalMode = false }: { portalMode?: boolean }) {
-    const [mode, setMode] = useState<'checkin' | 'checkout' | 'food'>('checkin');
+    const [mode, setMode] = useState<'checkin' | 'food'>('checkin');
+    const [customMeals, setCustomMeals] = useState<string[]>(MEAL_ROUNDS);
     const [selectedMeal, setSelectedMeal] = useState(MEAL_ROUNDS[0]);
     const [scanResult, setScanResult] = useState<'success' | 'error' | 'already' | null>(null);
     const [message, setMessage] = useState("");
@@ -34,6 +36,19 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
 
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Fetch custom meals from admin settings
+    useEffect(() => {
+        const fetchMeals = async () => {
+            const supabase = createClient();
+            const { data } = await supabase.from('hackathon_settings').select('custom_meals').single();
+            if (data?.custom_meals && Array.isArray(data.custom_meals) && data.custom_meals.length > 0) {
+                setCustomMeals(data.custom_meals);
+                setSelectedMeal(data.custom_meals[0]);
+            }
+        };
+        fetchMeals();
+    }, []);
 
     useEffect(() => {
         return () => {
@@ -146,18 +161,18 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
         }, 3000);
     };
 
-    const handleManualAction = async (participantId: string) => {
+    const handleManualAction = async (participantId: string, actionStr: 'checkin' | 'checkout' | 'food') => {
         setProcessingId(participantId);
         try {
-            const result = await processHackathonQrScan(participantId, mode, mode === 'food' ? selectedMeal : undefined);
+            const result = await processHackathonQrScan(participantId, actionStr, actionStr === 'food' ? selectedMeal : undefined);
             if (result.success) {
                 setMessage(result.message || "Success!");
                 setScanResult('success');
                 setSearchResults(prev => prev.map(p => p.id === participantId
                     ? {
                         ...p,
-                        is_checked_in: mode === 'checkout' ? false : (mode === 'checkin' ? true : p.is_checked_in),
-                        food_count: (p.food_count || 0) + (mode === 'food' ? 1 : 0)
+                        is_checked_in: actionStr === 'checkout' ? false : (actionStr === 'checkin' ? true : p.is_checked_in),
+                        food_count: (p.food_count || 0) + (actionStr === 'food' ? 1 : 0)
                     }
                     : p));
             } else if (result.message === "Already checked in" || result.message === "Not checked in") {
@@ -183,7 +198,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                 </Link>
                 <div className="flex items-center gap-2">
                     <QrCode className="w-5 h-5 text-emerald-400" />
-                    <h1 className="text-lg font-bold">Hackathon Scanner</h1>
+                    <h1 className="text-lg font-bold">Verify & Track</h1>
                 </div>
                 <div className="w-6" />
             </header>
@@ -195,19 +210,13 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                         onClick={() => setMode('checkin')}
                         className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-xs transition-colors ${mode === 'checkin' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <CheckCircle className="w-3.5 h-3.5" /> Check-in
-                    </button>
-                    <button
-                        onClick={() => setMode('checkout')}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-xs transition-colors ${mode === 'checkout' ? 'bg-rose-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-                    >
-                        <LogOut className="w-3.5 h-3.5" /> Check-out
+                        <CheckCircle className="w-3.5 h-3.5" /> Check-in / Out
                     </button>
                     <button
                         onClick={() => setMode('food')}
                         className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-xs transition-colors ${mode === 'food' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <Coffee className="w-3.5 h-3.5" /> Meal Scan
+                        <Coffee className="w-3.5 h-3.5" /> Log Meals
                     </button>
                 </div>
 
@@ -223,9 +232,11 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                 onChange={(e) => setSelectedMeal(e.target.value)}
                                 className="w-full bg-black/60 border border-white/20 rounded-lg px-4 py-2.5 text-white text-sm font-medium appearance-none focus:outline-none focus:border-orange-500 cursor-pointer"
                             >
-                                {MEAL_ROUNDS.map(meal => (
+                                {customMeals.length > 0 ? customMeals.map(meal => (
                                     <option key={meal} value={meal}>{meal}</option>
-                                ))}
+                                )) : (
+                                    <option value="No Meals Defined">No meals defined by Admin</option>
+                                )}
                             </select>
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
@@ -245,7 +256,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                         onClick={() => { setShowSearch(true); stopCamera(); }}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-colors ${showSearch ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <Search className="w-3.5 h-3.5" /> Search & {mode === 'checkin' ? 'Check-in' : mode === 'checkout' ? 'Check-out' : 'Log Meal'}
+                        <Search className="w-3.5 h-3.5" /> Search & {mode === 'checkin' ? 'Check-in/Out' : 'Log Meal'}
                     </button>
                 </div>
 
@@ -300,7 +311,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                             <p className="text-[11px] text-gray-600 truncate">{p.email}</p>
                                         </div>
                                         <div className="flex items-center gap-2 flex-shrink-0">
-                                            {(mode === 'checkin' || mode === 'checkout') && (
+                                            {mode === 'checkin' && (
                                                 <span className={`text-[10px] font-bold px-2 py-1 rounded ${p.is_checked_in ? 'text-emerald-400 bg-emerald-500/10' : 'text-gray-500 bg-white/5'}`}>
                                                     {p.is_checked_in ? '✓ In' : '✗ Out'}
                                                 </span>
@@ -308,19 +319,33 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                             {mode === 'food' && (
                                                 <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded">🍽 {p.food_count}</span>
                                             )}
-                                            <button
-                                                onClick={() => handleManualAction(p.id)}
-                                                disabled={processingId === p.id || (mode === 'checkin' && p.is_checked_in) || (mode === 'checkout' && !p.is_checked_in)}
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-40 ${mode === 'checkin' ? 'bg-blue-600 hover:bg-blue-500 text-white' :
-                                                    mode === 'checkout' ? 'bg-rose-600 hover:bg-rose-500 text-white' :
-                                                        'bg-orange-600 hover:bg-orange-500 text-white'
-                                                    }`}
-                                            >
-                                                {processingId === p.id ? '...' :
-                                                    mode === 'checkin' ? (p.is_checked_in ? 'Done' : 'Check In') :
-                                                        mode === 'checkout' ? (!p.is_checked_in ? 'Already Out' : 'Check Out') :
-                                                            'Log Meal'}
-                                            </button>
+
+                                            {mode === 'checkin' ? (
+                                                <div className="flex items-center gap-1.5">
+                                                    <button
+                                                        onClick={() => handleManualAction(p.id, 'checkin')}
+                                                        disabled={processingId === p.id || p.is_checked_in}
+                                                        className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-40 bg-emerald-600 hover:bg-emerald-500 text-white"
+                                                    >
+                                                        {processingId === p.id ? '...' : p.is_checked_in ? 'Done' : 'Check In'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleManualAction(p.id, 'checkout')}
+                                                        disabled={processingId === p.id || !p.is_checked_in}
+                                                        className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-40 bg-rose-600 hover:bg-rose-500 text-white"
+                                                    >
+                                                        {processingId === p.id ? '...' : !p.is_checked_in ? 'Out' : 'Check Out'}
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleManualAction(p.id, 'food')}
+                                                    disabled={processingId === p.id}
+                                                    className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-40 bg-orange-600 hover:bg-orange-500 text-white"
+                                                >
+                                                    {processingId === p.id ? '...' : 'Log Meal'}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
