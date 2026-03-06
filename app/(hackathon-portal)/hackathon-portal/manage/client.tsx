@@ -10,7 +10,7 @@ import {
     getVolunteers, addVolunteer, removeVolunteer,
     addHackathonTeamManually, updateHackathonTeamDetails, updateCustomMeals
 } from "@/lib/actions/hackathon";
-import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Utensils } from "lucide-react";
+import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Utensils, Settings } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import EvaluatorDashboardClient from "@/app/(admin)/admin/hackathon/evaluate/client";
@@ -404,6 +404,9 @@ export default function HackathonManageClient() {
                     <TabsTrigger value="schedule" className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
                         <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Schedule
                     </TabsTrigger>
+                    <TabsTrigger value="settings" className="data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-400 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                        <Settings className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Settings
+                    </TabsTrigger>
                 </TabsList>
 
                 {/* Teams & Import Tab */}
@@ -609,9 +612,15 @@ export default function HackathonManageClient() {
                                                     <tbody>
                                                         {(() => {
                                                             const sortedTeams = [...teams].sort((a, b) => {
-                                                                const totalScoreA = (b.hackathon_evaluations || []).reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                                const totalScoreB = (a.hackathon_evaluations || []).reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                                return totalScoreA - totalScoreB;
+                                                                const getAvg = (t: any) => {
+                                                                    const evals = t.hackathon_evaluations || [];
+                                                                    const r1 = evals.filter((e: any) => e.evaluation_round === 1);
+                                                                    const r2 = evals.filter((e: any) => e.evaluation_round === 2);
+                                                                    const r1Avg = r1.length ? r1.reduce((sum: number, e: any) => sum + Number(e.total_score), 0) / r1.length : 0;
+                                                                    const r2Avg = r2.length ? r2.reduce((sum: number, e: any) => sum + Number(e.total_score), 0) / r2.length : 0;
+                                                                    return r1Avg + r2Avg;
+                                                                };
+                                                                return getAvg(b) - getAvg(a);
                                                             });
                                                             const paginatedTeams = sortedTeams.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
                                                             return paginatedTeams.map((team, i) => {
@@ -665,14 +674,14 @@ export default function HackathonManageClient() {
                                                                             {(() => {
                                                                                 const r1 = team.hackathon_evaluations?.filter((e: any) => e.evaluation_round === 1) || [];
                                                                                 const total = r1.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                                                return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"}>{total > 0 ? total : '-'}</span>;
+                                                                                return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"} title={r1.length ? `Rated by ${r1.length} evaluator(s)` : ''}>{total > 0 ? (total / r1.length).toFixed(1) : '-'}</span>;
                                                                             })()}
                                                                         </td>
                                                                         <td className="px-4 py-4 font-mono text-center border-l border-white/5">
                                                                             {(() => {
                                                                                 const r2 = team.hackathon_evaluations?.filter((e: any) => e.evaluation_round === 2) || [];
                                                                                 const total = r2.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                                                return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"}>{total > 0 ? total : '-'}</span>;
+                                                                                return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"} title={r2.length ? `Rated by ${r2.length} evaluator(s)` : ''}>{total > 0 ? (total / r2.length).toFixed(1) : '-'}</span>;
                                                                             })()}
                                                                         </td>
                                                                         <td className="px-4 py-4">
@@ -1166,61 +1175,7 @@ export default function HackathonManageClient() {
                                 )}
                             </div>
 
-                            <div className="pt-6 border-t border-white/10 text-left">
-                                <label className="block text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                                    <Utensils className="w-4 h-4 text-orange-400" /> Meal Rounds Definition
-                                </label>
-                                <p className="text-xs text-gray-400 mb-4">Define exactly which meals food volunteers can scan for. This syncs directly to all volunteers' Verify & Track page.</p>
 
-                                <div className="space-y-2 mb-4">
-                                    {customMeals.map((meal, idx) => (
-                                        <div key={idx} className="flex items-center justify-between bg-white/5 border border-white/10 px-3 py-2 rounded-lg">
-                                            <span className="text-sm font-medium text-orange-100">{meal}</span>
-                                            <button
-                                                onClick={() => setCustomMeals(customMeals.filter((_, i) => i !== idx))}
-                                                className="text-red-400 hover:text-red-300 p-1 bg-red-500/10 rounded transition-colors"
-                                            >
-                                                <X className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {customMeals.length === 0 && (
-                                        <p className="text-xs text-gray-500 italic py-2 text-center border border-dashed border-white/10 rounded-lg">No meals defined.</p>
-                                    )}
-                                </div>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={newMeal}
-                                        onChange={(e) => setNewMeal(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && newMeal.trim() !== '') {
-                                                if (!customMeals.includes(newMeal.trim())) setCustomMeals([...customMeals, newMeal.trim()]);
-                                                setNewMeal('');
-                                            }
-                                        }}
-                                        placeholder="e.g. Day 3 Breakfast"
-                                        className="flex-1 bg-black border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-orange-500"
-                                    />
-                                    <button
-                                        onClick={() => {
-                                            if (newMeal.trim() !== '' && !customMeals.includes(newMeal.trim())) {
-                                                setCustomMeals([...customMeals, newMeal.trim()]);
-                                                setNewMeal('');
-                                            }
-                                        }}
-                                        className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors"
-                                    >
-                                        Add
-                                    </button>
-                                </div>
-                                <button
-                                    onClick={handleSaveMeals}
-                                    className="w-full bg-white/10 hover:bg-white/20 py-2.5 rounded-xl text-white mt-4 font-bold transition-colors border border-white/5"
-                                >
-                                    Save Defined Meals
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </TabsContent>
@@ -1304,6 +1259,76 @@ export default function HackathonManageClient() {
                                     ))}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </TabsContent>
+
+                {/* Settings Tab */}
+                <TabsContent value="settings" className="mt-0 border border-zinc-800 bg-zinc-900/50 rounded-2xl p-6 shadow-xl backdrop-blur-xl">
+                    <div className="max-w-xl">
+                        <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                            <Settings className="w-5 h-5 text-yellow-400" /> Platform Settings
+                        </h2>
+                        <p className="text-gray-400 text-sm mb-8">Manage global platform configurations and tracking schemas.</p>
+
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-6 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-3xl rounded-full" />
+                            <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                                <Utensils className="w-4 h-4 text-orange-400" /> Verify & Track Custom Meals
+                            </h3>
+                            <p className="text-xs text-gray-400 mb-6">Define exactly which meals food volunteers can scan and distribute. This syncs directly to all volunteers' Verify & Track dropdowns.</p>
+
+                            <div className="space-y-3 mb-6">
+                                {customMeals.map((meal, idx) => (
+                                    <div key={idx} className="flex items-center justify-between bg-black/40 border border-white/10 px-4 py-3 rounded-xl hover:border-orange-500/30 transition-colors">
+                                        <span className="text-sm font-medium text-orange-100/90">{meal}</span>
+                                        <button
+                                            onClick={() => setCustomMeals(customMeals.filter((_, i) => i !== idx))}
+                                            className="text-red-400 hover:bg-red-500/10 hover:text-red-300 p-1.5 rounded-lg transition-colors"
+                                            title="Delete Meal Round"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                                {customMeals.length === 0 && (
+                                    <p className="text-sm text-gray-500 italic py-4 text-center border border-dashed border-white/10 rounded-xl">No meals currently defined.</p>
+                                )}
+                            </div>
+
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={newMeal}
+                                    onChange={(e) => setNewMeal(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && newMeal.trim() !== '') {
+                                            if (!customMeals.includes(newMeal.trim())) setCustomMeals([...customMeals, newMeal.trim()]);
+                                            setNewMeal('');
+                                        }
+                                    }}
+                                    placeholder="Add a new meal (e.g. Day 3 Breakfast)"
+                                    className="flex-1 bg-black border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+                                />
+                                <button
+                                    onClick={() => {
+                                        if (newMeal.trim() !== '' && !customMeals.includes(newMeal.trim())) {
+                                            setCustomMeals([...customMeals, newMeal.trim()]);
+                                            setNewMeal('');
+                                        }
+                                    }}
+                                    className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-orange-500/20"
+                                >
+                                    Add Meal
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={handleSaveMeals}
+                                className="w-full bg-white/10 hover:bg-white/20 py-3 rounded-xl text-white mt-6 font-bold transition-colors border border-white/10 flex items-center justify-center gap-2"
+                            >
+                                <CheckCircle className="w-4 h-4" /> Save Meal Rounds
+                            </button>
                         </div>
                     </div>
                 </TabsContent>
