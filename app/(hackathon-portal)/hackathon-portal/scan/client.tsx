@@ -17,7 +17,7 @@ const MEAL_ROUNDS = [
 ];
 
 export default function HackathonScannerClient({ portalMode = false }: { portalMode?: boolean }) {
-    const [mode, setMode] = useState<'checkin' | 'food'>('checkin');
+    const [mode, setMode] = useState<'checkin' | 'food' | 'checkout'>('checkin');
     const [customMeals, setCustomMeals] = useState<string[]>(MEAL_ROUNDS);
     const [selectedMeal, setSelectedMeal] = useState(MEAL_ROUNDS[0]);
     const [scanResult, setScanResult] = useState<'success' | 'error' | 'already' | null>(null);
@@ -131,7 +131,8 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
 
         try {
             const participantId = decodedText.trim();
-            const result = await processHackathonQrScan(participantId, mode, mode === 'food' ? selectedMeal : undefined);
+            const actionStr = mode === 'food' ? 'food' : (mode === 'checkout' ? 'checkout' : 'checkin');
+            const result = await processHackathonQrScan(participantId, actionStr, mode === 'food' ? selectedMeal : undefined);
 
             if (result.success) {
                 setScanResult('success');
@@ -207,16 +208,22 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                 {/* Mode Selector */}
                 <div className="flex bg-white/5 p-1 rounded-xl">
                     <button
-                        onClick={() => setMode('checkin')}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-xs transition-colors ${mode === 'checkin' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        onClick={() => { setMode('checkin'); }}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-[10px] transition-colors ${mode === 'checkin' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <CheckCircle className="w-3.5 h-3.5" /> Check-in / Out
+                        <CheckCircle className="w-3.5 h-3.5" /> Check-in
                     </button>
                     <button
                         onClick={() => setMode('food')}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-xs transition-colors ${mode === 'food' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-[10px] transition-colors ${mode === 'food' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <Coffee className="w-3.5 h-3.5" /> Log Meals
+                        <Coffee className="w-3.5 h-3.5" /> Meals
+                    </button>
+                    <button
+                        onClick={() => setMode('checkout')}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-[10px] transition-colors ${mode === 'checkout' ? 'bg-red-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                    >
+                        <LogOut className="w-3.5 h-3.5" /> Check-out
                     </button>
                 </div>
 

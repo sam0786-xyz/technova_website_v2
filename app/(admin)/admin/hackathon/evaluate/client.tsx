@@ -16,7 +16,7 @@ const THEMES = [
 
 const ITEMS_PER_PAGE = 10;
 
-export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen = true }: { initialTeams: any[], evaluationOpen?: boolean }) {
+export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen = true, evaluationRounds = 2, evaluatorToken }: { initialTeams: any[], evaluationOpen?: boolean, evaluationRounds?: number, evaluatorToken?: string }) {
     const [round, setRound] = useState<number>(1);
     const [teams, setTeams] = useState<any[]>(initialTeams || []);
     const [searchQuery, setSearchQuery] = useState("");
@@ -127,7 +127,7 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
         setMessage(null);
 
         try {
-            const res = await submitEvaluation(teamId, round, scores);
+            const res = await submitEvaluation(teamId, round, scores, evaluatorToken);
             if (res.error) {
                 setMessage({ type: 'error', text: res.error });
             } else {
@@ -166,19 +166,16 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
     return (
         <div className="space-y-6">
             {/* Round Selector */}
-            <div className="flex bg-white/5 border border-white/10 rounded-xl p-1 w-full md:w-max mx-auto mb-8">
-                <button
-                    onClick={() => setRound(1)}
-                    className={`flex-1 md:px-8 py-2.5 rounded-lg text-sm font-medium transition-all ${round === 1 ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                >
-                    Round 1 - Online Screening
-                </button>
-                <button
-                    onClick={() => setRound(2)}
-                    className={`flex-1 md:px-8 py-2.5 rounded-lg text-sm font-medium transition-all ${round === 2 ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                >
-                    Round 2 - Grand Finale
-                </button>
+            <div className={`flex bg-white/5 border border-white/10 rounded-xl p-1 w-full flex-wrap md:flex-nowrap mx-auto mb-8`}>
+                {Array.from({ length: evaluationRounds }, (_, i) => i + 1).map((r) => (
+                    <button
+                        key={r}
+                        onClick={() => setRound(r)}
+                        className={`flex-1 min-w-[120px] md:px-8 py-2.5 rounded-lg text-sm font-medium transition-all ${round === r ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                        Round {r}
+                    </button>
+                ))}
             </div>
 
             {/* Theme Filter Pills */}

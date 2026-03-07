@@ -8,7 +8,8 @@ import {
     getSchedule, addScheduleItem, deleteScheduleItem, updateTeamStatus, toggleEvaluationPeriod,
     getCheckedInParticipantsData, getFoodLogsData,
     getVolunteers, addVolunteer, removeVolunteer,
-    addHackathonTeamManually, updateHackathonTeamDetails, updateCustomMeals
+    addHackathonTeamManually, updateHackathonTeamDetails, updateCustomMeals,
+    updateEvaluationRounds
 } from "@/lib/actions/hackathon";
 import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Utensils, Settings } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,6 +26,7 @@ export default function HackathonManageClient() {
     const [evaluators, setEvaluators] = useState<any[]>([]);
     const [volunteers, setVolunteers] = useState<any[]>([]);
     const [settings, setSettings] = useState<any>(null);
+    const [evaluationRounds, setEvaluationRounds] = useState(2);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedTheme, setSelectedTheme] = useState("ALL");
     const [schedule, setSchedule] = useState<any[]>([]);
@@ -1329,6 +1331,37 @@ export default function HackathonManageClient() {
                             >
                                 <CheckCircle className="w-4 h-4" /> Save Meal Rounds
                             </button>
+                        </div>
+
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-6 mt-6 relative overflow-hidden">
+                            <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                                <Star className="w-4 h-4 text-amber-400" /> Evaluation Rounds
+                            </h3>
+                            <p className="text-xs text-gray-400 mb-6">Set how many rounds of evaluation are required for this hackathon (e.g., 1 for screening, 2 for grand finale).</p>
+
+                            <div className="flex items-center gap-4">
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="5"
+                                    value={evaluationRounds}
+                                    onChange={(e) => setEvaluationRounds(parseInt(e.target.value) || 1)}
+                                    className="w-24 bg-black border border-white/10 rounded-xl px-4 py-3 text-white text-center font-bold focus:outline-none focus:border-amber-500 transition-colors"
+                                />
+                                <button
+                                    onClick={async () => {
+                                        const res = await updateEvaluationRounds(evaluationRounds);
+                                        if (res.success) {
+                                            setMessage({ type: 'success', text: `Max evaluation rounds updated to ${evaluationRounds}` });
+                                        } else {
+                                            setMessage({ type: 'error', text: res.error || "Failed to update rounds" });
+                                        }
+                                    }}
+                                    className="bg-amber-600 hover:bg-amber-500 text-white px-6 py-3 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-amber-500/20"
+                                >
+                                    Update Rounds
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </TabsContent>

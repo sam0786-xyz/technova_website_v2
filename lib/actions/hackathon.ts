@@ -6,7 +6,7 @@ import * as xlsx from 'xlsx'
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 
-async function getSupabase() {
+export async function getSupabase() {
     return createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -422,30 +422,65 @@ export async function addEvaluator(email: string, name: string = 'Evaluator') {
     if (!email) return { error: "Email is required" }
 
     const supabase = await getSupabase()
-    const { error } = await supabase
-        .from('hackathon_evaluators')
-        .insert({ email, name })
 
-    if (error) {
-        if (error.code === '23505') return { error: "Evaluator already exists" }
-        return { error: error.message }
+    // Check if evaluator already exists first to avoid duplicate email errors
+    const { data: existing } = await supabase
+        .from('hackathon_evaluators')
+        .select('id, magic_token')
+        .eq('email', email)
+        .maybeSingle()
+
+    let magicToken = existing?.magic_token;
+
+    if (!existing) {
+        const { data, error } = await supabase
+            .from('hackathon_evaluators')
+            .insert({ email, name })
+            .select('magic_token')
+            .single()
+
+        if (error) return { error: error.message }
+        magicToken = data.magic_token;
     }
 
     if (process.env.RESEND_API_KEY) {
         try {
             const resend = new Resend(process.env.RESEND_API_KEY)
+            const magicLink = `https://www.technovashardauniversity.in/hackathon-portal/evaluate?token=${magicToken}`;
+
             await resend.emails.send({
                 from: "TechNova Hackathon <no-reply@technovashardauniversity.in>",
                 to: email,
-                subject: "You have been invited as an Evaluator - TechNova",
+                subject: "Invitation: Official Evaluator - TechNova Hackathon",
                 html: `
-                    <h2>Welcome to TechNova Hackathon</h2>
-                    <p>Hi ${name},</p>
-                    <p>You have been invited to act as an evaluator for the upcoming TechNova Hackathon.</p>
-                    <p>You can access the evaluator portal using this link: <a href="https://www.technovashardauniversity.in/hackathon-portal/evaluate">https://www.technovashardauniversity.in/hackathon-portal/evaluate</a></p>
-                    <p>Please log in using this email address (<strong>${email}</strong>) to view the teams and submit your scores.</p>
-                    <br/>
-                    <p>Best regards,<br/>The TechNova Team</p>
+                    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
+                        <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 30px; text-align: center;">
+                            <h1 style="margin: 0; color: #000; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">TechNova Hackathon</h1>
+                            <p style="margin: 5px 0 0; color: #000; font-weight: bold; opacity: 0.8;">Official Evaluator Invitation</p>
+                        </div>
+                        <div style="padding: 40px 30px; line-height: 1.6;">
+                            <h2 style="color: #f59e0b; margin-top: 0;">Welcome, ${name}!</h2>
+                            <p style="color: #ccc; font-size: 16px;">
+                                You have been selected as an official evaluator for the TechNova Hackathon. Your expertise will be invaluable in identifying the most innovative projects.
+                            </p>
+                            
+                            <div style="background-color: #111; border: 1px solid #222; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
+                                <p style="margin: 0 0 15px; color: #888; font-size: 14px;">Use the button below for direct access to your dashboard:</p>
+                                <a href="${magicLink}" style="display: inline-block; background-color: #f59e0b; color: #000; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; transition: transform 0.2s;">
+                                    Enter Evaluator Portal
+                                </a>
+                                <p style="margin: 15px 0 0; color: #555; font-size: 12px;">Login Email: ${email}</p>
+                            </div>
+
+                            <p style="color: #666; font-size: 14px; margin-top: 30px;">
+                                If you have any trouble with the link above, you can copy and paste this URL into your browser:<br/>
+                                <span style="color: #f59e0b; word-break: break-all;">${magicLink}</span>
+                            </p>
+                        </div>
+                        <div style="background-color: #0a0a0a; padding: 20px; text-align: center; border-top: 1px solid #1a1a1a;">
+                            <p style="margin: 0; color: #444; font-size: 12px;">&copy; 2026 TechNova | Sharda University</p>
+                        </div>
+                    </div>
                 `
             })
         } catch (e) {
@@ -583,6 +618,30 @@ export async function stopTimer() {
     return { success: true }
 }
 
+export async function updateEvaluationRounds(rounds: number) {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized" }
+
+    const supabase = await getSupabase()
+
+    // Check if settings row exists
+    const { data: existing } = await supabase.from('hackathon_settings').select('id').limit(1).maybeSingle()
+
+    let error;
+    if (existing) {
+        const { error: updateError } = await supabase.from('hackathon_settings').update({ evaluation_rounds: rounds, updated_at: new Date().toISOString() }).eq('id', existing.id)
+        error = updateError
+    } else {
+        const { error: insertError } = await supabase.from('hackathon_settings').insert({ evaluation_rounds: rounds, timer_start: new Date().toISOString(), duration_hours: 24, is_running: false, updated_at: new Date().toISOString() })
+        error = insertError
+    }
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/admin/hackathon')
+    return { success: true }
+}
+
 export async function clearAnnouncement() {
     const session = await auth()
     if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) return { error: "Unauthorized" }
@@ -659,7 +718,7 @@ export async function checkEvaluatorAccess() {
     const supabase = await getSupabase()
     const { data } = await supabase
         .from('hackathon_evaluators')
-        .select('id, name')
+        .select('id, name, email')
         .eq('email', session.user.email)
         .single()
 
@@ -688,8 +747,8 @@ export async function getTeamsForEvaluation(round: number = 1) {
     if (round === 1) {
         // Use only valid enum values: pending, evaluating, shortlisted, rejected
         query = query.in('status', ['pending', 'evaluating', 'shortlisted', 'rejected'])
-    } else if (round === 2) {
-        query = query.eq('status', 'shortlisted') // Only shortlisted
+    } else {
+        query = query.in('status', ['shortlisted'])
     }
 
     const { data: teams, error } = await query.order('created_at', { ascending: true })
@@ -738,8 +797,22 @@ export type EvaluationScores = {
     panelName: string;
 }
 
-export async function submitEvaluation(teamId: string, round: number, scores: EvaluationScores) {
-    const evaluator = await checkEvaluatorAccess()
+export async function submitEvaluation(teamId: string, round: number, scores: EvaluationScores, token?: string) {
+    let evaluator;
+    if (token) {
+        const supabase = await getSupabase()
+        const { data } = await supabase
+            .from('hackathon_evaluators')
+            .select('id, name, email')
+            .eq('magic_token', token)
+            .maybeSingle()
+        evaluator = data
+    }
+
+    if (!evaluator) {
+        evaluator = await checkEvaluatorAccess()
+    }
+
     if (!evaluator) return { error: "Unauthorized Evaluator Access" }
 
     // Validate scores (1-5 range for 6 factors)
@@ -1123,8 +1196,8 @@ export async function checkHackathonRole(): Promise<{ role: HackathonRole, user:
     const session = await auth()
     if (!session || !session.user) return { role: 'none', user: null }
 
-    // Super admins are organizers
-    if (session.user.role === 'super_admin') {
+    // Admins and Super admins are organizers
+    if (session.user.role === 'super_admin' || session.user.role === 'admin') {
         return { role: 'organizer', user: session.user }
     }
 
