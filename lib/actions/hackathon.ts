@@ -937,10 +937,105 @@ export async function getPublicShortlistedTeams() {
         .select(`
             id, name, idea_title, table_number
         `)
-        .eq('status', 'shortlisted')
+        .or('status.eq.shortlisted,status.eq.shortlisted_notified')
         .order('total_score', { ascending: false })
 
     return teams || []
+}
+
+export async function emailShortlistedTeams() {
+    const session = await auth()
+    if (!session || !session.user) return { error: "Unauthorized" }
+    if (session.user.role !== 'admin' && session.user.role !== 'super_admin') return { error: "Unauthorized" }
+
+    if (!process.env.RESEND_API_KEY) return { error: "Email service not configured" }
+
+    const supabase = await getSupabase()
+
+    // Get all shortlisted teams with their participants
+    const { data: teams } = await supabase
+        .from('hackathon_teams')
+        .select('id, name, idea_title, team_code, hackathon_participants(name, email, role)')
+        .eq('status', 'shortlisted')
+
+    if (!teams || teams.length === 0) return { error: "No shortlisted teams found to email." }
+
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    let sentCount = 0
+    let failCount = 0
+
+    for (const team of teams) {
+        const participants = team.hackathon_participants || []
+        const emails = participants.map((p: any) => p.email).filter(Boolean)
+
+        if (emails.length === 0) continue
+
+        for (const participant of participants) {
+            if (!participant.email) continue
+            try {
+                await resend.emails.send({
+                    from: "Technova Society <no-reply@technovashardauniversity.in>",
+                    to: participant.email,
+                    subject: "🎉 Congratulations! Your Team has been Shortlisted - Innovate Bharat Hackathon",
+                    html: `
+                        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
+                            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center;">
+                                <h1 style="margin: 0; color: #fff; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">🎉 Congratulations!</h1>
+                                <p style="margin: 5px 0 0; color: rgba(255,255,255,0.9); font-weight: bold;">Innovate Bharat Hackathon</p>
+                            </div>
+                            <div style="padding: 40px 30px; line-height: 1.6;">
+                                <h2 style="color: #10b981; margin-top: 0;">Dear ${participant.name},</h2>
+                                <p style="color: #ccc; font-size: 16px;">
+                                    We are thrilled to inform you that your team <strong style="color: #f59e0b;">${team.name}</strong> has been <strong style="color: #10b981;">shortlisted</strong> for the Grand Finale of the Innovate Bharat Hackathon!
+                                </p>
+
+                                <div style="background-color: #111; border: 1px solid #222; border-radius: 8px; padding: 20px; margin: 25px 0;">
+                                    <p style="margin: 0 0 10px; color: #888; font-size: 14px;">Team Details:</p>
+                                    <p style="margin: 0; font-size: 16px; color: #fff;"><strong>Team:</strong> ${team.name}</p>
+                                    <p style="margin: 5px 0 0; font-size: 14px; color: #f59e0b;"><strong>Team Code:</strong> ${team.team_code || 'N/A'}</p>
+                                    <p style="margin: 5px 0 0; font-size: 14px; color: #aaa;"><strong>Project:</strong> ${team.idea_title || 'N/A'}</p>
+                                </div>
+
+                                <div style="background-color: #0a2e1e; border: 1px solid #10b981; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;">
+                                    <p style="margin: 0; color: #10b981; font-size: 18px; font-weight: bold;">🏆 You're in the Grand Finale!</p>
+                                    <p style="margin: 10px 0 0; color: #aaa; font-size: 14px;">
+                                        The 24-Hour Offline Hackathon awaits you at Sharda University. More details about the event schedule, venue, and logistics will be shared soon.
+                                    </p>
+                                </div>
+
+                                <p style="color: #ccc; font-size: 14px;">
+                                    Stay tuned for further updates. For any queries, reach out to the Technova Society team.
+                                </p>
+
+                                <div style="text-align: center; margin-top: 25px;">
+                                    <a href="https://www.technovashardauniversity.in/hackathon" style="display: inline-block; background-color: #10b981; color: #000; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                        View Hackathon Details
+                                    </a>
+                                </div>
+                            </div>
+                            <div style="background-color: #0a0a0a; padding: 20px; text-align: center; border-top: 1px solid #1a1a1a;">
+                                <p style="margin: 0; color: #444; font-size: 12px;">&copy; 2026 TechNova | Sharda University</p>
+                            </div>
+                        </div>
+                    `
+                })
+                sentCount++
+            } catch (e) {
+                console.error(`Failed to send email to ${participant.email}`, e)
+                failCount++
+            }
+        }
+
+        // Mark team as notified
+        await supabase
+            .from('hackathon_teams')
+            .update({ status: 'shortlisted_notified' })
+            .eq('id', team.id)
+    }
+
+    revalidatePath('/hackathon-portal/manage')
+    revalidatePath('/hackathon')
+    return { success: true, message: `✅ Emails sent to ${sentCount} participant(s) across ${teams.length} team(s).${failCount > 0 ? ` ${failCount} failed.` : ''}` }
 }
 
 // ==========================================

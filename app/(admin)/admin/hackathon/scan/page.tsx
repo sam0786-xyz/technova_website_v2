@@ -19,7 +19,7 @@ const MEAL_ROUNDS = [
 const ITEMS_PER_PAGE = 15;
 
 export default function HackathonScannerPage() {
-    const [mode, setMode] = useState<'checkin' | 'checkout' | 'food'>('checkin');
+    const [mode, setMode] = useState<'checkin' | 'food'>('checkin');
     const [customMeals, setCustomMeals] = useState<string[]>(MEAL_ROUNDS);
     const [selectedMeal, setSelectedMeal] = useState(MEAL_ROUNDS[0]);
     const [scanResult, setScanResult] = useState<'success' | 'error' | 'already' | null>(null);
@@ -250,12 +250,6 @@ export default function HackathonScannerPage() {
                     >
                         <Coffee className="w-3.5 h-3.5" /> Meals
                     </button>
-                    <button
-                        onClick={() => setMode('checkout')}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-medium text-xs transition-colors ${mode === 'checkout' ? 'bg-rose-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-                    >
-                        <LogOut className="w-3.5 h-3.5" /> Check-out
-                    </button>
                 </div>
 
                 {/* Meal Round Selector */}
@@ -292,7 +286,7 @@ export default function HackathonScannerPage() {
                         onClick={() => { setShowSearch(true); stopCamera(); }}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-colors ${showSearch ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <Search className="w-3.5 h-3.5" /> Search & {mode === 'food' ? 'Log/Unlog Meal' : mode === 'checkin' ? 'Check-in/Out' : 'Check-out'}
+                        <Search className="w-3.5 h-3.5" /> Search & {mode === 'food' ? 'Log/Unlog Meal' : 'Check-in/Out'}
                     </button>
                 </div>
 
@@ -379,7 +373,7 @@ export default function HackathonScannerPage() {
                                                         {processingId === p.id ? '...' : !p.is_checked_in ? 'Out' : 'Check Out'}
                                                     </button>
                                                 </div>
-                                            ) : mode === 'food' ? (
+                                            ) : (
                                                 <div className="flex items-center gap-1.5">
                                                     <button
                                                         onClick={() => handleManualAction(p.id, 'food')}
@@ -396,14 +390,6 @@ export default function HackathonScannerPage() {
                                                         {processingId === p.id ? '...' : 'Unlog'}
                                                     </button>
                                                 </div>
-                                            ) : (
-                                                <button
-                                                    onClick={() => handleManualAction(p.id, 'checkout')}
-                                                    disabled={processingId === p.id || !p.is_checked_in}
-                                                    className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-40 bg-rose-600 hover:bg-rose-500 text-white"
-                                                >
-                                                    {processingId === p.id ? '...' : 'Check Out'}
-                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -461,9 +447,7 @@ export default function HackathonScannerPage() {
                             <p className="text-xs text-gray-400">
                                 {mode === 'checkin'
                                     ? "Scan participants' IDs to mark them as arrived."
-                                    : mode === 'checkout'
-                                        ? "Scan participants' IDs to check them out."
-                                        : `Scanning for: ${selectedMeal}`}
+                                    : `Scanning for: ${selectedMeal}`}
                             </p>
                         </div>
 

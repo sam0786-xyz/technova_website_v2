@@ -342,6 +342,59 @@ export default function HackathonPage() {
                     </div>
                 </div>
 
+                {/* Shortlisted Teams Section */}
+                {liveData?.shortlistedTeams && liveData.shortlistedTeams.length > 0 && (
+                    <div className="mt-24 max-w-7xl mx-auto w-full relative z-20">
+                        <div className="text-center mb-16">
+                            <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-6">
+                                <Trophy className="w-8 h-8 text-emerald-400" />
+                            </div>
+                            <h2 className="text-4xl md:text-5xl font-black mb-4">
+                                Shortlisted <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Teams</span>
+                            </h2>
+                            <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+                                Congratulations to the following teams who have been selected for the Grand Finale! 🎉
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {liveData.shortlistedTeams.map((team: any, i: number) => (
+                                <motion.div
+                                    key={team.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: i * 0.05, duration: 0.4 }}
+                                    className="group p-5 rounded-2xl bg-gradient-to-br from-emerald-900/20 to-cyan-900/10 border border-emerald-500/20 backdrop-blur-sm hover:border-emerald-400/40 hover:bg-emerald-900/30 transition-all duration-300 shadow-lg hover:shadow-[0_0_25px_rgba(16,185,129,0.15)]"
+                                >
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 group-hover:bg-emerald-500/20 transition-colors">
+                                            <span className="text-emerald-400 font-bold text-sm">{i + 1}</span>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h3 className="font-bold text-white text-lg truncate group-hover:text-emerald-300 transition-colors">{team.name}</h3>
+                                            {team.idea_title && (
+                                                <p className="text-sm text-gray-400 mt-1 line-clamp-2">{team.idea_title}</p>
+                                            )}
+                                            {team.table_number && (
+                                                <span className="inline-block mt-2 px-2 py-0.5 text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md">
+                                                    Table {team.table_number}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        <div className="text-center mt-8">
+                            <p className="text-sm text-gray-500">
+                                {liveData.shortlistedTeams.length} team{liveData.shortlistedTeams.length !== 1 ? 's' : ''} shortlisted for the Grand Finale
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Why Sharda / Venue Highlights Section */}
                 <div className="mt-32 max-w-7xl mx-auto w-full relative z-20">
                     <div className="text-center mb-16">

@@ -9,9 +9,9 @@ import {
     getCheckedInParticipantsData, getFoodLogsData,
     getVolunteers, addVolunteer, removeVolunteer,
     addHackathonTeamManually, updateHackathonTeamDetails, updateCustomMeals,
-    updateEvaluationRounds
+    updateEvaluationRounds, emailShortlistedTeams
 } from "@/lib/actions/hackathon";
-import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Utensils, Settings } from "lucide-react";
+import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Utensils, Settings, Send } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import EvaluatorDashboardClient from "@/app/(admin)/admin/hackathon/evaluate/client";
@@ -28,6 +28,7 @@ export default function HackathonManageClient() {
     const [settings, setSettings] = useState<any>(null);
     const [evaluationRounds, setEvaluationRounds] = useState(2);
     const [searchQuery, setSearchQuery] = useState("");
+    const [sendingEmails, setSendingEmails] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState("ALL");
     const [schedule, setSchedule] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -307,7 +308,7 @@ export default function HackathonManageClient() {
         }
     }
     const handleToggleShortlist = async (teamId: string, currentStatus: string) => {
-        const newStatus = currentStatus === 'shortlisted' ? 'evaluating' : 'shortlisted';
+        const newStatus = (currentStatus === 'shortlisted' || currentStatus === 'shortlisted_notified') ? 'evaluating' : 'shortlisted';
         const res = await updateTeamStatus(teamId, newStatus);
         if (res.error) {
             setMessage({ type: 'error', text: res.error });
@@ -593,8 +594,33 @@ export default function HackathonManageClient() {
                                                     <Star className="w-5 h-5 text-amber-500" />
                                                     Final Evaluation Results
                                                 </h3>
-                                                <div className="text-sm text-gray-400">
-                                                    Sorted by Highest Score
+                                                <div className="flex items-center gap-4">
+                                                    <div className="text-sm text-gray-400">
+                                                        Sorted by Highest Score · {teams.filter(t => t.status === 'shortlisted' || t.status === 'shortlisted_notified').length} shortlisted
+                                                    </div>
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (!confirm('This will send congratulatory emails to ALL shortlisted teams. Continue?')) return;
+                                                            setSendingEmails(true);
+                                                            try {
+                                                                const res = await emailShortlistedTeams();
+                                                                if (res.error) {
+                                                                    setMessage({ type: 'error', text: res.error });
+                                                                } else {
+                                                                    setMessage({ type: 'success', text: res.message || 'Emails sent!' });
+                                                                    loadData();
+                                                                }
+                                                            } catch {
+                                                                setMessage({ type: 'error', text: 'Failed to send emails.' });
+                                                            }
+                                                            setSendingEmails(false);
+                                                        }}
+                                                        disabled={sendingEmails || teams.filter(t => t.status === 'shortlisted').length === 0}
+                                                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all disabled:opacity-40 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                                                    >
+                                                        <Send className="w-3.5 h-3.5" />
+                                                        {sendingEmails ? 'Sending...' : 'Email Shortlisted Teams'}
+                                                    </button>
                                                 </div>
                                             </div>
 
@@ -701,21 +727,21 @@ export default function HackathonManageClient() {
                                                                         <td className="px-4 py-4">
                                                                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium border w-fit ${team.status === 'pending' ? 'bg-gray-500/10 text-gray-400 border-gray-500/20' :
                                                                                 team.status === 'evaluating' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                                                                                    team.status === 'shortlisted' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                                                                    (team.status === 'shortlisted' || team.status === 'shortlisted_notified') ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
                                                                                         'bg-red-500/10 text-red-400 border-red-500/20'
                                                                                 }`}>
-                                                                                {team.status.toUpperCase()}
+                                                                                {team.status === 'shortlisted_notified' ? '✅ NOTIFIED' : team.status.toUpperCase()}
                                                                             </span>
                                                                         </td>
                                                                         <td className="px-4 py-4 text-right">
                                                                             <button
                                                                                 onClick={() => handleToggleShortlist(team.id, team.status)}
-                                                                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${team.status === 'shortlisted'
+                                                                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${(team.status === 'shortlisted' || team.status === 'shortlisted_notified')
                                                                                     ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/30'
                                                                                     : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
                                                                                     }`}
                                                                             >
-                                                                                {team.status === 'shortlisted' ? 'Remove from Shortlist' : 'Mark as Shortlisted'}
+                                                                                {(team.status === 'shortlisted' || team.status === 'shortlisted_notified') ? 'Remove from Shortlist' : 'Mark as Shortlisted'}
                                                                             </button>
                                                                         </td>
                                                                     </tr>
