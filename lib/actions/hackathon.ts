@@ -449,7 +449,7 @@ export async function addEvaluator(email: string, name: string = 'Evaluator') {
             const magicLink = `https://www.technovashardauniversity.in/evaluate?token=${magicToken}`;
 
             await resend.emails.send({
-                from: "TechNova Hackathon <no-reply@technovashardauniversity.in>",
+                from: "Technova Society <no-reply@technovashardauniversity.in>",
                 to: email,
                 subject: "Invitation: Official Evaluator - Innovate Bharat Hackathon",
                 html: `
