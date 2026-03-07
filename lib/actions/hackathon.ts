@@ -446,22 +446,22 @@ export async function addEvaluator(email: string, name: string = 'Evaluator') {
     if (process.env.RESEND_API_KEY) {
         try {
             const resend = new Resend(process.env.RESEND_API_KEY)
-            const magicLink = `https://www.technovashardauniversity.in/hackathon-portal/evaluate?token=${magicToken}`;
+            const magicLink = `https://www.technovashardauniversity.in/evaluate?token=${magicToken}`;
 
             await resend.emails.send({
                 from: "TechNova Hackathon <no-reply@technovashardauniversity.in>",
                 to: email,
-                subject: "Invitation: Official Evaluator - TechNova Hackathon",
+                subject: "Invitation: Official Evaluator - Innovate Bharat Hackathon",
                 html: `
                     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
                         <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 30px; text-align: center;">
-                            <h1 style="margin: 0; color: #000; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">TechNova Hackathon</h1>
+                            <h1 style="margin: 0; color: #000; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">Innovate Bharat Hackathon</h1>
                             <p style="margin: 5px 0 0; color: #000; font-weight: bold; opacity: 0.8;">Official Evaluator Invitation</p>
                         </div>
                         <div style="padding: 40px 30px; line-height: 1.6;">
                             <h2 style="color: #f59e0b; margin-top: 0;">Welcome, ${name}!</h2>
                             <p style="color: #ccc; font-size: 16px;">
-                                You have been selected as an official evaluator for the TechNova Hackathon. Your expertise will be invaluable in identifying the most innovative projects.
+                                You have been selected as an official evaluator for the Innovate Bharat Hackathon. Your expertise will be invaluable in identifying the most innovative projects.
                             </p>
                             
                             <div style="background-color: #111; border: 1px solid #222; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
@@ -794,7 +794,6 @@ export type EvaluationScores = {
     feasibility: number;
     communication: number;
     feedback: string;
-    panelName: string;
 }
 
 export async function submitEvaluation(teamId: string, round: number, scores: EvaluationScores, token?: string) {
@@ -844,8 +843,7 @@ export async function submitEvaluation(teamId: string, round: number, scores: Ev
             score_feasibility: scores.feasibility,
             score_communication: scores.communication,
             total_score: totalScore,
-            feedback: scores.feedback,
-            panel_name: scores.panelName || 'Panel 1'
+            feedback: scores.feedback
         })
 
     if (evalError) return { error: evalError.code === '23505' ? `You have already evaluated this team for Round ${round}.` : evalError.message }
