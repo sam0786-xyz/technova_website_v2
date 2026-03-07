@@ -1,16 +1,34 @@
-import { checkHackathonRole, getHackathonSettings } from "@/lib/actions/hackathon"
+import { checkHackathonRole, getHackathonSettings, getTeamsForEvaluation, getSupabase } from "@/lib/actions/hackathon"
 import { redirect } from "next/navigation"
 import EvaluatorDashboardClient from "@/app/(admin)/admin/hackathon/evaluate/client"
 
-export default async function HackathonEvaluatePage() {
+// Helper to fetch evaluator by magic token
+async function getEvaluatorByToken(token: string) {
+    const supabase = await getSupabase()
+    const { data } = await supabase
+        .from('hackathon_evaluators')
+        .select('id, name, email')
+        .eq('magic_token', token)
+        .maybeSingle()
+    return data
+}
+
+export default async function HackathonEvaluatePage({ searchParams }: { searchParams: { token?: string } }) {
     const { role } = await checkHackathonRole()
+    const token = searchParams.token
+
+    let evaluator = null
+    if (token) {
+        evaluator = await getEvaluatorByToken(token)
+    }
 
     // Only organizers and evaluators can evaluate
-    if (role !== 'organizer' && role !== 'evaluator') {
+    if (!evaluator && role !== 'organizer' && role !== 'evaluator') {
         redirect("/hackathon-portal")
     }
 
     const settings = await getHackathonSettings()
+    const initialTeams = await getTeamsForEvaluation(1)
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -19,7 +37,7 @@ export default async function HackathonEvaluatePage() {
                     Team Evaluation
                 </h1>
                 <p className="text-gray-400 mt-2 text-sm md:text-base">
-                    Score teams based on the 6-point rubric. Select a team to expand and submit your evaluation.
+                    Welcome{evaluator ? `, ${evaluator.name}` : ''}. Score teams based on the 6-point rubric. Select a team to expand and submit your evaluation.
                 </p>
             </div>
 
@@ -30,7 +48,7 @@ export default async function HackathonEvaluatePage() {
             )}
 
             <div className="border border-zinc-800 bg-zinc-900/50 rounded-2xl p-6 shadow-xl backdrop-blur-xl">
-                <EvaluatorDashboardClient initialTeams={[]} evaluationOpen={settings?.evaluation_open ?? false} />
+                <EvaluatorDashboardClient initialTeams={initialTeams} evaluationOpen={settings?.evaluation_open ?? false} evaluationRounds={settings?.evaluation_rounds ?? 2} evaluatorToken={token} />
             </div>
         </div>
     )
