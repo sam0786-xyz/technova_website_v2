@@ -1,6 +1,14 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 
+// Routes that evaluators/hackathon users should be allowed to access
+// even without completing onboarding (system_id)
+function isEvaluatorRoute(pathname: string): boolean {
+    return pathname.startsWith('/evaluate') ||
+        pathname.startsWith('/admin/hackathon/evaluate') ||
+        pathname.startsWith('/hackathon-portal')
+}
+
 export default auth((req) => {
     const isLoggedIn = !!req.auth
     const { pathname } = req.nextUrl
@@ -16,8 +24,22 @@ export default auth((req) => {
         pathname.startsWith('/clubs') ||
         pathname.startsWith('/leadership')
 
-    // If logged in and on login page, check if needs onboarding
+    // If logged in and on login page, redirect appropriately
     if (isLoggedIn && pathname === '/login') {
+        // Check if there's a callbackUrl (e.g. evaluator returning from Google OAuth)
+        const callbackUrl = req.nextUrl.searchParams.get('callbackUrl')
+        if (callbackUrl) {
+            // Only allow internal redirects (prevent open redirect)
+            try {
+                const target = new URL(callbackUrl, req.nextUrl.origin)
+                if (target.origin === req.nextUrl.origin) {
+                    return NextResponse.redirect(target)
+                }
+            } catch {
+                // Invalid URL, fall through to default behavior
+            }
+        }
+
         // New users (students without system_id) should go to onboarding
         const user = req.auth?.user
         if (user?.role === 'student' && !user?.system_id) {
@@ -28,8 +50,8 @@ export default auth((req) => {
 
     // If logged in as student without system_id and NOT on onboarding page
     if (isLoggedIn && req.auth?.user?.role === 'student' && !req.auth?.user?.system_id) {
-        // Allow onboarding and api routes
-        if (!pathname.startsWith('/onboarding') && !pathname.startsWith('/api') && !pathname.startsWith('/evaluate') && !pathname.startsWith('/admin/hackathon/evaluate')) {
+        // Allow onboarding, api routes, and evaluator routes
+        if (!pathname.startsWith('/onboarding') && !pathname.startsWith('/api') && !isEvaluatorRoute(pathname)) {
             return NextResponse.redirect(new URL('/onboarding', req.nextUrl))
         }
     }
