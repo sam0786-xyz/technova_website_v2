@@ -29,7 +29,7 @@ export default auth((req) => {
     // If logged in as student without system_id and NOT on onboarding page
     if (isLoggedIn && req.auth?.user?.role === 'student' && !req.auth?.user?.system_id) {
         // Allow onboarding and api routes
-        if (!pathname.startsWith('/onboarding') && !pathname.startsWith('/api')) {
+        if (!pathname.startsWith('/onboarding') && !pathname.startsWith('/api') && !pathname.startsWith('/evaluate') && !pathname.startsWith('/admin/hackathon/evaluate')) {
             return NextResponse.redirect(new URL('/onboarding', req.nextUrl))
         }
     }
