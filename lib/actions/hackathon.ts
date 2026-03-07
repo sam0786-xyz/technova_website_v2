@@ -947,7 +947,7 @@ export async function getPublicShortlistedTeams() {
 // LOGISTICS & QR ACTIONS
 // ==========================================
 
-export async function processHackathonQrScan(participantId: string, actionUrl: 'checkin' | 'checkout' | 'food', mealRound?: string) {
+export async function processHackathonQrScan(participantId: string, actionUrl: 'checkin' | 'checkout' | 'food' | 'food_unlog', mealRound?: string) {
     const session = await auth()
     if (!session || !session.user) return { error: "Unauthorized" }
 
@@ -1025,6 +1025,37 @@ export async function processHackathonQrScan(participantId: string, actionUrl: '
         if (updateError) return { error: updateError.message }
 
         return { success: true, participant, message: `✅ ${participant.name} — "${mealType}" logged! (Total meals: ${participant.food_count + 1})` }
+    }
+
+    if (actionUrl === 'food_unlog') {
+        const mealType = mealRound || 'default'
+
+        // Check if this participant has a log for this meal round
+        const { data: existingLog } = await supabase
+            .from('hackathon_food_logs')
+            .select('id')
+            .eq('participant_id', participantId)
+            .eq('meal_type', mealType)
+            .maybeSingle()
+
+        if (!existingLog) {
+            return { error: `${participant.name} has no meal log for "${mealType}" to remove.` }
+        }
+
+        const { error: deleteError } = await supabase
+            .from('hackathon_food_logs')
+            .delete()
+            .eq('id', existingLog.id)
+
+        if (deleteError) return { error: deleteError.message }
+
+        const newCount = Math.max(0, (participant.food_count || 1) - 1)
+        await supabase
+            .from('hackathon_participants')
+            .update({ food_count: newCount })
+            .eq('id', participantId)
+
+        return { success: true, participant, message: `🗑️ ${participant.name} — "${mealType}" unlogged! (Total meals: ${newCount})` }
     }
 
     return { error: "Invalid action" }
@@ -1113,13 +1144,52 @@ export async function searchParticipants(query: string) {
     if (!query || query.length < 2) return []
 
     const supabase = await getSupabase()
-    const { data: participants } = await supabase
+
+    // First search by name/email/phone
+    const { data: byFields } = await supabase
         .from('hackathon_participants')
         .select('id, name, email, phone, role, is_checked_in, food_count, hackathon_teams(name, team_code)')
         .or(`name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`)
-        .limit(10)
+        .limit(20)
 
-    return participants || []
+    // Also search by team_code or team name
+    const { data: byTeam } = await supabase
+        .from('hackathon_participants')
+        .select('id, name, email, phone, role, is_checked_in, food_count, hackathon_teams!inner(name, team_code)')
+        .or(`hackathon_teams.team_code.ilike.%${query}%,hackathon_teams.name.ilike.%${query}%`)
+        .limit(20)
+
+    // Merge and deduplicate
+    const merged = [...(byFields || []), ...(byTeam || [])]
+    const seen = new Set<string>()
+    const unique = merged.filter(p => {
+        if (seen.has(p.id)) return false
+        seen.add(p.id)
+        return true
+    })
+
+    return unique.slice(0, 20)
+}
+
+export async function getAllParticipantsForScan(page: number = 1, pageSize: number = 20) {
+    const session = await auth()
+    if (!session || !session.user) return { participants: [], total: 0 }
+
+    const isAdmin = session.user.role === 'admin' || session.user.role === 'super_admin'
+    const volunteer = await checkVolunteerAccess()
+    if (!isAdmin && !volunteer) return { participants: [], total: 0 }
+
+    const supabase = await getSupabase()
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+
+    const { data: participants, count } = await supabase
+        .from('hackathon_participants')
+        .select('id, name, email, phone, role, is_checked_in, food_count, hackathon_teams(name, team_code)', { count: 'exact' })
+        .order('name', { ascending: true })
+        .range(from, to)
+
+    return { participants: participants || [], total: count || 0 }
 }
 
 // ==========================================
