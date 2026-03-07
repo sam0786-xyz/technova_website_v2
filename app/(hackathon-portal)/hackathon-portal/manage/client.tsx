@@ -607,6 +607,7 @@ export default function HackathonManageClient() {
                                                             <th className="px-4 py-4 font-semibold">Project Title</th>
                                                             <th className="px-4 py-4 font-semibold text-center">Round 1 Score</th>
                                                             <th className="px-4 py-4 font-semibold text-center">Round 2 Score</th>
+                                                            <th className="px-4 py-4 font-semibold text-center">Final Score</th>
                                                             <th className="px-4 py-4 font-semibold">Status</th>
                                                             <th className="px-4 py-4 font-semibold text-right">Shortlist Action</th>
                                                         </tr>
@@ -684,6 +685,17 @@ export default function HackathonManageClient() {
                                                                                 const r2 = team.hackathon_evaluations?.filter((e: any) => e.evaluation_round === 2) || [];
                                                                                 const total = r2.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
                                                                                 return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"} title={r2.length ? `Rated by ${r2.length} evaluator(s)` : ''}>{total > 0 ? (total / r2.length).toFixed(1) : '-'}</span>;
+                                                                            })()}
+                                                                        </td>
+                                                                        <td className="px-4 py-4 font-mono text-center border-l border-white/5">
+                                                                            {(() => {
+                                                                                const evals = team.hackathon_evaluations || [];
+                                                                                const r1 = evals.filter((e: any) => e.evaluation_round === 1);
+                                                                                const r2 = evals.filter((e: any) => e.evaluation_round === 2);
+                                                                                const r1Avg = r1.length ? r1.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0) / r1.length : 0;
+                                                                                const r2Avg = r2.length ? r2.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0) / r2.length : 0;
+                                                                                const finalScore = r1Avg + r2Avg;
+                                                                                return <span className={finalScore > 0 ? "text-emerald-400 font-bold text-base" : "text-gray-600"} title={`R1: ${r1Avg.toFixed(1)} + R2: ${r2Avg.toFixed(1)}`}>{finalScore > 0 ? finalScore.toFixed(1) : '—'}</span>;
                                                                             })()}
                                                                         </td>
                                                                         <td className="px-4 py-4">

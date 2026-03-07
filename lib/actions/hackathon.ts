@@ -378,7 +378,8 @@ export async function getHackathonTeams() {
         .from('hackathon_teams')
         .select(`
             *,
-            hackathon_participants (*)
+            hackathon_participants (*),
+            hackathon_evaluations (evaluator_id, total_score, evaluation_round)
         `)
         .order('created_at', { ascending: false })
 
