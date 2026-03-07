@@ -484,15 +484,22 @@ export default function HackathonAdminPage() {
                                                             <th className="px-4 py-4 font-semibold">Project Title</th>
                                                             <th className="px-4 py-4 font-semibold text-center">Round 1 Score</th>
                                                             <th className="px-4 py-4 font-semibold text-center">Round 2 Score</th>
+                                                            <th className="px-4 py-4 font-semibold text-center">Final Score</th>
                                                             <th className="px-4 py-4 font-semibold">Status</th>
                                                             <th className="px-4 py-4 font-semibold text-right">Shortlist Action</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         {[...teams].sort((a, b) => {
-                                                            const totalScoreA = (b.hackathon_evaluations || []).reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                            const totalScoreB = (a.hackathon_evaluations || []).reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                            return totalScoreA - totalScoreB;
+                                                            const getAvg = (t: any) => {
+                                                                const evals = t.hackathon_evaluations || [];
+                                                                const r1 = evals.filter((e: any) => e.evaluation_round === 1);
+                                                                const r2 = evals.filter((e: any) => e.evaluation_round === 2);
+                                                                const r1Avg = r1.length ? r1.reduce((sum: number, e: any) => sum + Number(e.total_score), 0) / r1.length : 0;
+                                                                const r2Avg = r2.length ? r2.reduce((sum: number, e: any) => sum + Number(e.total_score), 0) / r2.length : 0;
+                                                                return r1Avg + r2Avg;
+                                                            };
+                                                            return getAvg(b) - getAvg(a);
                                                         }).map((team, index) => (
                                                             <tr key={team.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                                                                 <td className="px-4 py-4">
@@ -515,14 +522,25 @@ export default function HackathonAdminPage() {
                                                                     {(() => {
                                                                         const r1 = team.hackathon_evaluations?.filter((e: any) => e.evaluation_round === 1) || [];
                                                                         const total = r1.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                                        return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"}>{total > 0 ? total : '-'}</span>;
+                                                                        return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"} title={r1.length ? `Rated by ${r1.length} evaluator(s)` : ''}>{total > 0 ? (total / r1.length).toFixed(1) : '-'}</span>;
                                                                     })()}
                                                                 </td>
                                                                 <td className="px-4 py-4 font-mono text-center border-l border-white/5">
                                                                     {(() => {
                                                                         const r2 = team.hackathon_evaluations?.filter((e: any) => e.evaluation_round === 2) || [];
                                                                         const total = r2.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0);
-                                                                        return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"}>{total > 0 ? total : '-'}</span>;
+                                                                        return <span className={total > 0 ? "text-amber-400 font-bold" : "text-gray-600"} title={r2.length ? `Rated by ${r2.length} evaluator(s)` : ''}>{total > 0 ? (total / r2.length).toFixed(1) : '-'}</span>;
+                                                                    })()}
+                                                                </td>
+                                                                <td className="px-4 py-4 font-mono text-center border-l border-white/5">
+                                                                    {(() => {
+                                                                        const evals = team.hackathon_evaluations || [];
+                                                                        const r1 = evals.filter((e: any) => e.evaluation_round === 1);
+                                                                        const r2 = evals.filter((e: any) => e.evaluation_round === 2);
+                                                                        const r1Avg = r1.length ? r1.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0) / r1.length : 0;
+                                                                        const r2Avg = r2.length ? r2.reduce((sum: number, ev: any) => sum + Number(ev.total_score), 0) / r2.length : 0;
+                                                                        const finalScore = r1Avg + r2Avg;
+                                                                        return <span className={finalScore > 0 ? "text-emerald-400 font-bold text-base" : "text-gray-600"} title={`R1: ${r1Avg.toFixed(1)} + R2: ${r2Avg.toFixed(1)}`}>{finalScore > 0 ? finalScore.toFixed(1) : '—'}</span>;
                                                                     })()}
                                                                 </td>
                                                                 <td className="px-4 py-4">
