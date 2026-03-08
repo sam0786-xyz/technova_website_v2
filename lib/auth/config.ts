@@ -57,7 +57,27 @@ export const config = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
-        token.role = getRoleFromEmail(user.email || "")
+        let role = getRoleFromEmail(user.email || "")
+
+        // If they're just a 'student' by email pattern, check if they're a hackathon evaluator
+        if (role === 'student' && user.email) {
+          try {
+            const { getSupabase } = await import("@/lib/actions/hackathon")
+            const supabase = await getSupabase()
+            const { data: evaluator } = await supabase
+              .from('hackathon_evaluators')
+              .select('id')
+              .eq('email', user.email.toLowerCase())
+              .maybeSingle()
+            if (evaluator) {
+              role = 'evaluator' as any
+            }
+          } catch {
+            // Table may not exist yet
+          }
+        }
+
+        token.role = role
         // @ts-ignore
         token.system_id = user.system_id
       }
@@ -72,7 +92,7 @@ export const config = {
     async session({ session, token }) {
       if (session.user && token) {
         session.user.id = (token.id ?? token.sub) as string
-        session.user.role = (token.role ?? 'student') as 'student' | 'admin' | 'super_admin'
+        session.user.role = (token.role ?? 'student') as 'student' | 'admin' | 'super_admin' | 'evaluator'
         session.user.system_id = token.system_id as string | undefined
       }
       return session

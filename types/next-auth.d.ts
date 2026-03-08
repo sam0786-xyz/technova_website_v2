@@ -7,13 +7,13 @@ declare module "next-auth" {
     interface Session {
         user: {
             id: string
-            role: 'student' | 'admin' | 'super_admin'
+            role: 'student' | 'admin' | 'super_admin' | 'evaluator'
             system_id?: string | null
         } & DefaultSession["user"]
     }
 
     interface User {
-        role?: 'student' | 'admin' | 'super_admin'
+        role?: 'student' | 'admin' | 'super_admin' | 'evaluator'
         system_id?: string | null
         year?: number | null
         course?: string | null

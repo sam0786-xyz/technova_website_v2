@@ -14,6 +14,11 @@ export default async function DashboardLayout({
         redirect("/login")
     }
 
+    // Evaluators should go to the evaluator portal, not the student dashboard
+    if (session.user.role === 'evaluator') {
+        redirect("/evaluate")
+    }
+
     // Force onboarding if system_id is missing, but only for students
     if (!session.user.system_id && session.user.role === 'student') {
         redirect("/onboarding")

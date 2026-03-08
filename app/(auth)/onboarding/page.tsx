@@ -11,6 +11,11 @@ export default async function OnboardingPage() {
         redirect("/login")
     }
 
+    // If evaluator, skip onboarding and go to evaluator portal
+    if (session.user.role === 'evaluator') {
+        redirect("/evaluate")
+    }
+
     // If already completed, redirect to dashboard
     if (session.user.system_id) {
         redirect("/dashboard")
