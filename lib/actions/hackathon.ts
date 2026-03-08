@@ -1020,6 +1020,8 @@ export async function emailShortlistedTeams() {
                     `
                 })
                 sentCount++
+                // Throttle: Resend allows max 2 requests/sec
+                await new Promise(resolve => setTimeout(resolve, 600))
             } catch (e) {
                 console.error(`Failed to send email to ${participant.email}`, e)
                 failCount++
