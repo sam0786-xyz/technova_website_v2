@@ -600,10 +600,75 @@ export default function HackathonManageClient() {
                                                     <Star className="w-5 h-5 text-amber-500" />
                                                     Final Evaluation Results
                                                 </h3>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="text-sm text-gray-400">
+                                                <div className="flex flex-wrap items-center gap-2 md:gap-4">
+                                                    <div className="text-sm text-gray-400 hidden md:block">
                                                         Sorted by Highest Score · {teams.filter(t => t.status === 'shortlisted' || t.status === 'shortlisted_notified').length} shortlisted
                                                     </div>
+                                                    
+                                                    <button
+                                                        onClick={() => {
+                                                            const shortlistedTeams = teams.filter(t => t.status === 'shortlisted' || t.status === 'shortlisted_notified')
+                                                                .sort((a, b) => {
+                                                                    const getAvg = (t: any) => {
+                                                                        const evals = t.hackathon_evaluations || [];
+                                                                        const r1 = evals.filter((e: any) => e.round === 1);
+                                                                        const r2 = evals.filter((e: any) => e.round === 2);
+                                                                        const r1Avg = r1.length > 0 ? r1.reduce((sum: number, e: any) => sum + Number(e.total_score), 0) / r1.length : 0;
+                                                                        const r2Avg = r2.length > 0 ? r2.reduce((sum: number, e: any) => sum + Number(e.total_score), 0) / r2.length : 0;
+                                                                        return r1Avg + r2Avg;
+                                                                    }
+                                                                    return getAvg(b) - getAvg(a);
+                                                                });
+
+                                                            if (shortlistedTeams.length === 0) {
+                                                                setMessage({ type: 'error', text: 'No shortlisted teams to download.' });
+                                                                return;
+                                                            }
+
+                                                            // Generate CSV Content
+                                                            const headers = ['Rank', 'Team Code', 'Team Name', 'Project Title', 'Final Score', 'Leader Name', 'Leader Email', 'Leader Phone', 'Status'];
+                                                            const csvRows = [headers.join(',')];
+
+                                                            let rank = 1;
+                                                            shortlistedTeams.forEach(team => {
+                                                                const leader = team.hackathon_participants?.find((p: any) => p.role?.toLowerCase() === 'leader') || team.hackathon_participants?.[0] || {};
+                                                                const evals = team.hackathon_evaluations || [];
+                                                                const r1 = evals.filter((e: any) => e.round === 1);
+                                                                const r2 = evals.filter((e: any) => e.round === 2);
+                                                                const r1Avg = r1.length > 0 ? r1.reduce((sum: number, e: any) => sum + Number(e.total_score), 0) / r1.length : 0;
+                                                                const r2Avg = r2.length > 0 ? r2.reduce((sum: number, e: any) => sum + Number(e.total_score), 0) / r2.length : 0;
+                                                                const finalScore = r1Avg + r2Avg;
+
+                                                                const row = [
+                                                                    rank++,
+                                                                    `"${team.team_code || ''}"`,
+                                                                    `"${team.name || ''}"`,
+                                                                    `"${(team.idea_title || '').replace(/"/g, '""')}"`,
+                                                                    finalScore.toFixed(2),
+                                                                    `"${leader.name || ''}"`,
+                                                                    `"${leader.email || ''}"`,
+                                                                    `"${leader.phone || ''}"`,
+                                                                    team.status
+                                                                ];
+                                                                csvRows.push(row.join(','));
+                                                            });
+
+                                                            const csvContent = "data:text/csv;charset=utf-8," + csvRows.join('\n');
+                                                            const encodedUri = encodeURI(csvContent);
+                                                            const link = document.createElement("a");
+                                                            link.setAttribute("href", encodedUri);
+                                                            link.setAttribute("download", `shortlisted_teams_${new Date().toISOString().split('T')[0]}.csv`);
+                                                            document.body.appendChild(link);
+                                                            link.click();
+                                                            document.body.removeChild(link);
+                                                        }}
+                                                        disabled={teams.filter(t => t.status === 'shortlisted' || t.status === 'shortlisted_notified').length === 0}
+                                                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition-all disabled:opacity-40 border border-white/10"
+                                                    >
+                                                        <FileDown className="w-3.5 h-3.5" />
+                                                        Export CSV
+                                                    </button>
+
                                                     <button
                                                         onClick={async () => {
                                                             if (!confirm('This will send congratulatory emails to ALL shortlisted teams. Continue?')) return;
@@ -625,7 +690,7 @@ export default function HackathonManageClient() {
                                                         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all disabled:opacity-40 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                                                     >
                                                         <Send className="w-3.5 h-3.5" />
-                                                        {sendingEmails ? 'Sending...' : 'Email Shortlisted Teams'}
+                                                        {sendingEmails ? 'Sending...' : 'Email Shortlist'}
                                                     </button>
                                                 </div>
                                             </div>
