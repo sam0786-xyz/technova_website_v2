@@ -87,18 +87,16 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
 
     // Allow free typing: store raw string, validate only on blur
     const handleScoreChange = (field: string, value: string) => {
-        // Only allow empty string, or a number between 1 and 5 (and decimals)
-        if (value === "") {
+        // Allow empty string or just a decimal point temporarily
+        if (value === "" || value === ".") {
             setScores({ ...scores, [field]: value as any });
             return;
         }
 
-        const num = parseFloat(value);
-        // Only update if it's a valid part of a number between 1 and 5
-        if (!isNaN(num) && num >= 0 && num <= 5.9) {
+        // Regex to match a number between 0 and 5, with up to one decimal place
+        // e.g. "5", "5.", "5.0", "4.9"
+        if (/^([0-4]?(\.[0-9]?)?|5(\.0?)?)$/.test(value)) {
             setScores({ ...scores, [field]: value as any });
-        } else if (value === ".") {
-             setScores({ ...scores, [field]: value as any });
         }
     };
 
