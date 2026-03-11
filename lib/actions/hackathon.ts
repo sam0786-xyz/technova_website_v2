@@ -850,7 +850,7 @@ export async function getTeamsForEvaluation(round: number = 1) {
         .select(`
             id, name, idea_title, project_objective, team_code, table_number, status, total_score,
             hackathon_participants (name, email, phone, role, college),
-            hackathon_evaluations (evaluator_id, total_score, evaluation_round, edit_requested, edit_granted)
+            hackathon_evaluations (evaluator_id, total_score, evaluation_round, edit_requested, edit_granted, score_innovation, score_feasibility, score_impact, score_ux, score_presentation, feedback)
         `)
 
     if (round === 1) {
@@ -892,7 +892,15 @@ export async function getTeamsForEvaluation(round: number = 1) {
             has_evaluated: myEval ? !myEval.edit_granted : false,
             my_score: myEval ? myEval.total_score : null,
             edit_requested: myEval ? myEval.edit_requested : false,
-            edit_granted: myEval ? myEval.edit_granted : false
+            edit_granted: myEval ? myEval.edit_granted : false,
+            my_eval_details: myEval ? {
+                innovation: myEval.score_innovation ?? null,
+                feasibility: myEval.score_feasibility ?? null,
+                impact: myEval.score_impact ?? null,
+                ux: myEval.score_ux ?? null,
+                presentation: myEval.score_presentation ?? null,
+                feedback: myEval.feedback || ""
+            } : null
         }
     })
 }
@@ -1268,7 +1276,12 @@ export async function blastCustomEmail(subject: string, htmlBody: string, target
                 from: "Technova Society <no-reply@technovashardauniversity.in>",
                 to: email,
                 subject: subject,
-                html: htmlBody
+                html: `
+                    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
+                        <div style="padding: 30px; line-height: 1.6; color: rgba(255,255,255,0.9);">
+                            ${htmlBody.replace(/\n/g, '<br />')}
+                        </div>
+                    </div>`
             })
             sentCount++
             // Throttle: Resend allows max 2 requests/sec (600ms is safe)

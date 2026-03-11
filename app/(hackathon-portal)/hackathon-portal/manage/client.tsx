@@ -953,13 +953,13 @@ export default function HackathonManageClient() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-400 mb-2">HTML Body Content</label>
+                                                    <label className="block text-sm font-medium text-gray-400 mb-2">Message Body</label>
                                                     <textarea 
                                                         value={customEmailBody} 
                                                         onChange={e => setCustomEmailBody(e.target.value)} 
-                                                        placeholder="<p>Hello team...</p>"
+                                                        placeholder="Hello team,\n\nHere's an important update regarding the hackathon..."
                                                         rows={6}
-                                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 text-white placeholder-gray-600 font-mono text-sm"
+                                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 text-white placeholder-gray-600 text-sm"
                                                     />
                                                 </div>
                                                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -1574,7 +1574,12 @@ export default function HackathonManageClient() {
                                                         </span>
                                                     )}
                                                 </p>
-                                                <p className="text-xs text-gray-400">{v.email}</p>
+                                                <div className="text-xs text-gray-400 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                                                    <span>{v.email}</span>
+                                                    {v.mobile && <span>• Phone: {v.mobile}</span>}
+                                                    {v.system_id && <span>• Sys ID: {v.system_id}</span>}
+                                                    {v.department && <span>• {v.department} {v.section ? `(${v.section})` : ''} {v.year && `- Yr ${v.year}`}</span>}
+                                                </div>
                                             </div>
                                             <button
                                                 onClick={async () => { await removeVolunteer(v.id); loadData(); }}

@@ -24,7 +24,8 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
     const [selectedCollege, setSelectedCollege] = useState("ALL");
     const [currentPage, setCurrentPage] = useState(1);
     const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
-    const [scores, setScores] = useState({ innovation: 3, feasibility: 3, impact: 3, ux: 3, presentation: 3, feedback: "" });
+    const [scores, setScores] = useState({ innovation: 0, feasibility: 0, impact: 0, ux: 0, presentation: 0, feedback: "" });
+    const [confirmModalData, setConfirmModalData] = useState<{ teamId: string, sumScores: number, scores: any } | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [loadingTeams, setLoadingTeams] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -117,7 +118,7 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
         const raw = (scores as any)[field];
         const num = parseFloat(raw);
         if (isNaN(num) || raw === '' || raw === '.') {
-            setScores({ ...scores, [field]: 5 }); // Reset to default
+            setScores({ ...scores, [field]: 0 }); // Reset to default 0
         } else {
             setScores({ ...scores, [field]: Math.round(Math.min(10, Math.max(0, num)) * 10) / 10 });
         }
@@ -128,7 +129,19 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
             setExpandedTeam(null);
         } else {
             setExpandedTeam(teamId);
-            setScores(prev => ({ ...prev, innovation: 5, feasibility: 5, impact: 5, ux: 5, presentation: 5, feedback: "" }));
+            const team = teams.find(t => t.id === teamId);
+            if (team && team.my_eval_details) {
+                 setScores({
+                     innovation: team.my_eval_details.innovation ?? 0,
+                     feasibility: team.my_eval_details.feasibility ?? 0,
+                     impact: team.my_eval_details.impact ?? 0,
+                     ux: team.my_eval_details.ux ?? 0,
+                     presentation: team.my_eval_details.presentation ?? 0,
+                     feedback: team.my_eval_details.feedback || ""
+                 });
+            } else {
+                 setScores({ innovation: 0, feasibility: 0, impact: 0, ux: 0, presentation: 0, feedback: "" });
+            }
             setMessage(null);
 
             if (!evaluationOpen) {
@@ -145,11 +158,14 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
         }
     };
 
-    const handleSubmit = async (teamId: string) => {
+    const handleSubmitClick = (teamId: string) => {
         const sumScores = (Number(scores.innovation)*2.5) + (Number(scores.feasibility)*2) + (Number(scores.impact)*2) + (Number(scores.ux)*1.5) + (Number(scores.presentation)*2);
-        
-        const confirmMsg = `Are you sure you want to submit?\n\nInnovation: ${scores.innovation}/10 (25%)\nFeasibility: ${scores.feasibility}/10 (20%)\nImpact: ${scores.impact}/10 (20%)\nUX: ${scores.ux}/10 (15%)\nPresentation: ${scores.presentation}/10 (20%)\n\nFinal Score: ${sumScores.toFixed(1)} / 100`;
-        if (!window.confirm(confirmMsg)) return;
+        setConfirmModalData({ teamId, sumScores, scores });
+    };
+
+    const confirmSubmit = async () => {
+        if (!confirmModalData) return;
+        const { teamId, scores, sumScores } = confirmModalData;
 
         setSubmitting(true);
         setMessage(null);
@@ -160,14 +176,14 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                 setMessage({ type: 'error', text: res.error });
             } else {
                 setMessage({ type: 'success', text: "Evaluation submitted successfully!" });
-                const sumScores = (Number(scores.innovation)*2.5) + (Number(scores.feasibility)*2) + (Number(scores.impact)*2) + (Number(scores.ux)*1.5) + (Number(scores.presentation)*2);
-                setTeams(teams.map(t => t.id === teamId ? { ...t, has_evaluated: true, my_score: sumScores } : t));
+                setTeams(teams.map(t => t.id === teamId ? { ...t, has_evaluated: true, my_score: Math.round(sumScores * 10) / 10 } : t));
                 setTimeout(() => setExpandedTeam(null), 2000);
             }
         } catch (error: any) {
             setMessage({ type: 'error', text: "Failed to submit evaluation." });
         } finally {
             setSubmitting(false);
+            setConfirmModalData(null);
         }
     };
 
@@ -428,11 +444,11 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
 
                                                                 <div className="flex items-center justify-between pt-4 border-t border-white/10">
                                                                     <div className="text-2xl font-black text-white">
-                                                                        Total: <span className="text-amber-500">{((Number(scores.innovation)*5) + (Number(scores.feasibility)*4) + (Number(scores.impact)*4) + (Number(scores.ux)*3) + (Number(scores.presentation)*4)).toFixed(1)}</span><span className="text-gray-500 text-lg">/100</span>
+                                                                        Total: <span className="text-amber-500">{((Number(scores.innovation)*2.5) + (Number(scores.feasibility)*2) + (Number(scores.impact)*2) + (Number(scores.ux)*1.5) + (Number(scores.presentation)*2)).toFixed(1)}</span><span className="text-gray-500 text-lg">/100</span>
                                                                     </div>
 
                                                                     <button
-                                                                        onClick={() => handleSubmit(team.id)}
+                                                                        onClick={() => handleSubmitClick(team.id)}
                                                                         disabled={submitting}
                                                                         className="bg-amber-600 hover:bg-amber-500 text-white font-medium py-2.5 px-8 rounded-xl transition-all disabled:opacity-50 flex items-center gap-2"
                                                                     >
@@ -538,6 +554,60 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                     </>
                 )}
             </div>
+
+            {/* Custom Modal for Confirmation */}
+            {confirmModalData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+                        <h3 className="text-xl font-bold text-white mb-4">Confirm Submission</h3>
+                        <p className="text-gray-400 text-sm mb-6">Are you sure you want to submit? Please review the breakdown below:</p>
+                        
+                        <div className="space-y-3 bg-black/50 p-4 rounded-xl border border-white/5 mb-6">
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-400 text-sm">Innovation (25%)</span>
+                                <span className="text-white font-semibold">{confirmModalData.scores.innovation} / 10</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-400 text-sm">Feasibility (20%)</span>
+                                <span className="text-white font-semibold">{confirmModalData.scores.feasibility} / 10</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-400 text-sm">Impact (20%)</span>
+                                <span className="text-white font-semibold">{confirmModalData.scores.impact} / 10</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-400 text-sm">UX (15%)</span>
+                                <span className="text-white font-semibold">{confirmModalData.scores.ux} / 10</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-400 text-sm">Presentation (20%)</span>
+                                <span className="text-white font-semibold">{confirmModalData.scores.presentation} / 10</span>
+                            </div>
+                            <div className="pt-3 mt-3 border-t border-white/10 flex justify-between items-center">
+                                <span className="text-amber-500 font-bold uppercase tracking-wider text-sm">Final Score</span>
+                                <span className="text-amber-500 font-black text-xl">{confirmModalData.sumScores.toFixed(1)} / 100</span>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 justify-end">
+                            <button 
+                                onClick={() => setConfirmModalData(null)}
+                                disabled={submitting}
+                                className="px-5 py-2.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition-colors font-medium text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmSubmit}
+                                disabled={submitting}
+                                className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black transition-colors font-bold text-sm min-w-[120px]"
+                            >
+                                {submitting ? 'Submitting...' : 'Confirm'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
