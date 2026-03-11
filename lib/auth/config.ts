@@ -59,21 +59,34 @@ export const config = {
         token.id = user.id
         let role = getRoleFromEmail(user.email || "")
 
-        // If they're just a 'student' by email pattern, check if they're a hackathon evaluator
-        if (role === 'student' && user.email) {
+        if (user.email) {
           try {
             const { getSupabase } = await import("@/lib/actions/hackathon")
             const supabase = await getSupabase()
-            const { data: evaluator } = await supabase
-              .from('hackathon_evaluators')
-              .select('id')
+
+            // 1. Check custom hackathon_roles first
+            const { data: customRole } = await supabase
+              .from('hackathon_roles')
+              .select('role')
               .eq('email', user.email.toLowerCase())
               .maybeSingle()
-            if (evaluator) {
-              role = 'evaluator' as any
+            
+            if (customRole) {
+              role = customRole.role as any
+            } else if (role === 'student') {
+              // 2. Fall back to evaluator check if they are otherwise a student
+              const { data: evaluator } = await supabase
+                .from('hackathon_evaluators')
+                .select('id')
+                .eq('email', user.email.toLowerCase())
+                .maybeSingle()
+              
+              if (evaluator) {
+                role = 'evaluator' as any
+              }
             }
           } catch {
-            // Table may not exist yet
+            // Table may not exist yet or DB error
           }
         }
 

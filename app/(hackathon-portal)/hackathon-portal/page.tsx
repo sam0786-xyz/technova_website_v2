@@ -40,6 +40,15 @@ export default async function HackathonPortalHub() {
                 iconColor: "text-emerald-400",
             },
             {
+                title: "Volunteer Scanner",
+                desc: "Scan volunteer QR codes to track attendance",
+                href: "/hackathon-portal/volunteer-scan",
+                icon: UserCheck,
+                gradient: "from-violet-600/20 to-violet-500/10",
+                border: "border-violet-500/30 hover:border-violet-500/50",
+                iconColor: "text-violet-400",
+            },
+            {
                 title: "Live Dashboard",
                 desc: "View the public-facing timer & schedule",
                 href: "/hackathon/live",

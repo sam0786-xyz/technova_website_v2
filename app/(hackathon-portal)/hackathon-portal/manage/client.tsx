@@ -7,11 +7,12 @@ import {
     getHackathonSettings, startTimer, stopTimer, pushAnnouncement, clearAnnouncement,
     getSchedule, addScheduleItem, deleteScheduleItem, updateTeamStatus, toggleEvaluationPeriod,
     getCheckedInParticipantsData, getFoodLogsData,
-    getVolunteers, addVolunteer, removeVolunteer,
+    getVolunteers, addVolunteer, removeVolunteer, uploadVolunteersData,
     addHackathonTeamManually, updateHackathonTeamDetails, updateCustomMeals,
-    updateEvaluationRounds, emailShortlistedTeams, blastCustomEmail
+    updateEvaluationRounds, emailShortlistedTeams, blastCustomEmail,
+    getHackathonRoles, addHackathonRole, removeHackathonRole, approveScoreEdit, sendEvaluatorInvite
 } from "@/lib/actions/hackathon";
-import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Utensils, Settings, Send } from "lucide-react";
+import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Shield, Utensils, Settings, Send } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import EvaluatorDashboardClient from "@/app/(admin)/admin/hackathon/evaluate/client";
@@ -25,6 +26,7 @@ export default function HackathonManageClient() {
     const [teams, setTeams] = useState<any[]>([]);
     const [evaluators, setEvaluators] = useState<any[]>([]);
     const [volunteers, setVolunteers] = useState<any[]>([]);
+    const [roles, setRoles] = useState<any[]>([]);
     const [settings, setSettings] = useState<any>(null);
     const [evaluationRounds, setEvaluationRounds] = useState(2);
     const [searchQuery, setSearchQuery] = useState("");
@@ -36,6 +38,9 @@ export default function HackathonManageClient() {
     const [volEmail, setVolEmail] = useState("");
     const [volName, setVolName] = useState("");
     const [volTeam, setVolTeam] = useState("Registration & Stage Team");
+    const [volShift, setVolShift] = useState("Whole Day");
+    const [roleEmail, setRoleEmail] = useState("");
+    const [roleType, setRoleType] = useState("admin");
     const [announcement, setAnnouncement] = useState("");
     const [sendingQr, setSendingQr] = useState(false);
     const [deletingTeams, setDeletingTeams] = useState(false);
@@ -54,9 +59,10 @@ export default function HackathonManageClient() {
         teamName: '',
         ideaTitle: '',
         teamCode: '',
+        theme: '',
         projectObjective: '',
-        leader: { id: '', name: '', email: '', phone: '' },
-        members: [{ id: '', name: '', email: '', phone: '' }, { id: '', name: '', email: '', phone: '' }, { id: '', name: '', email: '', phone: '' }, { id: '', name: '', email: '', phone: '' }]
+        leader: { id: '', name: '', email: '', phone: '', course: '', section: '', system_id: '', year: '', college: '' },
+        members: [{ id: '', name: '', email: '', phone: '', course: '', section: '', system_id: '', year: '', college: '' }, { id: '', name: '', email: '', phone: '', course: '', section: '', system_id: '', year: '', college: '' }, { id: '', name: '', email: '', phone: '', course: '', section: '', system_id: '', year: '', college: '' }, { id: '', name: '', email: '', phone: '', course: '', section: '', system_id: '', year: '', college: '' }]
     });
 
     const [customMeals, setCustomMeals] = useState<string[]>(["Breakfast - Day 1", "Lunch - Day 1", "Snacks - Day 1", "Dinner - Day 1", "Breakfast - Day 2", "Lunch - Day 2"]);
@@ -70,18 +76,20 @@ export default function HackathonManageClient() {
 
     async function loadData() {
         setLoading(true);
-        const [teamsData, evaluatorsData, volunteersData, settingsData, scheduleData] = await Promise.all([
+        const [teamsData, evaluatorsData, volunteersData, settingsData, scheduleData, rolesData] = await Promise.all([
             getHackathonTeams(),
             getEvaluators(),
             getVolunteers(),
             getHackathonSettings(),
-            getSchedule()
+            getSchedule(),
+            getHackathonRoles()
         ]);
         setTeams(teamsData);
         setEvaluators(evaluatorsData);
         setVolunteers(volunteersData);
         setSettings(settingsData);
         setSchedule(scheduleData);
+        setRoles(rolesData);
         if (settingsData?.custom_meals && Array.isArray(settingsData.custom_meals)) {
             setCustomMeals(settingsData.custom_meals);
         }
@@ -130,17 +138,35 @@ export default function HackathonManageClient() {
         const data = {
             teamName: formData.get('teamName') as string,
             ideaTitle: formData.get('ideaTitle') as string,
-            teamCode: formData.get('teamCode') as string || undefined,
+            teamCode: formData.get('teamCode') as string,
+            theme: formData.get('theme') as string,
             leader: {
                 name: formData.get('leaderName') as string,
                 email: formData.get('leaderEmail') as string,
-                phone: formData.get('leaderPhone') as string
+                phone: formData.get('leaderPhone') as string,
+                course: formData.get('leaderCourse') as string,
+                section: formData.get('leaderSection') as string,
+                system_id: formData.get('leaderSystemId') as string,
+                year: formData.get('leaderYear') as string,
+                college: formData.get('leaderCollege') as string
             },
             members: [
-                { name: formData.get('m1Name') as string, email: formData.get('m1Email') as string, phone: formData.get('m1Phone') as string },
-                { name: formData.get('m2Name') as string, email: formData.get('m2Email') as string, phone: formData.get('m2Phone') as string },
-                { name: formData.get('m3Name') as string, email: formData.get('m3Email') as string, phone: formData.get('m3Phone') as string },
-                { name: formData.get('m4Name') as string, email: formData.get('m4Email') as string, phone: formData.get('m4Phone') as string },
+                { 
+                    name: formData.get('m1Name') as string, email: formData.get('m1Email') as string, phone: formData.get('m1Phone') as string,
+                    course: formData.get('m1Course') as string, section: formData.get('m1Section') as string, system_id: formData.get('m1SystemId') as string, year: formData.get('m1Year') as string, college: formData.get('m1College') as string 
+                },
+                { 
+                    name: formData.get('m2Name') as string, email: formData.get('m2Email') as string, phone: formData.get('m2Phone') as string,
+                    course: formData.get('m2Course') as string, section: formData.get('m2Section') as string, system_id: formData.get('m2SystemId') as string, year: formData.get('m2Year') as string, college: formData.get('m2College') as string 
+                },
+                { 
+                    name: formData.get('m3Name') as string, email: formData.get('m3Email') as string, phone: formData.get('m3Phone') as string,
+                    course: formData.get('m3Course') as string, section: formData.get('m3Section') as string, system_id: formData.get('m3SystemId') as string, year: formData.get('m3Year') as string, college: formData.get('m3College') as string 
+                },
+                { 
+                    name: formData.get('m4Name') as string, email: formData.get('m4Email') as string, phone: formData.get('m4Phone') as string,
+                    course: formData.get('m4Course') as string, section: formData.get('m4Section') as string, system_id: formData.get('m4SystemId') as string, year: formData.get('m4Year') as string, college: formData.get('m4College') as string 
+                },
             ].filter(m => m.name && m.name.trim() !== '')
         };
 
@@ -223,6 +249,19 @@ export default function HackathonManageClient() {
     const handleRemoveEvaluator = async (id: string) => {
         await removeEvaluator(id);
         loadData();
+    };
+
+    const handleSendEvaluatorInvite = async (evalId?: string) => {
+        setSendingEmails(true);
+        setMessage(null);
+        try {
+            const res = await sendEvaluatorInvite(evalId);
+            if (!res.success) throw new Error(res.error || 'Failed to send invite(s)');
+            setMessage({ type: 'success', text: res.message || 'Invitation(s) sent successfully' });
+        } catch (error: any) {
+            setMessage({ type: 'error', text: error.message });
+        }
+        setSendingEmails(false);
     };
 
     const handleStartTimer = async () => {
@@ -358,6 +397,25 @@ export default function HackathonManageClient() {
         }
     };
 
+    const handleDownloadVolunteers = () => {
+        if (!volunteers || volunteers.length === 0) {
+            setMessage({ type: 'error', text: 'No volunteers to download.' });
+            return;
+        }
+        
+        const exportData = volunteers.map((v: any) => ({
+            'Name': v.name,
+            'Email': v.email,
+            'Role Team': v.team_name,
+            'Shift': v.shift || '',
+            'Checked In': v.is_checked_in ? 'Yes' : 'No',
+            'Check-in Time': v.check_in_time ? new Date(v.check_in_time).toLocaleString() : '',
+            'Meals Scanned': v.food_count || 0,
+        }));
+        
+        downloadCSV(exportData, `volunteers_${new Date().toISOString().split('T')[0]}.csv`);
+    };
+
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
             <div className="flex flex-col gap-4">
@@ -415,6 +473,9 @@ export default function HackathonManageClient() {
                     </TabsTrigger>
                     <TabsTrigger value="settings" className="data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-400 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
                         <Settings className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Settings
+                    </TabsTrigger>
+                    <TabsTrigger value="roles" className="data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-400 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                        <Shield className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Roles
                     </TabsTrigger>
                 </TabsList>
 
@@ -749,6 +810,7 @@ export default function HackathonManageClient() {
                                                                                             teamName: team.name,
                                                                                             ideaTitle: team.idea_title,
                                                                                             teamCode: team.team_code || '',
+                                                                                            theme: team.theme || '',
                                                                                             projectObjective: team.project_objective || '',
                                                                                             leader,
                                                                                             members: paddedMembers.slice(0, 4)
@@ -760,6 +822,25 @@ export default function HackathonManageClient() {
                                                                                 >
                                                                                     <Edit className="w-3.5 h-3.5" />
                                                                                 </button>
+                                                                                {(() => {
+                                                                                    const pendingEdits = team.hackathon_evaluations?.filter((e: any) => e.edit_requested) || [];
+                                                                                    if (pendingEdits.length === 0) return null;
+                                                                                    return (
+                                                                                        <button 
+                                                                                            onClick={async () => {
+                                                                                                if (!window.confirm(`Approve ${pendingEdits.length} edit request(s) for ${team.name}?`)) return;
+                                                                                                for (const edit of pendingEdits) {
+                                                                                                    await approveScoreEdit(team.id, edit.evaluation_round);
+                                                                                                }
+                                                                                                loadData();
+                                                                                            }}
+                                                                                            className="flex items-center gap-1 px-2 py-1 bg-amber-500/10 text-amber-500 text-[10px] font-bold rounded border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+                                                                                            title="Approve Evaluator Score Edit"
+                                                                                        >
+                                                                                            <AlertCircle className="w-3 h-3" /> Approve Edit
+                                                                                        </button>
+                                                                                    )
+                                                                                })()}
                                                                             </div>
                                                                             <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                                                                                 <span className="font-mono text-amber-500">{team.team_code}</span>
@@ -950,7 +1031,11 @@ export default function HackathonManageClient() {
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs text-gray-400 mb-1">Team Code</label>
-                                                    <input type="text" value={editFormData.teamCode} onChange={e => setEditFormData({ ...editFormData, teamCode: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    <input type="text" value={editFormData.teamCode || ''} onChange={e => setEditFormData({ ...editFormData, teamCode: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-400 mb-1">Theme</label>
+                                                    <input type="text" value={editFormData.theme || ''} onChange={e => setEditFormData({ ...editFormData, theme: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs text-gray-400 mb-1">Idea / Project Title</label>
@@ -975,7 +1060,27 @@ export default function HackathonManageClient() {
                                                     </div>
                                                     <div>
                                                         <label className="block text-xs text-gray-400 mb-1">Phone *</label>
-                                                        <input required type="tel" value={editFormData.leader.phone} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, phone: e.target.value } })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        <input required type="tel" value={editFormData.leader.phone || ''} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, phone: e.target.value } })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Course</label>
+                                                        <input type="text" value={editFormData.leader.course || ''} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, course: e.target.value } })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Section (Optional for Shardans)</label>
+                                                        <input type="text" value={editFormData.leader.section || ''} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, section: e.target.value } })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">System ID (Optional for Shardans)</label>
+                                                        <input type="text" value={editFormData.leader.system_id || ''} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, system_id: e.target.value } })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Year</label>
+                                                        <input type="text" value={editFormData.leader.year || ''} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, year: e.target.value } })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-xs text-gray-400 mb-1">College</label>
+                                                        <input type="text" value={editFormData.leader.college || ''} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, college: e.target.value } })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1002,9 +1107,49 @@ export default function HackathonManageClient() {
                                                         </div>
                                                         <div>
                                                             <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">M{idx + 1} Phone</label>
-                                                            <input type="tel" value={member.phone} onChange={e => {
+                                                            <input type="tel" value={member.phone || ''} onChange={e => {
                                                                 const newMembers = [...editFormData.members];
                                                                 newMembers[idx].phone = e.target.value;
+                                                                setEditFormData({ ...editFormData, members: newMembers });
+                                                            }} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">M{idx + 1} Course</label>
+                                                            <input type="text" value={member.course || ''} onChange={e => {
+                                                                const newMembers = [...editFormData.members];
+                                                                newMembers[idx].course = e.target.value;
+                                                                setEditFormData({ ...editFormData, members: newMembers });
+                                                            }} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">M{idx + 1} Section</label>
+                                                            <input type="text" value={member.section || ''} onChange={e => {
+                                                                const newMembers = [...editFormData.members];
+                                                                newMembers[idx].section = e.target.value;
+                                                                setEditFormData({ ...editFormData, members: newMembers });
+                                                            }} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">M{idx + 1} System ID</label>
+                                                            <input type="text" value={member.system_id || ''} onChange={e => {
+                                                                const newMembers = [...editFormData.members];
+                                                                newMembers[idx].system_id = e.target.value;
+                                                                setEditFormData({ ...editFormData, members: newMembers });
+                                                            }} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">M{idx + 1} Year</label>
+                                                            <input type="text" value={member.year || ''} onChange={e => {
+                                                                const newMembers = [...editFormData.members];
+                                                                newMembers[idx].year = e.target.value;
+                                                                setEditFormData({ ...editFormData, members: newMembers });
+                                                            }} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">M{idx + 1} College</label>
+                                                            <input type="text" value={member.college || ''} onChange={e => {
+                                                                const newMembers = [...editFormData.members];
+                                                                newMembers[idx].college = e.target.value;
                                                                 setEditFormData({ ...editFormData, members: newMembers });
                                                             }} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
                                                         </div>
@@ -1044,8 +1189,12 @@ export default function HackathonManageClient() {
                                                         <input required type="text" name="teamName" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs text-gray-400 mb-1">Team Code (Optional)</label>
-                                                        <input type="text" name="teamCode" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        <label className="block text-xs text-gray-400 mb-1">Team Code *</label>
+                                                        <input required type="text" name="teamCode" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Theme</label>
+                                                        <input type="text" name="theme" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
                                                     </div>
                                                     <div className="md:col-span-2">
                                                         <label className="block text-xs text-gray-400 mb-1">Idea / Project Title *</label>
@@ -1069,6 +1218,26 @@ export default function HackathonManageClient() {
                                                         <label className="block text-xs text-gray-400 mb-1">Phone *</label>
                                                         <input required type="tel" name="leaderPhone" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
                                                     </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Course</label>
+                                                        <input type="text" name="leaderCourse" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Section (Optional for Shardans)</label>
+                                                        <input type="text" name="leaderSection" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">System ID (Optional for Shardans)</label>
+                                                        <input type="text" name="leaderSystemId" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs text-gray-400 mb-1">Year</label>
+                                                        <input type="text" name="leaderYear" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-xs text-gray-400 mb-1">College</label>
+                                                        <input type="text" name="leaderCollege" className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -1087,6 +1256,26 @@ export default function HackathonManageClient() {
                                                         <div>
                                                             <label className="block text-xs text-gray-400 mb-1">Phone</label>
                                                             <input type="tel" name={`m${num}Phone`} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs text-gray-400 mb-1">Course</label>
+                                                            <input type="text" name={`m${num}Course`} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs text-gray-400 mb-1">Section</label>
+                                                            <input type="text" name={`m${num}Section`} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs text-gray-400 mb-1">System ID</label>
+                                                            <input type="text" name={`m${num}SystemId`} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs text-gray-400 mb-1">Year</label>
+                                                            <input type="text" name={`m${num}Year`} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-xs text-gray-400 mb-1">College</label>
+                                                            <input type="text" name={`m${num}College`} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
                                                         </div>
                                                     </div>
                                                 ))}
@@ -1161,24 +1350,46 @@ export default function HackathonManageClient() {
                             </div>
 
                             <div className="flex-1 border-l border-white/10 pl-0 md:pl-8">
-                                <h3 className="text-lg font-semibold text-white mb-4">Current Evaluators</h3>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold text-white">Current Evaluators</h3>
+                                    {evaluators.length > 0 && (
+                                        <button
+                                            onClick={() => handleSendEvaluatorInvite()}
+                                            disabled={sendingEmails}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                                        >
+                                            <Send className="w-4 h-4" />
+                                            Send to All
+                                        </button>
+                                    )}
+                                </div>
                                 {evaluators.length === 0 ? (
                                     <p className="text-gray-500 text-sm italic">No evaluators added yet.</p>
                                 ) : (
                                     <div className="space-y-3">
                                         {evaluators.map(ev => (
-                                            <div key={ev.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                                            <div key={ev.id} className="group flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
                                                 <div>
                                                     <p className="font-medium text-white">{ev.name}</p>
                                                     <p className="text-xs text-gray-400">{ev.email}</p>
                                                 </div>
-                                                <button
-                                                    onClick={() => handleRemoveEvaluator(ev.id)}
-                                                    className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
-                                                    title="Remove Evaluator"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
+                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={() => handleSendEvaluatorInvite(ev.id)}
+                                                        disabled={sendingEmails}
+                                                        className="p-2 text-blue-400 hover:bg-blue-400/10 rounded-lg transition-colors"
+                                                        title="Send Magic Link"
+                                                    >
+                                                        <Send className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleRemoveEvaluator(ev.id)}
+                                                        className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                                                        title="Remove Evaluator"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -1209,17 +1420,18 @@ export default function HackathonManageClient() {
                             <form onSubmit={async (e) => {
                                 e.preventDefault();
                                 if (!volEmail) return;
-                                const res = await addVolunteer(volEmail, volName || 'Volunteer', volTeam);
+                                const res = await addVolunteer(volEmail, volName || 'Volunteer', volTeam, volShift, undefined);
                                 if (res.error) {
                                     setMessage({ type: 'error', text: res.error });
                                 } else {
                                     setVolEmail("");
                                     setVolName("");
+                                    setVolShift("Whole Day");
                                     setMessage({ type: 'success', text: "Volunteer added successfully." });
                                     loadData();
                                 }
                             }} className="space-y-3">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     <input
                                         type="text"
                                         value={volName}
@@ -1239,6 +1451,15 @@ export default function HackathonManageClient() {
                                         <option value="Judging & Evaluation Team">Judging & Evaluation Team</option>
                                         <option value="Discipline & ERT Team">Discipline & ERT Team</option>
                                     </select>
+                                    <select
+                                        value={volShift}
+                                        onChange={(e) => setVolShift(e.target.value)}
+                                        className="w-full bg-black border border-white/10 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 text-white"
+                                    >
+                                        <option value="Morning">Morning Shift</option>
+                                        <option value="Night">Night Shift</option>
+                                        <option value="Whole Day">Whole Day Shift</option>
+                                    </select>
                                 </div>
                                 <div className="flex gap-3">
                                     <input
@@ -1254,20 +1475,85 @@ export default function HackathonManageClient() {
                                     </button>
                                 </div>
                             </form>
-                            <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                                <p className="text-sm text-emerald-400 font-medium mb-1">Volunteer Scanner Link</p>
-                                <p className="text-xs text-gray-400 mb-2">Share this link with volunteers to access the scanner:</p>
-                                <div className="flex items-center gap-2 bg-black/50 p-2.5 rounded-lg border border-white/5 overflow-hidden">
-                                    <code className="text-xs text-emerald-400 select-all flex-1 truncate">https://www.technovashardauniversity.in/hackathon-portal</code>
-                                    <Link href="/hackathon-portal/scan" target="_blank" className="text-green-400 hover:text-green-300 text-xs underline whitespace-nowrap flex-shrink-0">
-                                        Open Scanner
-                                    </Link>
+
+                            {/* Bulk Upload */}
+                            <div className="mt-6 p-4 bg-violet-500/10 border border-violet-500/20 rounded-xl">
+                                <p className="text-sm text-violet-400 font-bold mb-1">📁 Bulk Upload Volunteers</p>
+                                <p className="text-xs text-gray-400 mb-3">Upload an Excel file with columns: S.No, Name, Role, System ID, Section, Year, Mobile Number, Department, Email</p>
+                                <form onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const formData = new FormData(e.currentTarget);
+                                    const file = formData.get('volFile') as File;
+                                    if (!file || file.size === 0) {
+                                        setMessage({ type: 'error', text: 'Please select a valid Excel file.' });
+                                        return;
+                                    }
+                                    setUploading(true);
+                                    setMessage(null);
+                                    try {
+                                        const uploadFormData = new FormData();
+                                        uploadFormData.append('file', file);
+                                        const result = await uploadVolunteersData(uploadFormData);
+                                        if (result.error) {
+                                            setMessage({ type: 'error', text: result.error });
+                                        } else {
+                                            setMessage({ type: 'success', text: result.message || 'Volunteers uploaded!' });
+                                            loadData();
+                                        }
+                                    } catch (err: any) {
+                                        setMessage({ type: 'error', text: err.message || 'Upload failed.' });
+                                    } finally {
+                                        setUploading(false);
+                                    }
+                                }} className="flex gap-2">
+                                    <input
+                                        type="file"
+                                        name="volFile"
+                                        accept=".xlsx,.xls,.csv"
+                                        className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white file:mr-3 file:px-3 file:py-1 file:rounded-md file:bg-violet-600 file:text-white file:border-0 file:text-xs file:cursor-pointer"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={uploading}
+                                        className="bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-lg text-white text-xs font-bold transition-colors disabled:opacity-50 whitespace-nowrap"
+                                    >
+                                        {uploading ? 'Uploading...' : 'Upload'}
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                                <p className="text-sm text-emerald-400 font-medium mb-1">Scanner Links</p>
+                                <p className="text-xs text-gray-400 mb-2">Share these links with respective roles:</p>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 bg-black/50 p-2.5 rounded-lg border border-white/5 overflow-hidden">
+                                        <code className="text-xs text-emerald-400 select-all flex-1 truncate">Participant Scanner</code>
+                                        <Link href="/hackathon-portal/scan" target="_blank" className="text-green-400 hover:text-green-300 text-xs underline whitespace-nowrap flex-shrink-0">
+                                            Open
+                                        </Link>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-black/50 p-2.5 rounded-lg border border-white/5 overflow-hidden">
+                                        <code className="text-xs text-violet-400 select-all flex-1 truncate">Volunteer Scanner</code>
+                                        <Link href="/hackathon-portal/volunteer-scan" target="_blank" className="text-violet-400 hover:text-violet-300 text-xs underline whitespace-nowrap flex-shrink-0">
+                                            Open
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="flex-1 border-l border-white/10 pl-0 md:pl-8">
-                            <h3 className="text-lg font-semibold text-white mb-4">Current Volunteers</h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-white">Current Volunteers</h3>
+                                <button
+                                    type="button"
+                                    onClick={handleDownloadVolunteers}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-emerald-400 transition-colors"
+                                >
+                                    <Download className="w-3.5 h-3.5" /> Download CSV
+                                </button>
+                            </div>
+                            
                             {volunteers.length === 0 ? (
                                 <p className="text-gray-500 text-sm italic">No volunteers added yet.</p>
                             ) : (
@@ -1275,11 +1561,16 @@ export default function HackathonManageClient() {
                                     {volunteers.map((v: any) => (
                                         <div key={v.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
                                             <div>
-                                                <p className="font-medium text-white flex items-center gap-2">
+                                                <p className="font-medium text-white flex flex-wrap items-center gap-2">
                                                     {v.name}
                                                     {v.team_name && (
                                                         <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] uppercase tracking-wider font-bold">
                                                             {v.team_name}
+                                                        </span>
+                                                    )}
+                                                    {v.shift && (
+                                                        <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] uppercase tracking-wider font-bold">
+                                                            {v.shift} Shift
                                                         </span>
                                                     )}
                                                 </p>
@@ -1546,6 +1837,105 @@ export default function HackathonManageClient() {
                                     Update Rounds
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </TabsContent>
+
+                {/* Roles Management Tab */}
+                <TabsContent value="roles" className="mt-0">
+                    <div className="flex flex-col md:flex-row gap-8">
+                        <div className="w-full md:w-1/3 bg-white/5 border border-white/10 rounded-xl p-6 relative overflow-hidden h-fit">
+                            <h3 className="text-xl font-semibold text-white mb-2 flex items-center gap-2">
+                                <Shield className="w-5 h-5 text-rose-400" /> Assign Role
+                            </h3>
+                            <p className="text-xs text-gray-400 mb-6">Assign special permissions to users based on their email. Super Admins always have full access.</p>
+                            
+                            <form onSubmit={async (e) => {
+                                e.preventDefault();
+                                setMessage(null);
+                                const res = await addHackathonRole(roleEmail, roleType);
+                                if (res.success) {
+                                    setMessage({ type: 'success', text: 'Role assigned successfully' });
+                                    setRoleEmail('');
+                                    loadData();
+                                } else {
+                                    setMessage({ type: 'error', text: res.error || 'Failed to assign role' });
+                                }
+                            }} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">User Email</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={roleEmail}
+                                        onChange={(e) => setRoleEmail(e.target.value)}
+                                        placeholder="admin@example.com"
+                                        className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-rose-500 transition-colors"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Role Type</label>
+                                    <select
+                                        value={roleType}
+                                        onChange={(e) => setRoleType(e.target.value)}
+                                        className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-rose-500 transition-colors appearance-none"
+                                    >
+                                        <option value="admin">Admin</option>
+                                        <option value="student_lead">Student Lead</option>
+                                        <option value="volunteer">Volunteer</option>
+                                    </select>
+                                </div>
+                                <button
+                                    type="submit"
+                                    className="w-full bg-rose-600 hover:bg-rose-500 text-white px-6 py-3 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-rose-500/20"
+                                >
+                                    Assign Role
+                                </button>
+                            </form>
+                        </div>
+
+                        <div className="flex-1 border border-white/10 bg-zinc-900/50 rounded-2xl p-6 shadow-xl backdrop-blur-xl">
+                            <h3 className="text-xl font-semibold text-white mb-6">Assigned Roles</h3>
+                            {roles.length === 0 ? (
+                                <p className="text-gray-500 text-sm italic">No custom roles assigned yet.</p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {roles.map((r, idx) => (
+                                        <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-black/40 border border-white/5 rounded-xl hover:border-white/10 transition-colors gap-4">
+                                            <div>
+                                                <p className="font-semibold text-white text-sm">{r.email}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
+                                                        r.role === 'admin' ? 'bg-amber-500/20 text-amber-400' :
+                                                        r.role === 'student_lead' ? 'bg-purple-500/20 text-purple-400' :
+                                                        'bg-blue-500/20 text-blue-400'
+                                                    }`}>
+                                                        {r.role.replace('_', ' ')}
+                                                    </span>
+                                                    <span className="text-xs text-gray-500">
+                                                        Assigned {new Date(r.created_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={async () => {
+                                                    const res = await removeHackathonRole(r.id);
+                                                    if (res.success) {
+                                                        setMessage({ type: 'success', text: 'Role removed' });
+                                                        loadData();
+                                                    } else {
+                                                        setMessage({ type: 'error', text: res.error || 'Failed to remove role' });
+                                                    }
+                                                }}
+                                                className="self-end md:self-auto p-2 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded-lg transition-colors group"
+                                                title="Remove Role"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </TabsContent>
