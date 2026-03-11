@@ -9,7 +9,7 @@ import {
     getCheckedInParticipantsData, getFoodLogsData,
     getVolunteers, addVolunteer, removeVolunteer,
     addHackathonTeamManually, updateHackathonTeamDetails, updateCustomMeals,
-    updateEvaluationRounds, emailShortlistedTeams
+    updateEvaluationRounds, emailShortlistedTeams, blastCustomEmail
 } from "@/lib/actions/hackathon";
 import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Utensils, Settings, Send } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +41,12 @@ export default function HackathonManageClient() {
     const [deletingTeams, setDeletingTeams] = useState(false);
     const [showManualAdd, setShowManualAdd] = useState(false);
     const [addingManualMode, setAddingManualMode] = useState(false);
+    
+    // Custom Email Blast states
+    const [customEmailSubject, setCustomEmailSubject] = useState("");
+    const [customEmailBody, setCustomEmailBody] = useState("");
+    const [customEmailTarget, setCustomEmailTarget] = useState<'all' | 'shortlisted'>('all');
+    const [blastingEmail, setBlastingEmail] = useState(false);
 
     // Team Edit states
     const [editingTeam, setEditingTeam] = useState<any>(null);
@@ -781,6 +787,81 @@ export default function HackathonManageClient() {
                                                 );
                                             })()}
 
+                                        </div>
+
+                                        {/* Custom Email Blast Section */}
+                                        <div className="mt-8 bg-white/5 border border-white/10 rounded-2xl p-6 shadow-xl">
+                                            <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
+                                                <Mail className="w-5 h-5 text-blue-400" />
+                                                Custom Email Blast
+                                            </h3>
+                                            <div className="grid gap-6">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-400 mb-2">Subject Line</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={customEmailSubject} 
+                                                        onChange={e => setCustomEmailSubject(e.target.value)} 
+                                                        placeholder="e.g. Important Update for Innovate Bharat Hackathon"
+                                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 text-white placeholder-gray-600"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-400 mb-2">HTML Body Content</label>
+                                                    <textarea 
+                                                        value={customEmailBody} 
+                                                        onChange={e => setCustomEmailBody(e.target.value)} 
+                                                        placeholder="<p>Hello team...</p>"
+                                                        rows={6}
+                                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 text-white placeholder-gray-600 font-mono text-sm"
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                                                    <div className="flex gap-4">
+                                                        <button 
+                                                            onClick={() => setCustomEmailTarget('all')}
+                                                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${customEmailTarget === 'all' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}`}
+                                                        >
+                                                            All Participants
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => setCustomEmailTarget('shortlisted')}
+                                                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${customEmailTarget === 'shortlisted' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}`}
+                                                        >
+                                                            Shortlisted Teams Only
+                                                        </button>
+                                                    </div>
+                                                    <button 
+                                                        onClick={async () => {
+                                                            if (!customEmailSubject || !customEmailBody) {
+                                                                setMessage({ type: 'error', text: 'Subject and Body are required!' });
+                                                                return;
+                                                            }
+                                                            if (!confirm(`Send custom email blast to ${customEmailTarget === 'all' ? 'EVERY participant' : 'SHORTLISTED teams'}? This action cannot be undone.`)) return;
+                                                            
+                                                            setBlastingEmail(true);
+                                                            try {
+                                                                const res = await blastCustomEmail(customEmailSubject, customEmailBody, customEmailTarget);
+                                                                if (res.error) {
+                                                                    setMessage({ type: 'error', text: res.error });
+                                                                } else {
+                                                                    setMessage({ type: 'success', text: res.message || 'Emails sent successfully!' });
+                                                                    setCustomEmailSubject('');
+                                                                    setCustomEmailBody('');
+                                                                }
+                                                            } catch {
+                                                                setMessage({ type: 'error', text: 'Failed to send custom email blast.' });
+                                                            }
+                                                            setBlastingEmail(false);
+                                                        }}
+                                                        disabled={blastingEmail}
+                                                        className="px-6 py-2 rounded-xl text-sm font-bold bg-white text-black hover:bg-gray-200 transition-all disabled:opacity-50 flex items-center gap-2 shadow-lg"
+                                                    >
+                                                        <Send className="w-4 h-4" />
+                                                        {blastingEmail ? 'Blasting...' : 'Send Email Blast'}
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 )}

@@ -87,7 +87,19 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
 
     // Allow free typing: store raw string, validate only on blur
     const handleScoreChange = (field: string, value: string) => {
-        setScores({ ...scores, [field]: value as any });
+        // Only allow empty string, or a number between 1 and 5 (and decimals)
+        if (value === "") {
+            setScores({ ...scores, [field]: value as any });
+            return;
+        }
+
+        const num = parseFloat(value);
+        // Only update if it's a valid part of a number between 1 and 5
+        if (!isNaN(num) && num >= 0 && num <= 5.9) {
+            setScores({ ...scores, [field]: value as any });
+        } else if (value === ".") {
+             setScores({ ...scores, [field]: value as any });
+        }
     };
 
     const handleScoreBlur = (field: string) => {
@@ -151,7 +163,10 @@ export default function EvaluatorDashboardClient({ initialTeams, evaluationOpen 
                 <span className="text-amber-400 font-bold text-lg">{(scores as any)[field]}/5</span>
             </label>
             <input
-                type="text"
+                type="number"
+                min="1"
+                max="5"
+                step="0.1"
                 inputMode="decimal"
                 value={(scores as any)[field]}
                 onChange={(e) => handleScoreChange(field, e.target.value)}

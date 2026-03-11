@@ -1039,7 +1039,77 @@ export async function emailShortlistedTeams() {
     revalidatePath('/hackathon')
     return { success: true, message: `✅ Emails sent to ${sentCount} participant(s) across ${teams.length} team(s).${failCount > 0 ? ` ${failCount} failed.` : ''}` }
 }
+export async function blastCustomEmail(subject: string, htmlBody: string, target: 'all' | 'shortlisted') {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
+        return { error: "Unauthorized" }
+    }
 
+    if (!process.env.RESEND_API_KEY) return { error: "Email service not configured" }
+    
+    // Safety check
+    if (!subject || !htmlBody) return { error: "Subject and body are required." }
+
+    const supabase = await getSupabase()
+    
+    let emails = new Set<string>()
+    let participants: any[] = []
+
+    if (target === 'shortlisted') {
+        const { data } = await supabase
+            .from('hackathon_teams')
+            .select(`
+                id,
+                status,
+                hackathon_participants ( email )
+            `)
+            .in('status', ['shortlisted', 'shortlisted_notified'])
+            
+        if (data) {
+            data.forEach(team => {
+                team.hackathon_participants?.forEach((p: any) => {
+                    if (p.email) emails.add(p.email)
+                })
+            })
+        }
+    } else {
+        const { data } = await supabase
+            .from('hackathon_participants')
+            .select('email')
+            
+        if (data) {
+            data.forEach(p => {
+                if (p.email) emails.add(p.email)
+            })
+        }
+    }
+
+    const uniqueEmails = Array.from(emails).filter(Boolean)
+    if (uniqueEmails.length === 0) return { error: "No participants found for the selected target." }
+
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    let sentCount = 0
+    let failCount = 0
+
+    for (const email of uniqueEmails) {
+        try {
+            await resend.emails.send({
+                from: "Technova Society <no-reply@technovashardauniversity.in>",
+                to: email,
+                subject: subject,
+                html: htmlBody
+            })
+            sentCount++
+            // Throttle: Resend allows max 2 requests/sec (600ms is safe)
+            await new Promise(resolve => setTimeout(resolve, 600))
+        } catch (e) {
+            console.error(`Failed to send custom blast to ${email}`, e)
+            failCount++
+        }
+    }
+
+    return { success: true, message: `✅ Sent to ${sentCount} recipient(s).${failCount > 0 ? ` ${failCount} failed.` : ''}` }
+}
 // ==========================================
 // LOGISTICS & QR ACTIONS
 // ==========================================
