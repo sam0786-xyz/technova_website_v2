@@ -54,20 +54,24 @@ export async function uploadHackathonData(formData: FormData) {
             })
             const ideaKey = Object.keys(row).find(k => {
                 const clean = cleanStr(k);
-                return clean.includes('idea') || clean.includes('projecttitle') || clean.includes('title') || clean.includes('solution') || clean.includes('theme');
+                return clean.includes('idea') || clean.includes('projecttitle') || (clean.includes('project') && clean.includes('title')) || clean.includes('solution');
             })
             const teamCodeKey = Object.keys(row).find(k => {
                 const clean = cleanStr(k);
-                return clean.includes('teamid') || clean.includes('code');
+                return clean.includes('teamid') || clean.includes('teamcode');
             })
             const objectiveKey = Object.keys(row).find(k => {
                 const clean = cleanStr(k);
-                return clean.includes('synopsis') || clean.includes('objective') || clean.includes('description');
+                return clean.includes('synopsis') || clean.includes('objective') || clean.includes('description') || clean.includes('projectobjective');
             })
             const themeKey = Object.keys(row).find(k => {
                 const clean = cleanStr(k);
-                return clean === 'theme' || clean.includes('projecttheme') || clean.includes('teamtheme');
+                return clean === 'theme' || clean.includes('projecttheme') || clean.includes('teamtheme') || clean.includes('trackselection') || clean.includes('track') || clean === 'category';
             })
+            const categoryKey = !themeKey ? Object.keys(row).find(k => {
+                const clean = cleanStr(k);
+                return clean === 'category' || clean.includes('categoryselection');
+            }) : null;
 
             const teamCode = teamCodeKey ? String(row[teamCodeKey]) : null
             let teamName = (teamNameKey && row[teamNameKey]) ? String(row[teamNameKey]).trim() : '';
@@ -76,7 +80,8 @@ export async function uploadHackathonData(formData: FormData) {
             }
             const ideaTitle = (ideaKey && row[ideaKey]) ? String(row[ideaKey]).trim() : 'TBD'
             const projectObjective = (objectiveKey && row[objectiveKey]) ? String(row[objectiveKey]).trim() : null
-            const theme = (themeKey && row[themeKey]) ? String(row[themeKey]).trim() : null
+            const themeValue = themeKey ? row[themeKey] : (categoryKey ? row[categoryKey] : null)
+            const theme = themeValue ? String(themeValue).trim() : null
 
             // Insert Team
             const { data: team, error: teamError } = await supabase
@@ -170,6 +175,37 @@ export async function uploadHackathonData(formData: FormData) {
                         college: getMemberField('college'),
                         role: 'Member'
                     })
+                }
+            }
+
+            // Also check for a semicolon-separated members column like "Team Member's Names and Affiliation ( ; Separated)"
+            if (participantPairs.length <= 1) {
+                const memberNamesKey = Object.keys(row).find(k => {
+                    const clean = cleanStr(k);
+                    return (clean.includes('member') && clean.includes('name') && (clean.includes('affiliation') || clean.includes('separated'))) ||
+                           (clean.includes('teammember') && clean.includes('name'));
+                });
+                if (memberNamesKey && row[memberNamesKey]) {
+                    const rawMembers = String(row[memberNamesKey]).split(';').map(s => s.trim()).filter(Boolean);
+                    for (const memberEntry of rawMembers) {
+                        // Entry might be "Name - College" or just "Name"
+                        const parts = memberEntry.split('-').map(s => s.trim());
+                        const memberName = parts[0] || memberEntry;
+                        const memberCollege = parts.length > 1 ? parts.slice(1).join('-').trim() : null;
+                        if (memberName && !participantPairs.some(p => p.name.toLowerCase() === memberName.toLowerCase())) {
+                            participantPairs.push({
+                                name: memberName,
+                                email: '',
+                                phone: null,
+                                course: null,
+                                section: null,
+                                system_id: null,
+                                year: null,
+                                college: memberCollege,
+                                role: 'Member'
+                            });
+                        }
+                    }
                 }
             }
 
@@ -480,6 +516,28 @@ export async function approveScoreEdit(teamId: string, round: number) {
     
     revalidatePath('/admin/hackathon')
     return { success: true }
+}
+
+export async function getEditRequests() {
+    const session = await auth()
+    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) return []
+
+    const supabase = await getSupabase()
+    const { data: requests, error } = await supabase
+        .from('hackathon_evaluations')
+        .select(`
+            id, team_id, evaluation_round, total_score, edit_requested, created_at,
+            hackathon_evaluators (name, email),
+            hackathon_teams (name, team_code)
+        `)
+        .eq('edit_requested', true)
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error("Error fetching edit requests:", error)
+        return []
+    }
+    return requests || []
 }
 
 // Evaluator Management
@@ -848,7 +906,7 @@ export async function getTeamsForEvaluation(round: number = 1) {
     let query = supabase
         .from('hackathon_teams')
         .select(`
-            id, name, idea_title, project_objective, team_code, table_number, status, total_score,
+            id, name, idea_title, project_objective, team_code, table_number, status, total_score, theme,
             hackathon_participants (name, email, phone, role, college),
             hackathon_evaluations (evaluator_id, total_score, evaluation_round, edit_requested, edit_granted, score_innovation, score_feasibility, score_impact, score_ux, score_presentation, feedback)
         `)
