@@ -1960,6 +1960,15 @@ export async function checkHackathonRole(): Promise<{ role: HackathonRole, user:
     const volunteer = await checkVolunteerAccess()
     if (volunteer) return { role: 'volunteer', user: session.user }
 
+    // Check hackathon_roles table (people assigned roles in Settings get volunteer-level scanner access)
+    const supabase = await getSupabase()
+    const { data: roleEntry } = await supabase
+        .from('hackathon_roles')
+        .select('id')
+        .eq('email', (session.user.email || '').toLowerCase())
+        .maybeSingle()
+    if (roleEntry) return { role: 'volunteer', user: session.user }
+
     return { role: 'none', user: session.user }
 }
 
@@ -2013,6 +2022,7 @@ export async function importEventAttendees(rows: any[], eventTag: string = 'gene
         const systemId = row['System ID'] || row['system_id'] || row['System Id'] || row['SID'] || row['Enrollment No'] || ''
         const section = row['Section'] || row['section'] || ''
         const department = row['Department'] || row['department'] || row['Course'] || row['Branch'] || ''
+        const year = row['Year'] || row['year'] || row['Yr'] || ''
         const college = row['College'] || row['college'] || row['University'] || 'Sharda University'
 
         if (!name.trim()) { skipped++; continue }
@@ -2025,6 +2035,7 @@ export async function importEventAttendees(rows: any[], eventTag: string = 'gene
             section: section.trim() || null,
             department: department.trim() || null,
             college: college.trim(),
+            year: year.toString().trim() || null,
             event_tag: eventTag
         })
 
@@ -2123,6 +2134,10 @@ export async function sendAttendeeQrEmails(eventTag: string, eventName: string =
                                 <p style="margin: 0; color: #fff; font-size: 15px;"><strong>${attendee.name}</strong></p>
                                 ${attendee.system_id ? `<p style="margin: 3px 0 0; color: #a78bfa; font-size: 13px;">System ID: ${attendee.system_id}</p>` : ''}
                                 ${attendee.department ? `<p style="margin: 3px 0 0; color: #aaa; font-size: 13px;">${attendee.department}${attendee.section ? ` — Section ${attendee.section}` : ''}</p>` : ''}
+                            </div>
+                            <div style="margin: 20px auto; text-align: center;">
+                                <a href="${baseUrl}/attendance/register" style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; padding: 12px 30px; border-radius: 8px; font-weight: bold; text-decoration: none; font-size: 14px;">📝 Complete Your Registration</a>
+                                <p style="color: #888; font-size: 12px; margin-top: 8px;">Fill in your System ID, Section, Department &amp; Year</p>
                             </div>
                             <p style="color: #666; font-size: 12px; margin-top: 20px;">
                                 Please keep this email handy. You can also take a screenshot of the QR code.
@@ -2291,7 +2306,7 @@ export async function lookupAttendeeByEmail(email: string) {
     const supabase = await getSupabase()
     const { data, error } = await supabase
         .from('event_attendees')
-        .select('id, name, email, system_id, section, department, college, event_tag')
+        .select('id, name, email, system_id, section, department, college, year, event_tag')
         .ilike('email', email.trim())
         .maybeSingle()
 
@@ -2309,7 +2324,8 @@ export async function updateAttendeeDetails(attendeeId: string, details: { syste
         .update({
             system_id: details.system_id.trim() || null,
             section: details.section.trim() || null,
-            department: details.department.trim() || null
+            department: details.department.trim() || null,
+            year: (details as any).year?.trim() || null
         })
         .eq('id', attendeeId)
 

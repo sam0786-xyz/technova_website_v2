@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { lookupAttendeeByEmail, updateAttendeeDetails } from "@/lib/actions/hackathon";
-import { Search, CheckCircle, AlertCircle, User, Hash, BookOpen, Building } from "lucide-react";
+import { Search, CheckCircle, AlertCircle, User, Hash, BookOpen, Building, GraduationCap } from "lucide-react";
 
 export default function AttendeeRegisterClient() {
     const [email, setEmail] = useState("");
@@ -15,6 +15,7 @@ export default function AttendeeRegisterClient() {
     const [systemId, setSystemId] = useState("");
     const [section, setSection] = useState("");
     const [department, setDepartment] = useState("");
+    const [year, setYear] = useState("");
     const [saving, setSaving] = useState(false);
 
     const handleLookup = async (e: React.FormEvent) => {
@@ -30,13 +31,14 @@ export default function AttendeeRegisterClient() {
             setSystemId(result.attendee.system_id || "");
             setSection(result.attendee.section || "");
             setDepartment(result.attendee.department || "");
+            setYear(result.attendee.year || "");
         }
         setLoading(false);
     };
 
     const handleSave = async () => {
         if (!attendee) return;
-        if (!systemId.trim() || !section.trim() || !department.trim()) {
+        if (!systemId.trim() || !section.trim() || !department.trim() || !year) {
             setError("Please fill in all fields.");
             return;
         }
@@ -44,8 +46,9 @@ export default function AttendeeRegisterClient() {
         const result = await updateAttendeeDetails(attendee.id, {
             system_id: systemId,
             section: section,
-            department: department
-        });
+            department: department,
+            year: year
+        } as any);
         if (result.error) {
             setError(result.error);
         } else {
@@ -161,6 +164,24 @@ export default function AttendeeRegisterClient() {
                                     placeholder="e.g. CSE, ECE, MBA"
                                     className="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 placeholder-gray-600"
                                 />
+                            </div>
+
+                            <div>
+                                <label className="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-1.5">
+                                    <GraduationCap className="w-3.5 h-3.5" /> Year
+                                </label>
+                                <select
+                                    value={year}
+                                    onChange={e => setYear(e.target.value)}
+                                    className="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 appearance-none"
+                                >
+                                    <option value="" disabled>Select your year</option>
+                                    <option value="1st Year">1st Year</option>
+                                    <option value="2nd Year">2nd Year</option>
+                                    <option value="3rd Year">3rd Year</option>
+                                    <option value="4th Year">4th Year</option>
+                                    <option value="5th Year">5th Year</option>
+                                </select>
                             </div>
 
                             <button
