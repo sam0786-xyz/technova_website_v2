@@ -12,7 +12,8 @@ import {
     updateEvaluationRounds, emailShortlistedTeams, blastCustomEmail,
     getHackathonRoles, addHackathonRole, removeHackathonRole, approveScoreEdit, sendEvaluatorInvite, getEditRequests,
     importEventAttendees, getEventAttendees, deleteEventAttendees, sendAttendeeQrEmails,
-    getAttendanceCheckpoints, updateAttendanceCheckpoints, getAttendanceReport
+    getAttendanceCheckpoints, updateAttendanceCheckpoints, getAttendanceReport,
+    saveAttendanceEventSettings, getAttendanceEventSettings
 } from "@/lib/actions/hackathon";
 import * as XLSX from "xlsx";
 import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Shield, Utensils, Settings, Send, Search, ExternalLink, Minus, MapPin, RefreshCw } from "lucide-react";
@@ -89,6 +90,8 @@ export default function HackathonManageClient() {
     const [attCurrentPage, setAttCurrentPage] = useState(1);
     const [newCheckpoint, setNewCheckpoint] = useState('');
     const [attLoading, setAttLoading] = useState(false);
+    const [attSettingsSaved, setAttSettingsSaved] = useState(false);
+    const [attSettingsLoaded, setAttSettingsLoaded] = useState(false);
 
     const ATT_ITEMS_PER_PAGE = 15;
 
@@ -122,12 +125,28 @@ export default function HackathonManageClient() {
         if (settingsData?.custom_meals && Array.isArray(settingsData.custom_meals)) {
             setCustomMeals(settingsData.custom_meals);
         }
+        // Load attendance event settings from DB
+        const attSettings = await getAttendanceEventSettings();
+        if (attSettings) {
+            setAttEventTag(attSettings.eventTag);
+            setAttEventName(attSettings.eventName);
+            if (attSettings.checkpoints) setAttCheckpoints(attSettings.checkpoints);
+            setAttSettingsLoaded(true);
+        }
         setLoading(false);
     }
 
-    async function loadAttendees() {
+    // Auto-load attendees once settings are loaded
+    useEffect(() => {
+        if (attSettingsLoaded && attendees.length === 0) {
+            loadAttendees();
+        }
+    }, [attSettingsLoaded]);
+
+    async function loadAttendees(tag?: string) {
         setAttLoading(true);
-        const data = await getEventAttendees(attEventTag || undefined);
+        const tagToUse = tag || attEventTag;
+        const data = await getEventAttendees(tagToUse || undefined);
         setAttendees(data);
         setAttLoading(false);
     }
@@ -1474,15 +1493,35 @@ export default function HackathonManageClient() {
                     {/* Event Config */}
                     <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
                         <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-4"><MapPin className="w-4 h-4 text-violet-500" /> Event Attendance Tracking</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Event Tag (ID)</label>
-                                <input type="text" value={attEventTag} onChange={e => setAttEventTag(e.target.value)} placeholder="e.g. hackathon_2026" className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
+                                <input type="text" value={attEventTag} onChange={e => { setAttEventTag(e.target.value); setAttSettingsSaved(false); }} placeholder="e.g. hackathon_2026" className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Event Name (for emails)</label>
-                                <input type="text" value={attEventName} onChange={e => setAttEventName(e.target.value)} placeholder="e.g. AWS Student Community Day" className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
+                                <input type="text" value={attEventName} onChange={e => { setAttEventName(e.target.value); setAttSettingsSaved(false); }} placeholder="e.g. AWS Student Community Day" className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
                             </div>
+                            <div className="flex items-end gap-2">
+                                <button onClick={async () => {
+                                    await saveAttendanceEventSettings(attEventTag, attEventName);
+                                    setAttSettingsSaved(true);
+                                    loadAttendees(attEventTag);
+                                    setTimeout(() => setAttSettingsSaved(false), 3000);
+                                }} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${attSettingsSaved ? 'bg-emerald-100 text-emerald-700' : 'bg-violet-600 hover:bg-violet-500 text-white'}`}>
+                                    {attSettingsSaved ? <><CheckCircle className="w-4 h-4" /> Saved!</> : 'Save & Load'}
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-3 bg-violet-50 border border-violet-200 rounded-xl">
+                            <MapPin className="w-4 h-4 text-violet-500 flex-shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-xs text-violet-700 font-medium">Student Self-Registration Form</p>
+                                <p className="text-[11px] text-violet-500">Share this link with students so they can fill in their System ID, Section, and Department.</p>
+                            </div>
+                            <a href="/attendance/register" target="_blank" className="flex items-center gap-1 px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-medium transition-all">
+                                <ExternalLink className="w-3 h-3" /> Open Form
+                            </a>
                         </div>
                     </div>
 

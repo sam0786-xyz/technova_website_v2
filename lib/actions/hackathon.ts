@@ -2259,3 +2259,60 @@ export async function getAllAttendeesForScan(eventTag?: string) {
     if (error) return { attendees: [], total: 0 }
     return { attendees: data || [], total: count || 0 }
 }
+
+export async function saveAttendanceEventSettings(eventTag: string, eventName: string) {
+    const session = await auth()
+    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) return { error: "Unauthorized" }
+
+    const supabase = await getSupabase()
+    const { error } = await supabase.from('hackathon_settings').update({
+        attendance_event_tag: eventTag,
+        attendance_event_name: eventName
+    }).not('id', 'is', null)
+
+    if (error) return { error: error.message }
+    return { success: true }
+}
+
+export async function getAttendanceEventSettings() {
+    const supabase = await getSupabase()
+    const { data } = await supabase.from('hackathon_settings').select('attendance_event_tag, attendance_event_name, attendance_checkpoints').single()
+    return {
+        eventTag: data?.attendance_event_tag || 'general',
+        eventName: data?.attendance_event_name || 'Event',
+        checkpoints: data?.attendance_checkpoints || ['Registration', 'Food', 'Exit']
+    }
+}
+
+// Public: student self-registration — lookup by email and update their details
+export async function lookupAttendeeByEmail(email: string) {
+    if (!email || !email.trim()) return { error: "Please enter your email." }
+
+    const supabase = await getSupabase()
+    const { data, error } = await supabase
+        .from('event_attendees')
+        .select('id, name, email, system_id, section, department, college, event_tag')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle()
+
+    if (error || !data) return { error: "No registration found with this email. Please contact the event organizers." }
+
+    return { success: true, attendee: data }
+}
+
+export async function updateAttendeeDetails(attendeeId: string, details: { system_id: string, section: string, department: string }) {
+    if (!attendeeId) return { error: "Invalid attendee" }
+
+    const supabase = await getSupabase()
+    const { error } = await supabase
+        .from('event_attendees')
+        .update({
+            system_id: details.system_id.trim() || null,
+            section: details.section.trim() || null,
+            department: details.department.trim() || null
+        })
+        .eq('id', attendeeId)
+
+    if (error) return { error: error.message }
+    return { success: true, message: "Your details have been updated successfully!" }
+}
