@@ -1357,13 +1357,11 @@ export async function blastCustomEmail(subject: string, htmlBody: string, target
 // ==========================================
 
 export async function processHackathonQrScan(participantId: string, actionUrl: 'checkin' | 'checkout' | 'food' | 'food_unlog', mealRound?: string) {
+    const { role } = await checkHackathonRole()
+    if (role !== 'organizer' && role !== 'volunteer') return { error: "Unauthorized" }
+
     const session = await auth()
     if (!session || !session.user) return { error: "Unauthorized" }
-
-    // Allow super_admin, admin, student_lead, or volunteers
-    const isAdmin = session.user.role === 'admin' || session.user.role === 'super_admin' || session.user.role === 'student_lead'
-    const volunteer = await checkVolunteerAccess()
-    if (!isAdmin && !volunteer) return { error: "Unauthorized" }
 
     const supabase = await getSupabase()
 
@@ -1960,14 +1958,18 @@ export async function checkHackathonRole(): Promise<{ role: HackathonRole, user:
     const volunteer = await checkVolunteerAccess()
     if (volunteer) return { role: 'volunteer', user: session.user }
 
-    // Check hackathon_roles table (people assigned roles in Settings get volunteer-level scanner access)
+    // Check hackathon_roles table (people assigned roles in Settings get volunteer/organizer-level access based on their assigned role)
     const supabase = await getSupabase()
     const { data: roleEntry } = await supabase
         .from('hackathon_roles')
-        .select('id')
+        .select('role')
         .eq('email', (session.user.email || '').toLowerCase())
         .maybeSingle()
-    if (roleEntry) return { role: 'volunteer', user: session.user }
+    if (roleEntry) {
+        if (roleEntry.role === 'admin' || roleEntry.role === 'super_admin' || roleEntry.role === 'organizer') return { role: 'organizer', user: session.user }
+        if (roleEntry.role === 'evaluator') return { role: 'evaluator', user: session.user }
+        return { role: 'volunteer', user: session.user }
+    }
 
     return { role: 'none', user: session.user }
 }
@@ -2194,12 +2196,11 @@ export async function sendAttendeeQrEmails(eventTag: string, eventName: string =
 }
 
 export async function processAttendanceScan(qrCode: string, checkpoint: string) {
+    const { role } = await checkHackathonRole()
+    if (role !== 'organizer' && role !== 'volunteer') return { error: "Unauthorized" }
+
     const session = await auth()
     if (!session || !session.user) return { error: "Unauthorized" }
-
-    const isAdmin = ['admin', 'super_admin', 'student_lead'].includes(session.user.role as string)
-    const volunteer = await checkVolunteerAccess()
-    if (!isAdmin && !volunteer) return { error: "Unauthorized" }
 
     const supabase = await getSupabase()
 
