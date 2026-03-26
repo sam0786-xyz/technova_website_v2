@@ -25,6 +25,20 @@ import EvaluatorDashboardClient from "@/app/(admin)/admin/hackathon/evaluate/cli
 const ITEMS_PER_PAGE = 10;
 
 export default function HackathonManageClient() {
+    // Tab persistence via URL hash
+    const [activeTab, setActiveTab] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const hash = window.location.hash.replace('#', '');
+            if (['teams', 'evaluators', 'volunteers', 'attendance', 'settings'].includes(hash)) return hash;
+        }
+        return 'teams';
+    });
+    const handleTabChange = (val: string) => {
+        setActiveTab(val);
+        window.location.hash = val;
+        if (val === 'attendance' && attendees.length === 0 && attSettingsLoaded) loadAttendees();
+    };
+
     const [currentPage, setCurrentPage] = useState(1);
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -605,7 +619,7 @@ export default function HackathonManageClient() {
                 <div className={cardCls}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Average Score</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-amber-600">{avgScore}</span><div className="flex gap-0.5 mb-1">{[1,2,3,4,5].map(i => <Star key={i} className={`w-3 h-3 ${parseFloat(avgScore) >= i * 2 ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />)}</div></div></div>
             </div>
 
-            <Tabs defaultValue="teams" className="w-full">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 {message && (
                     <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 ${message.type === 'error' ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-emerald-50 border border-emerald-200 text-emerald-700'}`}>
                         {message.type === 'error' ? <AlertCircle className="w-5 h-5 flex-shrink-0" /> : <CheckCircle className="w-5 h-5 flex-shrink-0" />}

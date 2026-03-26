@@ -2008,8 +2008,8 @@ export async function importEventAttendees(rows: any[], eventTag: string = 'gene
 
     for (const row of rows) {
         const name = row['Name'] || row['name'] || row['Student Name'] || ''
-        const email = row['Email'] || row['email'] || row['Email ID'] || row['Email Id'] || ''
-        const mobile = row['Mobile'] || row['mobile'] || row['Phone'] || row['Mobile Number'] || row['Contact'] || ''
+        const email = row['Email'] || row['email'] || row['Email ID'] || row['Email Id'] || row['Email Address'] || row['email address'] || row['EmailAddress'] || row['email_address'] || ''
+        const mobile = row['Mobile'] || row['mobile'] || row['Phone'] || row['Mobile Number'] || row['Contact'] || row['Phone Number'] || row['phone'] || ''
         const systemId = row['System ID'] || row['system_id'] || row['System Id'] || row['SID'] || row['Enrollment No'] || ''
         const section = row['Section'] || row['section'] || ''
         const department = row['Department'] || row['department'] || row['Course'] || row['Branch'] || ''
@@ -2292,7 +2292,7 @@ export async function lookupAttendeeByEmail(email: string) {
     const { data, error } = await supabase
         .from('event_attendees')
         .select('id, name, email, system_id, section, department, college, event_tag')
-        .eq('email', email.trim().toLowerCase())
+        .ilike('email', email.trim())
         .maybeSingle()
 
     if (error || !data) return { error: "No registration found with this email. Please contact the event organizers." }
