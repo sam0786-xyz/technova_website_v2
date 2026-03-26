@@ -133,8 +133,10 @@ export default function AttendeeRegisterClient() {
                                 </label>
                                 <input
                                     type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     value={systemId}
-                                    onChange={e => setSystemId(e.target.value)}
+                                    onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setSystemId(v); }}
                                     placeholder="e.g. 2024012345"
                                     className="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 placeholder-gray-600"
                                 />
@@ -144,13 +146,16 @@ export default function AttendeeRegisterClient() {
                                 <label className="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-1.5">
                                     <BookOpen className="w-3.5 h-3.5" /> Section
                                 </label>
-                                <input
-                                    type="text"
+                                <select
                                     value={section}
                                     onChange={e => setSection(e.target.value)}
-                                    placeholder="e.g. A, B, C"
-                                    className="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 placeholder-gray-600"
-                                />
+                                    className="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 appearance-none"
+                                >
+                                    <option value="" disabled>Select your section</option>
+                                    {'ABCDEFGHIJKLMNOPQRS'.split('').map(s => (
+                                        <option key={s} value={s}>{s}</option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div>
@@ -180,7 +185,6 @@ export default function AttendeeRegisterClient() {
                                     <option value="2nd Year">2nd Year</option>
                                     <option value="3rd Year">3rd Year</option>
                                     <option value="4th Year">4th Year</option>
-                                    <option value="5th Year">5th Year</option>
                                 </select>
                             </div>
 
