@@ -2,7 +2,7 @@ import { checkHackathonRole } from "@/lib/actions/hackathon"
 import { getHackathonTeams, getEvaluators, getVolunteers, getHackathonSettings } from "@/lib/actions/hackathon"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { ClipboardList, QrCode, Settings, Radio, UserCheck, Users, Timer, ChevronRight, BarChart3, Activity } from "lucide-react"
+import { ClipboardList, QrCode, Settings, Radio, UserCheck, Users, Timer, ChevronRight, BarChart3, Activity, MapPin } from "lucide-react"
 import LiveTimer from "./components/LiveTimer"
 
 export default async function HackathonPortalHub() {
@@ -83,6 +83,15 @@ export default async function HackathonPortalHub() {
                 iconColor: "text-white",
                 borderHover: "hover:border-amber-300 hover:shadow-amber-500/10",
             },
+            {
+                title: "Attendance Scanner",
+                desc: "Scan attendee QR codes to track event attendance at checkpoints",
+                href: "/hackathon-portal/attendance-scan",
+                icon: MapPin,
+                iconBg: "bg-gradient-to-br from-pink-500 to-rose-600",
+                iconColor: "text-white",
+                borderHover: "hover:border-pink-300 hover:shadow-pink-500/10",
+            },
         )
     }
 
@@ -107,6 +116,15 @@ export default async function HackathonPortalHub() {
             iconBg: "bg-gradient-to-br from-emerald-500 to-teal-600",
             iconColor: "text-white",
             borderHover: "hover:border-emerald-300 hover:shadow-emerald-500/10",
+        })
+        cards.push({
+            title: "Attendance Scanner",
+            desc: "Scan attendee QR codes at event checkpoints",
+            href: "/hackathon-portal/attendance-scan",
+            icon: MapPin,
+            iconBg: "bg-gradient-to-br from-pink-500 to-rose-600",
+            iconColor: "text-white",
+            borderHover: "hover:border-pink-300 hover:shadow-pink-500/10",
         })
     }
 

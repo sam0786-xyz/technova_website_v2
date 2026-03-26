@@ -1993,3 +1993,269 @@ export async function isHackathonEmail(email: string): Promise<boolean> {
 
     return !!volunteer
 }
+
+// ==========================================
+// EVENT ATTENDANCE TRACKING
+// ==========================================
+
+export async function importEventAttendees(rows: any[], eventTag: string = 'general') {
+    const session = await auth()
+    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) return { error: "Unauthorized" }
+
+    const supabase = await getSupabase()
+    let imported = 0
+    let skipped = 0
+
+    for (const row of rows) {
+        const name = row['Name'] || row['name'] || row['Student Name'] || ''
+        const email = row['Email'] || row['email'] || row['Email ID'] || row['Email Id'] || ''
+        const mobile = row['Mobile'] || row['mobile'] || row['Phone'] || row['Mobile Number'] || row['Contact'] || ''
+        const systemId = row['System ID'] || row['system_id'] || row['System Id'] || row['SID'] || row['Enrollment No'] || ''
+        const section = row['Section'] || row['section'] || ''
+        const department = row['Department'] || row['department'] || row['Course'] || row['Branch'] || ''
+        const college = row['College'] || row['college'] || row['University'] || 'Sharda University'
+
+        if (!name.trim()) { skipped++; continue }
+
+        const { error } = await supabase.from('event_attendees').insert({
+            name: name.trim(),
+            email: email.trim() || null,
+            mobile: String(mobile).trim() || null,
+            system_id: String(systemId).trim() || null,
+            section: section.trim() || null,
+            department: department.trim() || null,
+            college: college.trim(),
+            event_tag: eventTag
+        })
+
+        if (error) {
+            console.error(`Failed to import attendee ${name}:`, error.message)
+            skipped++
+        } else {
+            imported++
+        }
+    }
+
+    revalidatePath('/hackathon-portal/manage')
+    return { success: true, imported, skipped, message: `Imported ${imported} attendees. ${skipped > 0 ? `${skipped} skipped.` : ''}` }
+}
+
+export async function getEventAttendees(eventTag?: string) {
+    const session = await auth()
+    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) return []
+
+    const supabase = await getSupabase()
+    let query = supabase.from('event_attendees').select('*, event_attendance_scans(checkpoint, scanned_at)').order('created_at', { ascending: false })
+
+    if (eventTag) {
+        query = query.eq('event_tag', eventTag)
+    }
+
+    const { data, error } = await query
+    if (error) {
+        console.error("Error fetching attendees:", error)
+        return []
+    }
+    return data || []
+}
+
+export async function deleteEventAttendees(eventTag: string) {
+    const session = await auth()
+    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) return { error: "Unauthorized" }
+
+    const supabase = await getSupabase()
+    const { error } = await supabase.from('event_attendees').delete().eq('event_tag', eventTag)
+    if (error) return { error: error.message }
+
+    revalidatePath('/hackathon-portal/manage')
+    return { success: true }
+}
+
+export async function sendAttendeeQrEmails(eventTag: string, eventName: string = 'Event') {
+    const session = await auth()
+    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) return { error: "Unauthorized" }
+
+    if (!process.env.RESEND_API_KEY) return { error: "Email service not configured (RESEND_API_KEY)" }
+
+    const supabase = await getSupabase()
+
+    // Get all attendees for this event that haven't been emailed
+    const { data: attendees } = await supabase
+        .from('event_attendees')
+        .select('*')
+        .eq('event_tag', eventTag)
+        .eq('qr_emailed', false)
+        .not('email', 'is', null)
+
+    if (!attendees || attendees.length === 0) return { error: "No un-emailed attendees found.", sent: 0, failed: 0, failedEmails: [] }
+
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    let sent = 0
+    const failedEmails: string[] = []
+
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.technovashardauniversity.in'
+
+    for (const attendee of attendees) {
+        if (!attendee.email) continue
+        try {
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(attendee.qr_code)}`
+
+            await resend.emails.send({
+                from: "Technova Society <no-reply@technovashardauniversity.in>",
+                to: attendee.email,
+                subject: `🎫 Your Attendance QR Code — ${eventName}`,
+                html: `
+                    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
+                        <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 30px; text-align: center;">
+                            <h1 style="margin: 0; color: #fff; font-size: 22px; letter-spacing: 1px;">🎫 Your Attendance QR</h1>
+                            <p style="margin: 5px 0 0; color: rgba(255,255,255,0.9); font-weight: bold;">${eventName}</p>
+                        </div>
+                        <div style="padding: 30px; text-align: center; line-height: 1.6;">
+                            <h2 style="color: #a78bfa; margin-top: 0;">Hi ${attendee.name},</h2>
+                            <p style="color: #ccc; font-size: 15px;">
+                                Please show this QR code at each checkpoint during the event. Your attendance will be recorded automatically.
+                            </p>
+                            <div style="background-color: #fff; border-radius: 12px; padding: 20px; margin: 20px auto; display: inline-block;">
+                                <img src="${qrImageUrl}" alt="QR Code" style="width: 250px; height: 250px;" />
+                            </div>
+                            <div style="background-color: #111; border: 1px solid #222; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: left;">
+                                <p style="margin: 0 0 5px; color: #888; font-size: 13px;">Your Details:</p>
+                                <p style="margin: 0; color: #fff; font-size: 15px;"><strong>${attendee.name}</strong></p>
+                                ${attendee.system_id ? `<p style="margin: 3px 0 0; color: #a78bfa; font-size: 13px;">System ID: ${attendee.system_id}</p>` : ''}
+                                ${attendee.department ? `<p style="margin: 3px 0 0; color: #aaa; font-size: 13px;">${attendee.department}${attendee.section ? ` — Section ${attendee.section}` : ''}</p>` : ''}
+                            </div>
+                            <p style="color: #666; font-size: 12px; margin-top: 20px;">
+                                Please keep this email handy. You can also take a screenshot of the QR code.
+                            </p>
+                        </div>
+                        <div style="background-color: #0a0a0a; padding: 15px; text-align: center; border-top: 1px solid #1a1a1a;">
+                            <p style="margin: 0; color: #444; font-size: 11px;">&copy; 2026 TechNova | Sharda University</p>
+                        </div>
+                    </div>
+                `
+            })
+
+            // Mark as emailed
+            await supabase.from('event_attendees').update({ qr_emailed: true }).eq('id', attendee.id)
+            sent++
+
+            // Throttle: 2 req/sec limit
+            await new Promise(resolve => setTimeout(resolve, 600))
+        } catch (e) {
+            console.error(`Failed to email ${attendee.email}:`, e)
+            failedEmails.push(attendee.email)
+        }
+    }
+
+    revalidatePath('/hackathon-portal/manage')
+    return {
+        success: true,
+        sent,
+        failed: failedEmails.length,
+        failedEmails,
+        message: `✅ Sent ${sent} QR emails.${failedEmails.length > 0 ? ` ${failedEmails.length} failed — retry these.` : ''}`
+    }
+}
+
+export async function processAttendanceScan(qrCode: string, checkpoint: string) {
+    const session = await auth()
+    if (!session || !session.user) return { error: "Unauthorized" }
+
+    const isAdmin = ['admin', 'super_admin', 'student_lead'].includes(session.user.role as string)
+    const volunteer = await checkVolunteerAccess()
+    if (!isAdmin && !volunteer) return { error: "Unauthorized" }
+
+    const supabase = await getSupabase()
+
+    // Find the attendee by QR code
+    const { data: attendee, error: findError } = await supabase
+        .from('event_attendees')
+        .select('*')
+        .eq('qr_code', qrCode.trim())
+        .maybeSingle()
+
+    if (findError || !attendee) return { error: "Invalid QR Code: Attendee not found." }
+
+    // Check if already scanned for this checkpoint
+    const { data: existing } = await supabase
+        .from('event_attendance_scans')
+        .select('id')
+        .eq('attendee_id', attendee.id)
+        .eq('checkpoint', checkpoint)
+        .maybeSingle()
+
+    if (existing) {
+        return { already: true, attendee, message: `${attendee.name} already scanned for "${checkpoint}".` }
+    }
+
+    // Record the scan
+    const { error: insertError } = await supabase.from('event_attendance_scans').insert({
+        attendee_id: attendee.id,
+        checkpoint,
+        scanned_by: session.user.email || 'unknown'
+    })
+
+    if (insertError) return { error: insertError.message }
+
+    return {
+        success: true,
+        attendee,
+        message: `✅ ${attendee.name} — ${checkpoint} recorded${attendee.system_id ? ` (${attendee.system_id})` : ''}`
+    }
+}
+
+export async function getAttendanceReport(eventTag: string) {
+    const session = await auth()
+    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) return []
+
+    const supabase = await getSupabase()
+    const { data, error } = await supabase
+        .from('event_attendees')
+        .select('*, event_attendance_scans(checkpoint, scanned_at, scanned_by)')
+        .eq('event_tag', eventTag)
+        .order('name', { ascending: true })
+
+    if (error) {
+        console.error("Error fetching attendance report:", error)
+        return []
+    }
+    return data || []
+}
+
+export async function getAttendanceCheckpoints() {
+    const supabase = await getSupabase()
+    const { data } = await supabase.from('hackathon_settings').select('attendance_checkpoints').single()
+    return data?.attendance_checkpoints || ['Registration', 'Food', 'Exit']
+}
+
+export async function updateAttendanceCheckpoints(checkpoints: string[]) {
+    const session = await auth()
+    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) return { error: "Unauthorized" }
+
+    const supabase = await getSupabase()
+    const { error } = await supabase.from('hackathon_settings').update({ attendance_checkpoints: checkpoints }).not('id', 'is', null)
+
+    if (error) return { error: error.message }
+    revalidatePath('/hackathon-portal/manage')
+    return { success: true }
+}
+
+export async function getAllAttendeesForScan(eventTag?: string) {
+    const session = await auth()
+    if (!session || !session.user) return { attendees: [], total: 0 }
+
+    const isAdmin = ['admin', 'super_admin', 'student_lead'].includes(session.user.role as string)
+    const volunteer = await checkVolunteerAccess()
+    if (!isAdmin && !volunteer) return { attendees: [], total: 0 }
+
+    const supabase = await getSupabase()
+    let query = supabase.from('event_attendees').select('*, event_attendance_scans(checkpoint, scanned_at)', { count: 'exact' }).order('name', { ascending: true })
+
+    if (eventTag) {
+        query = query.eq('event_tag', eventTag)
+    }
+
+    const { data, count, error } = await query
+    if (error) return { attendees: [], total: 0 }
+    return { attendees: data || [], total: count || 0 }
+}

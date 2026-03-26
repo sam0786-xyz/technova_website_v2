@@ -10,9 +10,12 @@ import {
     getVolunteers, addVolunteer, removeVolunteer, uploadVolunteersData,
     addHackathonTeamManually, updateHackathonTeamDetails, updateCustomMeals,
     updateEvaluationRounds, emailShortlistedTeams, blastCustomEmail,
-    getHackathonRoles, addHackathonRole, removeHackathonRole, approveScoreEdit, sendEvaluatorInvite, getEditRequests
+    getHackathonRoles, addHackathonRole, removeHackathonRole, approveScoreEdit, sendEvaluatorInvite, getEditRequests,
+    importEventAttendees, getEventAttendees, deleteEventAttendees, sendAttendeeQrEmails,
+    getAttendanceCheckpoints, updateAttendanceCheckpoints, getAttendanceReport
 } from "@/lib/actions/hackathon";
-import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Shield, Utensils, Settings, Send, Search, ExternalLink, Minus } from "lucide-react";
+import * as XLSX from "xlsx";
+import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Shield, Utensils, Settings, Send, Search, ExternalLink, Minus, MapPin, RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import LiveTimer from "../components/LiveTimer";
@@ -74,7 +77,23 @@ export default function HackathonManageClient() {
     const [customMeals, setCustomMeals] = useState<string[]>(["Breakfast - Day 1", "Lunch - Day 1", "Snacks - Day 1", "Dinner - Day 1", "Breakfast - Day 2", "Lunch - Day 2"]);
     const [newMeal, setNewMeal] = useState("");
 
+    // Attendance states
+    const [attendees, setAttendees] = useState<any[]>([]);
+    const [attCheckpoints, setAttCheckpoints] = useState<string[]>(['Registration', 'Food', 'Exit']);
+    const [attEventTag, setAttEventTag] = useState('general');
+    const [attEventName, setAttEventName] = useState('Event');
+    const [attUploading, setAttUploading] = useState(false);
+    const [attSendingEmails, setAttSendingEmails] = useState(false);
+    const [attEmailResult, setAttEmailResult] = useState<any>(null);
+    const [attSearchQuery, setAttSearchQuery] = useState('');
+    const [attCurrentPage, setAttCurrentPage] = useState(1);
+    const [newCheckpoint, setNewCheckpoint] = useState('');
+    const [attLoading, setAttLoading] = useState(false);
+
+    const ATT_ITEMS_PER_PAGE = 15;
+
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const attFileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         loadData();
@@ -82,14 +101,15 @@ export default function HackathonManageClient() {
 
     async function loadData() {
         setLoading(true);
-        const [teamsData, evaluatorsData, volunteersData, settingsData, scheduleData, rolesData, editReqData] = await Promise.all([
+        const [teamsData, evaluatorsData, volunteersData, settingsData, scheduleData, rolesData, editReqData, checkpointsData] = await Promise.all([
             getHackathonTeams(),
             getEvaluators(),
             getVolunteers(),
             getHackathonSettings(),
             getSchedule(),
             getHackathonRoles(),
-            getEditRequests()
+            getEditRequests(),
+            getAttendanceCheckpoints()
         ]);
         setTeams(teamsData);
         setEvaluators(evaluatorsData);
@@ -98,11 +118,84 @@ export default function HackathonManageClient() {
         setSchedule(scheduleData);
         setRoles(rolesData);
         setEditRequests(editReqData);
+        if (checkpointsData) setAttCheckpoints(checkpointsData);
         if (settingsData?.custom_meals && Array.isArray(settingsData.custom_meals)) {
             setCustomMeals(settingsData.custom_meals);
         }
         setLoading(false);
     }
+
+    async function loadAttendees() {
+        setAttLoading(true);
+        const data = await getEventAttendees(attEventTag || undefined);
+        setAttendees(data);
+        setAttLoading(false);
+    }
+
+    const handleAttUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setAttUploading(true);
+        setMessage(null);
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data);
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet);
+            const result = await importEventAttendees(rows, attEventTag);
+            if (result.error) {
+                setMessage({ type: 'error', text: result.error });
+            } else {
+                setMessage({ type: 'success', text: result.message || `Imported ${result.imported} attendees.` });
+                loadAttendees();
+            }
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Failed to parse file. Please use CSV or XLSX.' });
+        }
+        setAttUploading(false);
+        if (attFileInputRef.current) attFileInputRef.current.value = '';
+    };
+
+    const handleExportAttendance = async () => {
+        const report = await getAttendanceReport(attEventTag);
+        if (!report || report.length === 0) {
+            setMessage({ type: 'error', text: 'No attendance data to export.' });
+            return;
+        }
+        const rows = report.map((a: any) => {
+            const row: any = {
+                'Name': a.name,
+                'System ID': a.system_id || '',
+                'Section': a.section || '',
+                'Department': a.department || '',
+                'Email': a.email || '',
+                'Mobile': a.mobile || '',
+                'College': a.college || '',
+            };
+            attCheckpoints.forEach(cp => {
+                const scan = a.event_attendance_scans?.find((s: any) => s.checkpoint === cp);
+                row[`${cp}`] = scan ? '✓' : '✗';
+                row[`${cp} Time`] = scan ? new Date(scan.scanned_at).toLocaleString() : '';
+            });
+            return row;
+        });
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+        XLSX.writeFile(wb, `attendance_${attEventTag}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    };
+
+    const filteredAttendees = attendees.filter((a: any) => {
+        if (!attSearchQuery) return true;
+        const q = attSearchQuery.toLowerCase();
+        return (a.name || '').toLowerCase().includes(q) ||
+            (a.email || '').toLowerCase().includes(q) ||
+            (a.system_id || '').toLowerCase().includes(q) ||
+            (a.department || '').toLowerCase().includes(q) ||
+            (a.section || '').toLowerCase().includes(q);
+    });
+    const attTotalPages = Math.ceil(filteredAttendees.length / ATT_ITEMS_PER_PAGE);
+    const paginatedAttendees = filteredAttendees.slice((attCurrentPage - 1) * ATT_ITEMS_PER_PAGE, attCurrentPage * ATT_ITEMS_PER_PAGE);
 
     const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -511,6 +604,9 @@ export default function HackathonManageClient() {
                         <UserCheck className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Volunteers
                     </TabsTrigger>
 
+                    <TabsTrigger value="attendance" onClick={() => { if (attendees.length === 0) loadAttendees(); }} className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 text-gray-500 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                        <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Attendance
+                    </TabsTrigger>
                     <TabsTrigger value="settings" className="data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700 text-gray-500 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
                         <Settings className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Settings & Roles
                     </TabsTrigger>
@@ -1372,6 +1468,174 @@ export default function HackathonManageClient() {
                     </div>
                 </div>
             )}
+
+                {/* Attendance Tab */}
+                <TabsContent value="attendance" className="mt-0 space-y-6">
+                    {/* Event Config */}
+                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-4"><MapPin className="w-4 h-4 text-violet-500" /> Event Attendance Tracking</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Event Tag (ID)</label>
+                                <input type="text" value={attEventTag} onChange={e => setAttEventTag(e.target.value)} placeholder="e.g. hackathon_2026" className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Event Name (for emails)</label>
+                                <input type="text" value={attEventName} onChange={e => setAttEventName(e.target.value)} placeholder="e.g. AWS Student Community Day" className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Import + Actions */}
+                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between mb-4">
+                            <h3 className="text-sm font-bold text-gray-900">Import Attendees</h3>
+                            <div className="flex gap-2 flex-wrap">
+                                <label className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all ${attUploading ? 'bg-gray-100 text-gray-400' : 'bg-violet-600 hover:bg-violet-500 text-white'}`}>
+                                    <Upload className="w-4 h-4" /> {attUploading ? 'Importing...' : 'Upload CSV/XLSX'}
+                                    <input ref={attFileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleAttUpload} className="hidden" disabled={attUploading} />
+                                </label>
+                                <button onClick={() => loadAttendees()} className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-all">
+                                    <RefreshCw className="w-4 h-4" /> Refresh
+                                </button>
+                                <button onClick={handleExportAttendance} className="flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-sm font-medium transition-all">
+                                    <Download className="w-4 h-4" /> Export Report
+                                </button>
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-400">Upload a CSV/XLSX with columns: Name, Email, Mobile, System ID, Section, Department, College. The event tag above filters which attendees are shown.</p>
+                    </div>
+
+                    {/* Checkpoints Config */}
+                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                        <h3 className="text-sm font-bold text-gray-900 mb-3">Checkpoints</h3>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                            {attCheckpoints.map((cp, i) => (
+                                <span key={i} className="flex items-center gap-1.5 bg-violet-50 border border-violet-200 text-violet-700 px-3 py-1.5 rounded-lg text-xs font-medium">
+                                    {cp}
+                                    <button onClick={async () => { const updated = attCheckpoints.filter((_, idx) => idx !== i); setAttCheckpoints(updated); await updateAttendanceCheckpoints(updated); }} className="text-violet-400 hover:text-red-500 ml-1">
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                        <div className="flex gap-2">
+                            <input type="text" value={newCheckpoint} onChange={e => setNewCheckpoint(e.target.value)} placeholder="New checkpoint name" className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
+                            <button onClick={async () => { if (!newCheckpoint.trim()) return; const updated = [...attCheckpoints, newCheckpoint.trim()]; setAttCheckpoints(updated); setNewCheckpoint(''); await updateAttendanceCheckpoints(updated); }} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-sm font-medium transition-all">
+                                <Plus className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* QR Email Section */}
+                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-3"><Mail className="w-4 h-4 text-violet-500" /> Send QR Code Emails</h3>
+                        <div className="flex items-center gap-4 mb-3">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3 text-sm">
+                                    <span className="text-gray-500">Total: <strong className="text-gray-900">{attendees.length}</strong></span>
+                                    <span className="text-emerald-600">Emailed: <strong>{attendees.filter(a => a.qr_emailed).length}</strong></span>
+                                    <span className="text-amber-600">Pending: <strong>{attendees.filter(a => !a.qr_emailed && a.email).length}</strong></span>
+                                </div>
+                            </div>
+                            <button onClick={async () => {
+                                setAttSendingEmails(true); setAttEmailResult(null);
+                                const result = await sendAttendeeQrEmails(attEventTag, attEventName);
+                                setAttEmailResult(result);
+                                setAttSendingEmails(false);
+                                loadAttendees();
+                            }} disabled={attSendingEmails} className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-sm font-bold transition-all disabled:opacity-50">
+                                {attSendingEmails ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending...</> : <><Send className="w-4 h-4" /> Send All QR Emails</>}
+                            </button>
+                        </div>
+                        {attEmailResult && (
+                            <div className={`p-3 rounded-xl text-sm ${attEmailResult.error && !attEmailResult.sent ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                                <p className="font-medium">{attEmailResult.message || attEmailResult.error}</p>
+                                {attEmailResult.failedEmails && attEmailResult.failedEmails.length > 0 && (
+                                    <div className="mt-2">
+                                        <p className="text-xs font-bold text-red-600 mb-1">Failed emails (retry these):</p>
+                                        <p className="text-xs text-red-500 break-all">{attEmailResult.failedEmails.join(', ')}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Attendee List */}
+                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between mb-4">
+                            <h3 className="text-sm font-bold text-gray-900">Attendees ({filteredAttendees.length})</h3>
+                            <div className="flex gap-2 items-center">
+                                <div className="relative flex-1 md:w-64">
+                                    <input type="text" placeholder="Search attendees..." value={attSearchQuery} onChange={e => { setAttSearchQuery(e.target.value); setAttCurrentPage(1); }} className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
+                                    <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                </div>
+                                <button onClick={async () => { if (confirm('Delete ALL attendees for this event tag? This cannot be undone.')) { await deleteEventAttendees(attEventTag); setAttendees([]); setMessage({ type: 'success', text: 'All attendees deleted.' }); }}} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete all attendees">
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {attLoading ? (
+                            <div className="text-center py-8"><div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-2" /><p className="text-gray-500 text-sm">Loading attendees...</p></div>
+                        ) : filteredAttendees.length === 0 ? (
+                            <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl">No attendees found. Import a CSV/XLSX file above.</div>
+                        ) : (
+                            <>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
+                                                <th className="px-3 py-2 text-left font-semibold">#</th>
+                                                <th className="px-3 py-2 text-left font-semibold">Name</th>
+                                                <th className="px-3 py-2 text-left font-semibold">System ID</th>
+                                                <th className="px-3 py-2 text-left font-semibold">Section</th>
+                                                <th className="px-3 py-2 text-left font-semibold">Department</th>
+                                                <th className="px-3 py-2 text-left font-semibold">Email</th>
+                                                <th className="px-3 py-2 text-center font-semibold">QR Sent</th>
+                                                {attCheckpoints.map(cp => (
+                                                    <th key={cp} className="px-3 py-2 text-center font-semibold">{cp}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {paginatedAttendees.map((a: any, idx: number) => (
+                                                <tr key={a.id} className="border-t border-gray-100 hover:bg-gray-50">
+                                                    <td className="px-3 py-2 text-gray-400 text-xs">{(attCurrentPage - 1) * ATT_ITEMS_PER_PAGE + idx + 1}</td>
+                                                    <td className="px-3 py-2 font-medium text-gray-900">{a.name}</td>
+                                                    <td className="px-3 py-2 text-violet-600 font-mono text-xs">{a.system_id || '—'}</td>
+                                                    <td className="px-3 py-2 text-gray-600 text-xs">{a.section || '—'}</td>
+                                                    <td className="px-3 py-2 text-gray-600 text-xs">{a.department || '—'}</td>
+                                                    <td className="px-3 py-2 text-gray-500 text-xs truncate max-w-[150px]">{a.email || '—'}</td>
+                                                    <td className="px-3 py-2 text-center">
+                                                        {a.qr_emailed ? <span className="text-emerald-500 text-xs font-bold">✓</span> : <span className="text-gray-300 text-xs">✗</span>}
+                                                    </td>
+                                                    {attCheckpoints.map(cp => {
+                                                        const scan = a.event_attendance_scans?.find((s: any) => s.checkpoint === cp);
+                                                        return (
+                                                            <td key={cp} className="px-3 py-2 text-center">
+                                                                {scan ? <span className="text-emerald-500 text-xs font-bold" title={new Date(scan.scanned_at).toLocaleString()}>✓</span> : <span className="text-gray-300 text-xs">✗</span>}
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {attTotalPages > 1 && (
+                                    <div className="flex items-center justify-between px-3 py-3 border-t border-gray-100">
+                                        <span className="text-xs text-gray-500">Page {attCurrentPage} of {attTotalPages}</span>
+                                        <div className="flex gap-1">
+                                            <button onClick={() => setAttCurrentPage(p => Math.max(1, p - 1))} disabled={attCurrentPage === 1} className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-30"><ChevronLeft className="w-4 h-4" /></button>
+                                            <button onClick={() => setAttCurrentPage(p => Math.min(attTotalPages, p + 1))} disabled={attCurrentPage === attTotalPages} className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-30"><ChevronRight className="w-4 h-4" /></button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </TabsContent>
 
             </Tabs>
         </div>
