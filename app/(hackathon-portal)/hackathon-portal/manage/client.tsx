@@ -13,10 +13,10 @@ import {
     getHackathonRoles, addHackathonRole, removeHackathonRole, approveScoreEdit, sendEvaluatorInvite, getEditRequests,
     importEventAttendees, getEventAttendees, deleteEventAttendees, sendAttendeeQrEmails,
     getAttendanceCheckpoints, updateAttendanceCheckpoints, getAttendanceReport,
-    saveAttendanceEventSettings, getAttendanceEventSettings
+    saveAttendanceEventSettings, getAttendanceEventSettings, updateSingleAttendee
 } from "@/lib/actions/hackathon";
 import * as XLSX from "xlsx";
-import { Upload, FileDown, CheckCircle, AlertCircle, Users, Cpu, Clock, Calendar, Trash2, QrCode, StopCircle, X, Mail, Star, Download, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Shield, Utensils, Settings, Send, Search, ExternalLink, Minus, MapPin, RefreshCw } from "lucide-react";
+import { Download, Upload, Users, AlertCircle, CheckCircle, Search, Trash2, Mail, ExternalLink, RefreshCw, Save, Edit2, X, FileDown, Cpu, Clock, Calendar, QrCode, StopCircle, Star, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Shield, Utensils, Settings, Send, Minus, MapPin } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import LiveTimer from "../components/LiveTimer";
@@ -106,6 +106,35 @@ export default function HackathonManageClient() {
     const [attLoading, setAttLoading] = useState(false);
     const [attSettingsSaved, setAttSettingsSaved] = useState(false);
     const [attSettingsLoaded, setAttSettingsLoaded] = useState(false);
+
+    // Inline Editing
+    const [editingAttendeeId, setEditingAttendeeId] = useState<string | null>(null);
+    const [editAttendeeFormData, setEditAttendeeFormData] = useState<any>({});
+    const [editSaving, setEditSaving] = useState(false);
+
+    const handleEditStart = (attendee: any) => {
+        setEditingAttendeeId(attendee.id);
+        setEditAttendeeFormData({ ...attendee });
+    };
+
+    const handleEditCancel = () => {
+        setEditingAttendeeId(null);
+        setEditAttendeeFormData({});
+    };
+
+    const handleEditSave = async () => {
+        if (!editingAttendeeId) return;
+        setEditSaving(true);
+        const result = await updateSingleAttendee(editingAttendeeId, editAttendeeFormData);
+        if (result.success) {
+            setMessage({ type: 'success', text: 'Attendee updated successfully.' });
+            setAttendees(prev => prev.map(a => a.id === editingAttendeeId ? { ...a, ...editAttendeeFormData } : a));
+            setEditingAttendeeId(null);
+        } else {
+            setMessage({ type: 'error', text: result.error || 'Failed to update attendee.' });
+        }
+        setEditSaving(false);
+    };
 
     const ATT_ITEMS_PER_PAGE = 15;
 
@@ -1644,35 +1673,63 @@ export default function HackathonManageClient() {
                                                 <th className="px-3 py-2 text-left font-semibold">System ID</th>
                                                 <th className="px-3 py-2 text-left font-semibold">Section</th>
                                                 <th className="px-3 py-2 text-left font-semibold">Department</th>
+                                                <th className="px-3 py-2 text-left font-semibold">Year</th>
                                                 <th className="px-3 py-2 text-left font-semibold">Email</th>
                                                 <th className="px-3 py-2 text-center font-semibold">QR Sent</th>
                                                 {attCheckpoints.map(cp => (
                                                     <th key={cp} className="px-3 py-2 text-center font-semibold">{cp}</th>
                                                 ))}
+                                                <th className="px-3 py-2 text-center font-semibold">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {paginatedAttendees.map((a: any, idx: number) => (
-                                                <tr key={a.id} className="border-t border-gray-100 hover:bg-gray-50">
-                                                    <td className="px-3 py-2 text-gray-400 text-xs">{(attCurrentPage - 1) * ATT_ITEMS_PER_PAGE + idx + 1}</td>
-                                                    <td className="px-3 py-2 font-medium text-gray-900">{a.name}</td>
-                                                    <td className="px-3 py-2 text-violet-600 font-mono text-xs">{a.system_id || '—'}</td>
-                                                    <td className="px-3 py-2 text-gray-600 text-xs">{a.section || '—'}</td>
-                                                    <td className="px-3 py-2 text-gray-600 text-xs">{a.department || '—'}</td>
-                                                    <td className="px-3 py-2 text-gray-500 text-xs truncate max-w-[150px]">{a.email || '—'}</td>
-                                                    <td className="px-3 py-2 text-center">
-                                                        {a.qr_emailed ? <span className="text-emerald-500 text-xs font-bold">✓</span> : <span className="text-gray-300 text-xs">✗</span>}
-                                                    </td>
-                                                    {attCheckpoints.map(cp => {
-                                                        const scan = a.event_attendance_scans?.find((s: any) => s.checkpoint === cp);
-                                                        return (
-                                                            <td key={cp} className="px-3 py-2 text-center">
-                                                                {scan ? <span className="text-emerald-500 text-xs font-bold" title={new Date(scan.scanned_at).toLocaleString()}>✓</span> : <span className="text-gray-300 text-xs">✗</span>}
-                                                            </td>
-                                                        );
-                                                    })}
-                                                </tr>
-                                            ))}
+                                            {paginatedAttendees.map((a: any, idx: number) => {
+                                                const isEditing = editingAttendeeId === a.id;
+                                                return (
+                                                    <tr key={a.id} className="border-t border-gray-100 hover:bg-gray-50">
+                                                        <td className="px-3 py-2 text-gray-400 text-xs">{(attCurrentPage - 1) * ATT_ITEMS_PER_PAGE + idx + 1}</td>
+                                                        <td className="px-3 py-2">
+                                                            {isEditing ? <input value={editAttendeeFormData.name} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, name: e.target.value })} className="w-full text-xs p-1 border rounded" /> : <span className="font-medium text-gray-900">{a.name}</span>}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-violet-600 font-mono text-xs">
+                                                            {isEditing ? <input value={editAttendeeFormData.system_id || ''} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, system_id: e.target.value })} className="w-full text-xs p-1 border rounded" /> : (a.system_id || '—')}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-gray-600 text-xs">
+                                                            {isEditing ? <input value={editAttendeeFormData.section || ''} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, section: e.target.value })} className="w-full text-xs p-1 border rounded" /> : (a.section || '—')}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-gray-600 text-xs">
+                                                            {isEditing ? <input value={editAttendeeFormData.department || ''} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, department: e.target.value })} className="w-full text-xs p-1 border rounded" /> : (a.department || '—')}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-gray-600 text-xs">
+                                                            {isEditing ? <input value={editAttendeeFormData.year || ''} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, year: e.target.value })} className="w-full text-xs p-1 border rounded" /> : (a.year || '—')}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-gray-500 text-xs truncate max-w-[150px]">
+                                                            {isEditing ? <input value={editAttendeeFormData.email || ''} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, email: e.target.value })} className="w-full text-xs p-1 border rounded" /> : (a.email || '—')}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-center">
+                                                            {a.qr_emailed ? <span className="text-emerald-500 text-xs font-bold">✓</span> : <span className="text-gray-300 text-xs">✗</span>}
+                                                        </td>
+                                                        {attCheckpoints.map(cp => {
+                                                            const scan = a.event_attendance_scans?.find((s: any) => s.checkpoint === cp);
+                                                            return (
+                                                                <td key={cp} className="px-3 py-2 text-center">
+                                                                    {scan ? <span className="text-emerald-500 text-xs font-bold" title={new Date(scan.scanned_at).toLocaleString()}>✓</span> : <span className="text-gray-300 text-xs">✗</span>}
+                                                                </td>
+                                                            );
+                                                        })}
+                                                        <td className="px-3 py-2 text-center">
+                                                            {isEditing ? (
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <button onClick={handleEditSave} disabled={editSaving} className="text-emerald-600 hover:text-emerald-700 disabled:opacity-50"><Save className="w-4 h-4" /></button>
+                                                                    <button onClick={handleEditCancel} disabled={editSaving} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                                                                </div>
+                                                            ) : (
+                                                                <button onClick={() => handleEditStart(a)} className="text-violet-600 hover:text-violet-700 p-1 bg-violet-50 rounded-md"><Edit2 className="w-3.5 h-3.5" /></button>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>

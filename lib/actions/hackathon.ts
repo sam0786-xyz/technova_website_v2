@@ -2079,6 +2079,27 @@ export async function deleteEventAttendees(eventTag: string) {
     if (error) return { error: error.message }
 
     revalidatePath('/hackathon-portal/manage')
+    return { success: true, message: 'Attendees deleted.' }
+}
+
+export async function updateSingleAttendee(attendeeId: string, fields: {
+    name?: string, email?: string, mobile?: string, system_id?: string, section?: string, department?: string, year?: string
+}) {
+    const session = await auth()
+    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) return { error: "Unauthorized" }
+
+    const supabase = await getSupabase()
+    const updateData: any = {}
+    if (fields.name !== undefined) updateData.name = fields.name.trim()
+    if (fields.email !== undefined) updateData.email = fields.email.trim() || null
+    if (fields.mobile !== undefined) updateData.mobile = fields.mobile.trim() || null
+    if (fields.system_id !== undefined) updateData.system_id = fields.system_id.trim() || null
+    if (fields.section !== undefined) updateData.section = fields.section.trim() || null
+    if (fields.department !== undefined) updateData.department = fields.department.trim() || null
+    if (fields.year !== undefined) updateData.year = fields.year.trim() || null
+
+    const { error } = await supabase.from('event_attendees').update(updateData).eq('id', attendeeId)
+    if (error) return { error: error.message }
     return { success: true }
 }
 
