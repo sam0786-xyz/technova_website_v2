@@ -2354,3 +2354,33 @@ export async function updateAttendeeDetails(attendeeId: string, details: { syste
     if (error) return { error: error.message }
     return { success: true, message: "Your details have been updated successfully!" }
 }
+
+export async function registerNewAttendee(details: { name: string, email: string, mobile: string, system_id: string, section: string, department: string, year: string }) {
+    if (!details.name || !details.email || !details.system_id || !details.section || !details.department || !details.year) {
+        return { error: "Please fill in all required fields." }
+    }
+
+    const { eventTag } = await getAttendanceEventSettings()
+    const supabase = await getSupabase()
+
+    // Check if already exists
+    const { data: existing } = await supabase.from('event_attendees').select('id').ilike('email', details.email.trim()).maybeSingle()
+    if (existing) {
+        return { error: "An attendee with this email is already registered. Please use the lookup feature instead." }
+    }
+
+    const { data, error } = await supabase.from('event_attendees').insert({
+        name: details.name.trim(),
+        email: details.email.trim(),
+        mobile: details.mobile?.trim() || null,
+        system_id: details.system_id.trim(),
+        section: details.section.trim(),
+        department: details.department.trim(),
+        year: details.year.trim(),
+        event_tag: eventTag,
+        qr_code: crypto.randomUUID()
+    }).select('id, name, email, system_id, section, department, year').single()
+
+    if (error) return { error: error.message }
+    return { success: true, message: "Registration successful!", attendee: data }
+}
