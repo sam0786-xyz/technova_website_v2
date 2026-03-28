@@ -123,7 +123,7 @@ export function FeaturedEvents() {
                             >
                                 <div className={`absolute inset-0 bg-gradient-to-br ${event.gradient} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
 
-                                <div className={`relative h-full flex flex-col p-8 rounded-3xl bg-zinc-900/40 backdrop-blur-xl border ${event.border ? event.border : 'border-white/10 group-hover:border-white/30'} transition-all duration-500 hover:-translate-y-2 overflow-hidden`}>
+                                <div className={`relative h-full flex flex-col p-8 rounded-3xl bg-zinc-900/40 border ${event.border ? event.border : 'border-white/10 group-hover:border-white/30'} transition-colors duration-200 overflow-hidden`} style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }}>
 
                                     {/* Highlight Banner for special events */}
                                     {event.isHighlight && (
@@ -185,7 +185,7 @@ export function FeaturedEvents() {
 
                                         {/* Highlight Registration Deadline Text */}
                                         {event.isHighlight && (
-                                            <div className="mb-2 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-center animate-pulse">
+                                            <div className="mb-2 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-center">
                                                 <p className="text-xs text-orange-400 font-bold uppercase tracking-wider">
                                                     🚨 Last Date To Register: {event.deadlineText}
                                                 </p>
@@ -193,7 +193,7 @@ export function FeaturedEvents() {
                                         )}
 
                                         {event.closingSoon && (
-                                            <div className="mb-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-center animate-pulse">
+                                            <div className="mb-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
                                                 <p className="text-xs text-red-400 font-bold uppercase tracking-wider">
                                                     ⏳ Registrations Closing Soon
                                                 </p>
@@ -209,7 +209,7 @@ export function FeaturedEvents() {
                                             </div>
                                         )}
                                         <Link href={event.link} target={event.link.startsWith('http') ? "_blank" : undefined} rel={event.link.startsWith('http') ? "noopener noreferrer" : undefined} className="block w-full">
-                                            <button className={`w-full py-4 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${event.isHighlight ? 'bg-gradient-to-r from-orange-500 via-white to-green-500 text-black hover:opacity-90 shadow-[0_0_20px_rgba(255,165,0,0.4)]' : 'bg-white text-black hover:bg-gray-200 shadow-lg'} group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]`}>
+                                            <button className={`w-full py-4 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] ${event.isHighlight ? 'bg-gradient-to-r from-orange-500 via-white to-green-500 text-black hover:opacity-90 shadow-[0_0_20px_rgba(255,165,0,0.4)]' : 'bg-white text-black hover:bg-gray-200 shadow-lg'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }}>
                                                 <span>{event.isHighlight ? 'Register Now' : (event.link === '/hackathon' ? 'Learn More' : 'Register Now')}</span>
                                                 <ExternalLink className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                             </button>
