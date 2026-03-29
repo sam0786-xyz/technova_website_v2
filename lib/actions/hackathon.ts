@@ -73,6 +73,23 @@ export async function uploadHackathonData(formData: FormData) {
                 return clean === 'category' || clean.includes('categoryselection');
             }) : null;
 
+            const coordinatorNameKey = Object.keys(row).find(k => {
+                const clean = cleanStr(k);
+                return clean.includes('studentcoordinator') || clean.includes('coordinatorname');
+            });
+            const coordinatorPhoneKey = Object.keys(row).find(k => {
+                const clean = cleanStr(k);
+                return clean.includes('coordinatorphone') || clean.includes('coordinatornumber');
+            });
+            const accommodationKey = Object.keys(row).find(k => {
+                const clean = cleanStr(k);
+                return clean.includes('accommodation') || clean.includes('accomodation');
+            });
+            const remarksKey = Object.keys(row).find(k => {
+                const clean = cleanStr(k);
+                return clean.includes('remark');
+            });
+
             const teamCode = teamCodeKey ? String(row[teamCodeKey]) : null
             let teamName = (teamNameKey && row[teamNameKey]) ? String(row[teamNameKey]).trim() : '';
             if (!teamName) {
@@ -83,6 +100,24 @@ export async function uploadHackathonData(formData: FormData) {
             const themeValue = themeKey ? row[themeKey] : (categoryKey ? row[categoryKey] : null)
             const theme = themeValue ? String(themeValue).trim() : null
 
+            const studentCoordinator = coordinatorNameKey ? String(row[coordinatorNameKey]).trim() : null;
+            const coordinatorPhone = coordinatorPhoneKey ? String(row[coordinatorPhoneKey]).trim() : null;
+            const needAccommodationStr = accommodationKey ? String(row[accommodationKey]).toLowerCase().trim() : '';
+            const needAccommodation = needAccommodationStr === 'yes' || needAccommodationStr === 'true';
+            const remarks = remarksKey ? String(row[remarksKey]).trim() : null;
+
+            // Check for explicitly marked status in sheet: "Coming" etc., otherwise default to shortlisted
+            const statusKey = Object.keys(row).find(k => cleanStr(k).includes('status'));
+            let finalStatus = 'shortlisted';
+            if (statusKey && row[statusKey]) {
+                const val = String(row[statusKey]).toLowerCase().trim();
+                // If it's something like "rejected" we could map it, but for now
+                // we assume "Coming" or empty gets shortlisted.
+                if (val.includes('reject') || val.includes('not coming')) {
+                    finalStatus = 'rejected';
+                }
+            }
+
             // Insert Team
             const { data: team, error: teamError } = await supabase
                 .from('hackathon_teams')
@@ -92,7 +127,11 @@ export async function uploadHackathonData(formData: FormData) {
                     team_code: teamCode,
                     theme: theme,
                     project_objective: projectObjective,
-                    status: 'pending'
+                    student_coordinator: studentCoordinator,
+                    coordinator_phone: coordinatorPhone,
+                    need_accommodation: needAccommodation,
+                    remarks: remarks,
+                    status: finalStatus
                 })
                 .select()
                 .single()
