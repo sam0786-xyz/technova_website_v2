@@ -1211,9 +1211,9 @@ export async function getPublicShortlistedTeams() {
     const { data: teams } = await supabase
         .from('hackathon_teams')
         .select(`
-            id, name, idea_title, table_number
+            id, name, idea_title, table_number, total_score
         `)
-        .or('status.eq.shortlisted,status.eq.shortlisted_notified')
+        .in('status', ['shortlisted', 'shortlisted_notified'])
         .order('total_score', { ascending: false })
 
     return teams || []

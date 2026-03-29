@@ -80,7 +80,7 @@ export default function PortalEvaluatorClient({ initialTeams, evaluationOpen = t
 
     if (loadingTeams) return (
         <div className="text-center py-20">
-            <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-gray-500">Loading teams...</p>
         </div>
     );
@@ -103,7 +103,7 @@ export default function PortalEvaluatorClient({ initialTeams, evaluationOpen = t
                 <div className="flex items-center gap-2 flex-wrap">
                     <div className="relative">
                         <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                        <input type="text" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentTeamIndex(0); }} placeholder="Search teams..." className="pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-blue-500 w-48" />
+                        <input type="text" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentTeamIndex(0); }} placeholder="Search teams..." className="pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 w-48 transition-all" />
                     </div>
                     <select value={filterTrack} onChange={e => { setFilterTrack(e.target.value); setCurrentTeamIndex(0); }} className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none">
                         <option value="all">All Tracks</option>
@@ -130,7 +130,7 @@ export default function PortalEvaluatorClient({ initialTeams, evaluationOpen = t
                     <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                         {/* Track Badge */}
                         {team.theme && (
-                            <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold border border-blue-100 mb-4">{team.theme} Track</span>
+                            <span className="inline-flex items-center px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-indigo-100">{team.theme} Track</span>
                         )}
                         {team.team_code && (
                             <span className="inline-block ml-2 px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-mono font-bold border border-gray-200 mb-4">{team.team_code}</span>
@@ -144,7 +144,7 @@ export default function PortalEvaluatorClient({ initialTeams, evaluationOpen = t
                             </div>
                             <div className="flex -space-x-2">
                                 {members.slice(0, 5).map((m: any, i: number) => (
-                                    <div key={i} className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-xs font-bold text-white border-2 border-white shadow-sm" title={m.name}>{m.name?.charAt(0)?.toUpperCase() || '?'}</div>
+                                    <div key={i} className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm" title={m.name}>{m.name?.charAt(0)?.toUpperCase() || '?'}</div>
                                 ))}
                             </div>
                         </div>
@@ -250,33 +250,33 @@ export default function PortalEvaluatorClient({ initialTeams, evaluationOpen = t
                                         return (
                                             <div key={c.key} className="bg-gray-50/50 rounded-xl p-4 border border-gray-100">
                                                 <div className="flex items-center justify-between mb-3">
-                                                    <span className="text-sm font-semibold text-gray-900">{c.label}</span>
-                                                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">WEIGHT: {c.weight}%</span>
+                                                    <span className="text-sm font-bold text-gray-900">{c.label}</span>
+                                                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100 uppercase tracking-widest">Weight: {c.weight}%</span>
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <div className="flex-1">
-                                                        <input
-                                                            type="range" min="0" max="10" step="0.5" value={val}
-                                                            onChange={e => setScores({ ...scores, [c.key]: parseFloat(e.target.value) })}
-                                                            className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer"
-                                                            style={{ background: `linear-gradient(to right, #1d4ed8 ${val * 10}%, #e5e7eb ${val * 10}%)` }}
-                                                        />
-                                                        <div className="flex justify-between mt-1">
-                                                            <span className="text-[10px] text-gray-400 font-bold uppercase">{c.lowLabel}</span>
-                                                            <span className="text-[10px] text-gray-400 font-bold uppercase">{c.highLabel}</span>
+                                                            <input
+                                                                type="range" min="0" max="10" step="0.5" value={val}
+                                                                onChange={e => setScores({ ...scores, [c.key]: parseFloat(e.target.value) })}
+                                                                className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer"
+                                                                style={{ background: `linear-gradient(to right, #4f46e5 ${val * 10}%, #e5e7eb ${val * 10}%)` }}
+                                                            />
+                                                            <div className="flex justify-between mt-1">
+                                                                <span className="text-[10px] text-gray-400 font-bold uppercase">{c.lowLabel}</span>
+                                                                <span className="text-[10px] text-gray-400 font-bold uppercase">{c.highLabel}</span>
+                                                            </div>
                                                         </div>
+                                                        <input
+                                                            type="number" min="0" max="10" step="0.5"
+                                                            value={val}
+                                                            onChange={e => {
+                                                                const v = parseFloat(e.target.value);
+                                                                if (!isNaN(v) && v >= 0 && v <= 10) setScores({ ...scores, [c.key]: v });
+                                                                else if (e.target.value === '') setScores({ ...scores, [c.key]: 0 });
+                                                            }}
+                                                            className="w-16 h-10 text-center font-bold text-lg text-indigo-700 bg-white border border-indigo-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+                                                        />
                                                     </div>
-                                                    <input
-                                                        type="number" min="0" max="10" step="0.5"
-                                                        value={val}
-                                                        onChange={e => {
-                                                            const v = parseFloat(e.target.value);
-                                                            if (!isNaN(v) && v >= 0 && v <= 10) setScores({ ...scores, [c.key]: v });
-                                                            else if (e.target.value === '') setScores({ ...scores, [c.key]: 0 });
-                                                        }}
-                                                        className="w-16 h-10 text-center font-bold text-lg text-blue-700 bg-white border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                                                    />
-                                                </div>
                                             </div>
                                         );
                                     })}

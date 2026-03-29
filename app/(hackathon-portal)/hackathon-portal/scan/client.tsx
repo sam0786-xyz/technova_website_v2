@@ -230,9 +230,9 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
     };
 
     return (
-        <div className="min-h-screen bg-black text-white p-4">
+        <div className="min-h-screen bg-white text-gray-900 p-4">
             <header className="max-w-md mx-auto py-3 flex items-center justify-between mb-4">
-                <Link href="/hackathon-portal" className="text-white/40 font-mono hover:text-white transition-colors">
+                <Link href="/hackathon-portal" className="text-gray-400 font-mono hover:text-gray-900 transition-colors">
                     <ArrowLeft className="w-6 h-6" />
                 </Link>
                 <div className="flex items-center gap-2">
@@ -244,16 +244,16 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
 
             <main className="max-w-md mx-auto space-y-4">
                 {/* Mode Selector */}
-                <div className="flex bg-[#03030F]/5 p-1 rounded-none neo-border">
+                <div className="flex bg-gray-50 p-1 rounded-xl shadow-sm">
                     <button
                         onClick={() => { setMode('checkin'); }}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-none font-medium text-[10px] transition-colors ${mode === 'checkin' ? 'bg-blue-600 text-white shadow-lg' : 'text-white/40 font-mono hover:text-white'}`}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-medium text-[10px] transition-colors ${mode === 'checkin' ? 'bg-blue-600 text-gray-900 shadow-lg' : 'text-gray-400 font-mono hover:text-gray-900'}`}
                     >
                         <CheckCircle className="w-3.5 h-3.5" /> Check-in
                     </button>
                     <button
                         onClick={() => setMode('food')}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-none font-medium text-[10px] transition-colors ${mode === 'food' ? 'bg-orange-600 text-white shadow-lg' : 'text-white/40 font-mono hover:text-white'}`}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-medium text-[10px] transition-colors ${mode === 'food' ? 'bg-orange-600 text-gray-900 shadow-lg' : 'text-gray-400 font-mono hover:text-gray-900'}`}
                     >
                         <Coffee className="w-3.5 h-3.5" /> Meals
                     </button>
@@ -261,7 +261,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
 
                 {/* Meal Round Selector - only visible in food mode */}
                 {mode === 'food' && (
-                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-none neo-border p-3">
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl shadow-sm p-3">
                         <label className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2 block">
                             Active Meal Round
                         </label>
@@ -269,7 +269,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                             <select
                                 value={selectedMeal}
                                 onChange={(e) => setSelectedMeal(e.target.value)}
-                                className="w-full bg-black/60 border border-white/20 rounded-none px-4 py-2.5 text-white text-sm font-medium appearance-none focus:outline-none focus:border-orange-500 cursor-pointer"
+                                className="w-full bg-white/60 border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 text-sm font-medium appearance-none focus:outline-none focus:border-orange-500 cursor-pointer"
                             >
                                 {customMeals.length > 0 ? customMeals.map(meal => (
                                     <option key={meal} value={meal}>{meal}</option>
@@ -277,23 +277,23 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                     <option value="No Meals Defined">No meals defined by Admin</option>
                                 )}
                             </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 font-mono pointer-events-none" />
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 font-mono pointer-events-none" />
                         </div>
                         <p className="text-[11px] text-orange-400/60 mt-2">Each participant can only scan once per meal round.</p>
                     </div>
                 )}
 
                 {/* Toggle: Camera vs Search */}
-                <div className="flex bg-[#03030F]/5 p-1 rounded-none neo-border">
+                <div className="flex bg-gray-50 p-1 rounded-xl shadow-sm">
                     <button
                         onClick={() => { setShowSearch(false); }}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-none text-xs font-medium transition-colors ${!showSearch ? 'bg-emerald-600 text-white' : 'text-white/40 font-mono hover:text-white'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium transition-colors ${!showSearch ? 'bg-emerald-600 text-gray-900' : 'text-gray-400 font-mono hover:text-gray-900'}`}
                     >
                         <Camera className="w-3.5 h-3.5" /> QR Camera
                     </button>
                     <button
                         onClick={() => { setShowSearch(true); stopCamera(); }}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-none text-xs font-medium transition-colors ${showSearch ? 'bg-emerald-600 text-white' : 'text-white/40 font-mono hover:text-white'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium transition-colors ${showSearch ? 'bg-emerald-600 text-gray-900' : 'text-gray-400 font-mono hover:text-gray-900'}`}
                     >
                         <Search className="w-3.5 h-3.5" /> Search & {mode === 'food' ? 'Log/Unlog Meal' : 'Check-in/Out'}
                     </button>
@@ -301,7 +301,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
 
                 {/* Status message */}
                 {scanResult && showSearch && (
-                    <div className={`p-3 rounded-none neo-border text-sm font-medium text-center ${scanResult === 'success' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' :
+                    <div className={`p-3 rounded-xl shadow-sm text-sm font-medium text-center ${scanResult === 'success' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' :
                         scanResult === 'already' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/20' :
                             'bg-red-500/20 text-red-400 border border-red-500/20'
                         }`}>
@@ -314,24 +314,24 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                     <div className="space-y-3">
                         {/* Search input */}
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 font-mono tracking-wider" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 font-mono tracking-wider" />
                             <input
                                 type="text"
                                 placeholder="Search by name, team ID, email, phone..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-[#03030F]/5 border border-white/10 rounded-none neo-border pl-10 pr-10 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                                className="w-full bg-gray-50 border border-gray-100 rounded-xl shadow-sm pl-10 pr-10 py-3 text-gray-900 text-sm focus:outline-none focus:border-emerald-500"
                                 autoFocus
                             />
                             {searchQuery && (
-                                <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 font-mono tracking-wider hover:text-white">
+                                <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-mono tracking-wider hover:text-gray-900">
                                     <X className="w-4 h-4" />
                                 </button>
                             )}
                         </div>
 
                         {/* Count info */}
-                        <div className="flex items-center justify-between text-[11px] text-white/50 font-mono tracking-wider px-1">
+                        <div className="flex items-center justify-between text-[11px] text-gray-500 font-mono tracking-wider px-1">
                             <span>{filteredParticipants.length} participant{filteredParticipants.length !== 1 ? 's' : ''} {searchQuery ? 'found' : 'total'}</span>
                             {totalPages > 1 && <span>Page {currentPage} of {totalPages}</span>}
                         </div>
@@ -339,27 +339,27 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                         {loadingParticipants ? (
                             <div className="text-center py-6">
                                 <div className="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-2" />
-                                <p className="text-white/50 font-mono tracking-wider text-xs">Loading all participants...</p>
+                                <p className="text-gray-500 font-mono tracking-wider text-xs">Loading all participants...</p>
                             </div>
                         ) : paginatedParticipants.length === 0 ? (
-                            <div className="text-center py-6 text-white/50 font-mono tracking-wider text-sm border border-dashed border-white/10 rounded-none neo-border">
+                            <div className="text-center py-6 text-gray-500 font-mono tracking-wider text-sm border border-dashed border-gray-100 rounded-xl shadow-sm">
                                 {searchQuery ? `No participants found for "${searchQuery}"` : 'No participants found'}
                             </div>
                         ) : (
                             <div className="space-y-2">
                                 {paginatedParticipants.map((p: any) => (
-                                    <div key={p.id} className="flex items-center justify-between p-3 rounded-none neo-border bg-[#03030F]/5 border border-white/10">
+                                    <div key={p.id} className="flex items-center justify-between p-3 rounded-xl shadow-sm bg-gray-50 border border-gray-100">
                                         <div className="flex-1 min-w-0 mr-3">
-                                            <p className="text-sm font-bold text-white truncate">{p.name}</p>
-                                            <p className="text-[11px] text-white/50 font-mono tracking-wider truncate">
+                                            <p className="text-sm font-bold text-gray-900 truncate">{p.name}</p>
+                                            <p className="text-[11px] text-gray-500 font-mono tracking-wider truncate">
                                                 {p.hackathon_teams?.team_code && <span className="text-amber-400 font-mono mr-1.5">{p.hackathon_teams.team_code}</span>}
                                                 {p.hackathon_teams?.name || ''} · {p.role}
                                             </p>
-                                            <p className="text-[11px] text-white/70 truncate">{p.email}</p>
+                                            <p className="text-[11px] text-gray-600 truncate">{p.email}</p>
                                         </div>
                                         <div className="flex items-center gap-2 flex-shrink-0">
                                             {mode === 'checkin' && (
-                                                <span className={`text-[10px] font-bold px-2 py-1 rounded ${p.is_checked_in ? 'text-emerald-400 bg-emerald-500/10' : 'text-white/50 font-mono tracking-wider bg-[#03030F]/5'}`}>
+                                                <span className={`text-[10px] font-bold px-2 py-1 rounded ${p.is_checked_in ? 'text-emerald-400 bg-emerald-500/10' : 'text-gray-500 font-mono tracking-wider bg-gray-50'}`}>
                                                     {p.is_checked_in ? '✓ In' : '✗ Out'}
                                                 </span>
                                             )}
@@ -372,14 +372,14 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                                     <button
                                                         onClick={() => handleManualAction(p.id, 'checkin')}
                                                         disabled={processingId === p.id || p.is_checked_in}
-                                                        className="px-3 py-1.5 rounded-none text-xs font-bold transition-all disabled:opacity-40 bg-[#00FF41] hover:bg-white text-black font-black uppercase tracking-widest spring-btn text-white"
+                                                        className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 bg-emerald-500 hover:bg-white text-black font-black uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] text-gray-900"
                                                     >
                                                         {processingId === p.id ? '...' : p.is_checked_in ? 'Done' : 'Check In'}
                                                     </button>
                                                     <button
                                                         onClick={() => handleManualAction(p.id, 'checkout')}
                                                         disabled={processingId === p.id || !p.is_checked_in}
-                                                        className="px-3 py-1.5 rounded-none text-xs font-bold transition-all disabled:opacity-40 bg-rose-600 hover:bg-rose-500 text-white"
+                                                        className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 bg-rose-600 hover:bg-rose-500 text-gray-900"
                                                     >
                                                         {processingId === p.id ? '...' : !p.is_checked_in ? 'Out' : 'Check Out'}
                                                     </button>
@@ -389,14 +389,14 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                                     <button
                                                         onClick={() => handleManualAction(p.id, 'food')}
                                                         disabled={processingId === p.id}
-                                                        className="px-3 py-1.5 rounded-none text-xs font-bold transition-all disabled:opacity-40 bg-[#FF6B00] hover:bg-white text-black font-black uppercase tracking-widest spring-btn text-white"
+                                                        className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 bg-[#FF6B00] hover:bg-white text-black font-black uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] text-gray-900"
                                                     >
                                                         {processingId === p.id ? '...' : 'Log'}
                                                     </button>
                                                     <button
                                                         onClick={() => handleManualAction(p.id, 'food_unlog')}
                                                         disabled={processingId === p.id}
-                                                        className="px-3 py-1.5 rounded-none text-xs font-bold transition-all disabled:opacity-40 bg-rose-600 hover:bg-rose-500 text-white"
+                                                        className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 bg-rose-600 hover:bg-rose-500 text-gray-900"
                                                     >
                                                         {processingId === p.id ? '...' : 'Unlog'}
                                                     </button>
@@ -414,7 +414,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                 <button
                                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                     disabled={currentPage === 1}
-                                    className="p-2 rounded-none bg-[#03030F]/5 border border-white/10 text-white/40 font-mono hover:text-white disabled:opacity-30 transition-all"
+                                    className="p-2 rounded-xl bg-gray-50 border border-gray-100 text-gray-400 font-mono hover:text-gray-900 disabled:opacity-30 transition-all"
                                 >
                                     <ChevronLeft className="w-4 h-4" />
                                 </button>
@@ -434,7 +434,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                             <button
                                                 key={pageNum}
                                                 onClick={() => setCurrentPage(pageNum)}
-                                                className={`w-8 h-8 rounded-none text-xs font-medium transition-all ${currentPage === pageNum ? 'bg-emerald-600 text-white' : 'bg-[#03030F]/5 text-white/40 font-mono hover:text-white'}`}
+                                                className={`w-8 h-8 rounded-xl text-xs font-medium transition-all ${currentPage === pageNum ? 'bg-emerald-600 text-gray-900' : 'bg-gray-50 text-gray-400 font-mono hover:text-gray-900'}`}
                                             >
                                                 {pageNum}
                                             </button>
@@ -444,7 +444,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                 <button
                                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                     disabled={currentPage === totalPages}
-                                    className="p-2 rounded-none bg-[#03030F]/5 border border-white/10 text-white/40 font-mono hover:text-white disabled:opacity-30 transition-all"
+                                    className="p-2 rounded-xl bg-gray-50 border border-gray-100 text-gray-400 font-mono hover:text-gray-900 disabled:opacity-30 transition-all"
                                 >
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
@@ -455,14 +455,14 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                     /* Camera Mode */
                     <>
                         <div className="text-center">
-                            <p className="text-xs text-white/40 font-mono">
+                            <p className="text-xs text-gray-400 font-mono">
                                 {mode === 'checkin'
                                     ? "Scan participants' IDs to mark them as arrived."
                                     : `Scanning for: ${selectedMeal}`}
                             </p>
                         </div>
 
-                        <div className="relative w-full aspect-square bg-black rounded-none neo-border overflow-hidden border border-[#00FF41]/20 flex flex-col items-center justify-center">
+                        <div className="relative w-full aspect-square bg-white rounded-xl shadow-sm overflow-hidden border border-[#00FF41]/20 flex flex-col items-center justify-center">
                             <div id="reader" className="w-full h-full absolute inset-0 opacity-80 mix-blend-screen"></div>
 
                             {/* Sniper HUD Overlay */}
@@ -471,18 +471,18 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                 <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-[#00FF41]"></div>
                                 <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-[#00FF41]"></div>
                                 <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-[#00FF41]"></div>
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1 bg-[#00FF41] rounded-full animate-ping"></div>
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1 bg-emerald-500 rounded-full animate-ping"></div>
                             </div>
 
                             {!cameraActive && !scanResult && (
                                 <div className="z-20 flex flex-col items-center p-6 text-center">
                                     <button
                                         onClick={startCamera}
-                                        className="bg-[#00FF41] hover:bg-white text-black font-black uppercase tracking-widest spring-btn px-8 py-4 flex items-center gap-3 transition-colors mb-4"
+                                        className="bg-emerald-500 hover:bg-white text-black font-black uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] px-8 py-4 flex items-center gap-3 transition-colors mb-4"
                                     >
                                         <Camera className="w-6 h-6" /> START SCANNING
                                     </button>
-                                    {cameraError && <p className="text-red-400 text-sm font-mono mt-2 bg-red-500/10 px-3 py-1 neo-border">{cameraError}</p>}
+                                    {cameraError && <p className="text-red-400 text-sm font-mono mt-2 bg-red-500/10 px-3 py-1 shadow-sm">{cameraError}</p>}
                                 </div>
                             )}
 
@@ -490,14 +490,14 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                 <div className={`absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center backdrop-blur-md ${scanResult === 'success' ? 'bg-emerald-500/90' :
                                     scanResult === 'already' ? 'bg-amber-500/90' : 'bg-red-500/90'
                                     }`}>
-                                    {scanResult === 'success' ? <CheckCircle className="w-16 h-16 text-white mb-4 drop-shadow-none" /> :
-                                        <AlertCircle className="w-16 h-16 text-white mb-4 drop-shadow-none" />}
+                                    {scanResult === 'success' ? <CheckCircle className="w-16 h-16 text-gray-900 mb-4 drop-shadow-none" /> :
+                                        <AlertCircle className="w-16 h-16 text-gray-900 mb-4 drop-shadow-none" />}
 
-                                    <h2 className="text-2xl font-black text-white drop-shadow-none tracking-tight mb-2">
+                                    <h2 className="text-2xl font-black text-gray-900 drop-shadow-none tracking-tight mb-2">
                                         {scanResult === 'success' ? 'SUCCESS' : scanResult === 'already' ? 'ALREADY SCANNED' : 'ERROR'}
                                     </h2>
-                                    {participantName && <p className="text-xl font-bold text-white mb-1">{participantName}</p>}
-                                    <p className="text-white/90 font-medium text-sm">{message}</p>
+                                    {participantName && <p className="text-xl font-bold text-gray-900 mb-1">{participantName}</p>}
+                                    <p className="text-gray-900/90 font-medium text-sm">{message}</p>
                                 </div>
                             )}
                         </div>
@@ -505,7 +505,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                         {cameraActive && !scanResult && (
                             <button
                                 onClick={stopCamera}
-                                className="w-full py-3 text-center text-white/40 font-mono hover:text-white font-medium transition-colors text-sm"
+                                className="w-full py-3 text-center text-gray-400 font-mono hover:text-gray-900 font-medium transition-colors text-sm"
                             >
                                 Stop Camera
                             </button>

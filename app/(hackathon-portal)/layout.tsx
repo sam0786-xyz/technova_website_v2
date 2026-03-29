@@ -19,18 +19,18 @@ export default async function HackathonPortalLayout({
 
     if (role === 'none') {
         return (
-            <div className="flex h-screen items-center justify-center bg-gradient-to-br from-gray-950 via-black to-gray-950">
+            <div className="flex h-screen items-center justify-center bg-gray-50">
                 {/* Background grid */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_80%)]" />
-                <div className="text-center p-10 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-2xl max-w-md relative shadow-2xl">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-2xl bg-red-500/20 border border-red-500/30 flex items-center justify-center">
-                        <ShieldCheck className="w-8 h-8 text-red-400" />
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_80%)]" />
+                <div className="text-center p-10 rounded-2xl bg-white border border-gray-200 max-w-md relative shadow-sm z-10">
+                    <div className="mx-auto w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mb-6">
+                        <ShieldCheck className="w-8 h-8 text-red-500" />
                     </div>
-                    <h1 className="text-2xl font-bold text-red-400 mt-4">Access Restricted</h1>
-                    <p className="text-gray-400 mt-3 leading-relaxed">
-                        You do not have access to the Hackathon Portal. Contact the organizers to get added as an evaluator or volunteer.
+                    <h1 className="text-2xl font-bold text-gray-900 mt-4">Access Restricted</h1>
+                    <p className="text-gray-500 mt-3 leading-relaxed">
+                        You do not have access to the Hackathon internal portal. Contact the organizers to get added as an evaluator or volunteer.
                     </p>
-                    <Link href="/" className="inline-flex items-center gap-2 mt-8 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl text-white font-medium transition-all duration-300">
+                    <Link href="/" className="inline-flex items-center gap-2 mt-8 px-6 py-3 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-xl text-gray-700 font-medium transition-all duration-300 shadow-sm hover:shadow">
                         <ArrowLeft className="w-4 h-4" /> Return Home
                     </Link>
                 </div>
@@ -40,28 +40,25 @@ export default async function HackathonPortalLayout({
 
     const roleBadgeConfig = {
         organizer: {
-            bg: 'bg-gradient-to-r from-purple-500/20 to-violet-500/20',
-            text: 'text-purple-300',
-            border: 'border-purple-500/30',
+            bg: 'bg-indigo-50',
+            text: 'text-indigo-700',
+            border: 'border-indigo-200',
             icon: ShieldCheck,
-            label: 'Organizer',
-            glow: 'shadow-[0_0_15px_rgba(139,92,246,0.15)]',
+            label: 'Organizer'
         },
         evaluator: {
-            bg: 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20',
-            text: 'text-blue-300',
-            border: 'border-blue-500/30',
+            bg: 'bg-emerald-50',
+            text: 'text-emerald-700',
+            border: 'border-emerald-200',
             icon: ClipboardCheck,
-            label: 'Evaluator',
-            glow: 'shadow-[0_0_15px_rgba(59,130,246,0.15)]',
+            label: 'Evaluator'
         },
         volunteer: {
-            bg: 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20',
-            text: 'text-emerald-300',
-            border: 'border-emerald-500/30',
+            bg: 'bg-amber-50',
+            text: 'text-amber-700',
+            border: 'border-amber-200',
             icon: RadioIcon,
-            label: 'Volunteer',
-            glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]',
+            label: 'Volunteer'
         },
     }
 
@@ -69,36 +66,36 @@ export default async function HackathonPortalLayout({
     const RoleIcon = badge.icon
 
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-[#00FF41] selection:text-black font-sans">
-            {/* Premium Dark Header */}
-            <header className="sticky top-0 z-50 bg-[#0F0F14]/95 backdrop-blur-2xl border-b border-white/[0.08]">
+        <div className="min-h-screen bg-gray-50 text-gray-900 selection:bg-blue-100 selection:text-blue-900 font-sans">
+            {/* Premium Light Header */}
+            <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href="/" className="bg-white/5 border border-white/10 hover:border-[#00FF41] hover:bg-[#00FF41]/10 hover:text-[#00FF41] text-white/70 px-4 py-2 flex items-center gap-2 text-xs font-mono uppercase tracking-widest transition-all group rounded-none">
-                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
-                            <span className="hidden sm:inline">EXIT CONSOLE</span>
+                        <Link href="/" className="bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 hover:text-gray-900 px-4 py-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider transition-all rounded-lg group">
+                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> 
+                            <span className="hidden sm:inline">Portal Exit</span>
                         </Link>
-                        <div className="w-px h-6 bg-white/10" />
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-900/30">
+                        <div className="w-px h-6 bg-gray-200" />
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm">
                                 <Zap className="w-4 h-4 text-white" />
                             </div>
                             <div>
-                                <h1 className="font-bold text-base text-white leading-tight">Hackathon Portal</h1>
-                                <p className="text-[10px] text-gray-500 leading-tight hidden sm:block">Innovate Bharat 2026</p>
+                                <h1 className="font-bold text-sm text-gray-900 leading-tight">Admin & Evaluation</h1>
+                                <p className="text-[10px] text-gray-500 leading-tight hidden sm:block font-medium uppercase tracking-wider">Innovate Bharat 2026</p>
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${badge.border} ${badge.bg} ${badge.glow} backdrop-blur-sm`}>
+                    <div className="flex items-center gap-4">
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border ${badge.border} ${badge.bg}`}>
                             <RoleIcon className={`w-3.5 h-3.5 ${badge.text}`} />
-                            <span className={`text-xs font-bold ${badge.text} tracking-wide uppercase`}>{badge.label}</span>
+                            <span className={`text-[10px] font-bold ${badge.text} tracking-wider uppercase`}>{badge.label}</span>
                         </div>
-                        <div className="hidden sm:flex items-center gap-2.5 pl-3 border-l border-white/10">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-xs font-bold text-white border border-white/10">
+                        <div className="hidden sm:flex items-center gap-2.5 pl-4 border-l border-gray-200">
+                            <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-xs font-bold text-white shadow-sm ring-2 ring-white">
                                 {session.user.name?.charAt(0)?.toUpperCase() || '?'}
                             </div>
-                            <span className="text-sm text-gray-300 font-medium">{session.user.name}</span>
+                            <span className="text-sm text-gray-700 font-semibold">{session.user.name}</span>
                         </div>
                     </div>
                 </div>

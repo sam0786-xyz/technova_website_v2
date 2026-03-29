@@ -168,44 +168,63 @@ export default function HackathonPage() {
                         viewport={{ once: true, margin: "-100px" }}
                         className="mb-32 w-full clip-reveal"
                     >
-                        <div className="w-full bg-white/5 border border-white/10 p-8 md:p-16 neo-border relative overflow-hidden">
+                        <div className="w-full bg-[#050510] border border-white/10 p-8 md:p-16 relative overflow-hidden shadow-[0_0_50px_rgba(255,107,0,0.05)] rounded-3xl">
                             {/* Graphic texture */}
-                            <div className="absolute -right-32 -top-32 w-96 h-96 border border-white/5 rounded-full flex items-center justify-center">
-                                <div className="w-64 h-64 border border-[#00FF41]/20 rounded-full animate-spin-slow" />
-                            </div>
+                            <div className="absolute top-0 right-0 w-full h-[500px] bg-[radial-gradient(ellipse_at_top_right,rgba(0,255,65,0.08),transparent_50%)] pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 w-full h-[500px] bg-[radial-gradient(ellipse_at_bottom_left,rgba(255,107,0,0.08),transparent_50%)] pointer-events-none" />
 
-                            <div className="relative z-10 mb-12">
-                                <div className="inline-flex items-center gap-2 text-[#00FF41] font-mono text-sm tracking-widest mb-4">
-                                    <Trophy className="w-4 h-4" /> GRAND FINALE SELECTIONS
+                            <div className="relative z-10 mb-16 text-center">
+                                <div className="inline-flex items-center justify-center gap-2 text-[#00FF41] font-mono text-sm tracking-widest mb-6 border border-[#00FF41]/20 bg-[#00FF41]/5 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(0,255,65,0.1)]">
+                                    <Trophy className="w-4 h-4" /> OFFICIAL SEAMLESS ENTRY
                                 </div>
-                                <h2 className="text-5xl md:text-7xl font-heading font-black tracking-tight text-white mb-4 uppercase">
-                                    The <span className="text-[#FF6B00]">Shortlist</span>
+                                <h2 className="text-5xl md:text-7xl font-heading font-black tracking-tight text-white mb-6 uppercase drop-shadow-2xl">
+                                    The <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] to-[#FFB800]">Shortlist</span>
                                 </h2>
-                                <p className="text-white/60 max-w-2xl text-lg">
-                                    These elite squads have cleared screening and will battle it out in the 24-hr offline crucible.
+                                <p className="text-white/70 max-w-2xl mx-auto text-lg/relaxed font-medium">
+                                    These elite squads have cleared screening criteria and will battle it out in real-time during the 24-hr offline crucible. 
                                 </p>
                             </div>
 
-                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 relative z-10">
-                                {liveData.shortlistedTeams.map((team: any, i: number) => (
+                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative z-10">
+                                {liveData.shortlistedTeams
+                                    .slice()
+                                    .sort((a: any, b: any) => a.name.localeCompare(b.name))
+                                    .map((team: any, i: number) => (
                                     <motion.div 
                                         key={team.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        whileInView={{ opacity: 1, scale: 1 }}
                                         viewport={{ once: true }}
-                                        transition={{ delay: i * 0.05 }}
-                                        className="group p-5 bg-[#03030F] border border-white/10 hover:border-[#00FF41]/50 transition-colors neo-border flex flex-col"
+                                        transition={{ delay: i * 0.05, type: "spring", stiffness: 100 }}
+                                        className="group relative p-[1px] rounded-2xl overflow-hidden bg-gradient-to-b from-white/10 to-transparent hover:from-[#FF6B00]/40 hover:to-[#00FF41]/40 transition-colors duration-500 shadow-2xl"
                                     >
-                                        <div className="flex justify-between items-start mb-4">
-                                            <span className="text-[10px] font-bold tracking-widest text-[#FF6B00] uppercase">RANK {i + 1}</span>
-                                            {team.table_number && (
-                                                <span className="tabular-nums text-[10px] font-mon text-[#00FF41] bg-[#00FF41]/10 px-2 py-0.5 border border-[#00FF41]/20">
-                                                    TBL-{team.table_number}
-                                                </span>
+                                        <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B00]/0 to-[#00FF41]/0 group-hover:from-[#FF6B00]/20 group-hover:to-[#00FF41]/20 transition-all duration-500 opacity-50 blur-xl" />
+                                        
+                                        <div className="relative h-full bg-[#0A0A15]/90 backdrop-blur-xl p-6 rounded-2xl flex flex-col border border-white/5 group-hover:bg-[#0A0A15]/80 transition-colors">
+                                            <div className="flex justify-between items-start mb-6 w-full">
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
+                                                    <Star className="w-3 h-3 text-[#FFB800] fill-[#FFB800]" />
+                                                    <span className="text-[10px] font-bold tracking-widest text-white/90 uppercase">Elite Squad</span>
+                                                </div>
+                                                {team.table_number && (
+                                                    <span className="tabular-nums text-[10px] font-mono text-[#00FF41] bg-[#00FF41]/10 px-2 py-1 rounded-md border border-[#00FF41]/20 shadow-[0_0_10px_rgba(0,255,65,0.1)]">
+                                                        TBL-{team.table_number}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            
+                                            <h3 className="font-heading font-black text-xl text-white uppercase group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-[#00FF41] transition-all line-clamp-2 mt-auto">
+                                                {team.name}
+                                            </h3>
+                                            
+                                            {team.idea_title && (
+                                                <div className="mt-4 pt-4 border-t border-white/10">
+                                                    <p className="text-sm text-white/50 line-clamp-2 leading-relaxed font-medium group-hover:text-white/80 transition-colors">
+                                                        {team.idea_title}
+                                                    </p>
+                                                </div>
                                             )}
                                         </div>
-                                        <h3 className="font-heading font-black text-xl text-white uppercase group-hover:text-[#00FF41] transition-colors line-clamp-1">{team.name}</h3>
-                                        {team.idea_title && <p className="text-xs text-white/50 mt-2 line-clamp-2 leading-relaxed">{team.idea_title}</p>}
                                     </motion.div>
                                 ))}
                             </div>

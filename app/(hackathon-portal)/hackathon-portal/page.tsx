@@ -29,6 +29,7 @@ export default async function HackathonPortalHub() {
         href: string
         icon: any
         bgColor: string
+        accentColor: string
         badge?: string
     }[] = []
 
@@ -36,10 +37,11 @@ export default async function HackathonPortalHub() {
         cards.push(
             {
                 title: "Manage Hackathon",
-                desc: "Full root access: Teams, scheduling, parameters, and global endpoints.",
+                desc: "Full access to teams, scheduling, grading parameters, and settings.",
                 href: "/hackathon-portal/manage",
                 icon: Settings,
-                bgColor: "bg-white text-black",
+                bgColor: "bg-white",
+                accentColor: "text-indigo-600 bg-indigo-50",
                 badge: "ROOT",
             },
             {
@@ -47,35 +49,40 @@ export default async function HackathonPortalHub() {
                 desc: "Grade targets across rubric parameters in the active deployment phase.",
                 href: "/hackathon-portal/evaluate",
                 icon: ClipboardList,
-                bgColor: "bg-[#00FF41] text-black", // Acid Green
+                bgColor: "bg-white",
+                accentColor: "text-emerald-600 bg-emerald-50",
             },
             {
                 title: "Participant Verify",
                 desc: "Execute QR handshakes for check-in, checkout, and ration tracking.",
                 href: "/hackathon-portal/scan",
                 icon: QrCode,
-                bgColor: "bg-[#FF6B00] text-black", // Saffron
+                bgColor: "bg-white",
+                accentColor: "text-orange-600 bg-orange-50",
             },
             {
                 title: "Volunteer Command",
                 desc: "Track agent attendance and verify shift authorizations.",
                 href: "/hackathon-portal/volunteer-scan",
                 icon: UserCheck,
-                bgColor: "bg-[#03030F] text-white", // Space Blue
+                bgColor: "bg-white",
+                accentColor: "text-blue-600 bg-blue-50",
             },
             {
                 title: "Live Dashboard",
                 desc: "Access the public viewport: Countdown, flight plan, and active directives.",
                 href: "/hackathon/live",
                 icon: Radio,
-                bgColor: "bg-[#00FF41] text-black", // Acid Green
+                bgColor: "bg-white",
+                accentColor: "text-rose-600 bg-rose-50",
             },
             {
                 title: "Checkpoint Scanner",
                 desc: "Validate personnel movements and specific geographic checkpoints.",
                 href: "/hackathon-portal/attendance-scan",
                 icon: MapPin,
-                bgColor: "bg-white text-black",
+                bgColor: "bg-white",
+                accentColor: "text-violet-600 bg-violet-50",
             },
         )
     }
@@ -86,7 +93,8 @@ export default async function HackathonPortalHub() {
             desc: "Grade targets across rubric parameters in the active deployment phase.",
             href: "/hackathon-portal/evaluate",
             icon: ClipboardList,
-            bgColor: "bg-[#00FF41] text-black", 
+            bgColor: "bg-white",
+            accentColor: "text-emerald-600 bg-emerald-50"
         })
     }
 
@@ -96,57 +104,62 @@ export default async function HackathonPortalHub() {
             desc: "Execute QR handshakes for check-in, checkout, and ration tracking.",
             href: "/hackathon-portal/scan",
             icon: QrCode,
-            bgColor: "bg-[#FF6B00] text-black", 
+            bgColor: "bg-white",
+            accentColor: "text-orange-600 bg-orange-50", 
         })
         cards.push({
             title: "Checkpoint Scanner",
             desc: "Validate personnel movements and specific geographic checkpoints.",
             href: "/hackathon-portal/attendance-scan",
             icon: MapPin,
-            bgColor: "bg-[#03030F] text-white", 
+            bgColor: "bg-white",
+            accentColor: "text-violet-600 bg-violet-50", 
         })
     }
 
     return (
-        <div className="min-h-screen bg-white">
-            <div className="max-w-[1200px] mx-auto px-4 py-16">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-1">
                 
-                {/* NEO-BRUTALIST HEADER */}
-                <div className="mb-16 border-b-4 border-black pb-8 flex items-end justify-between">
-                    <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white text-xs font-bold uppercase tracking-widest mb-4">
-                            <ShieldAlert className="w-4 h-4 text-[#FF6B00]" />
-                            {role} CLEARANCE
+                {/* POLISHED HEADER */}
+                <div className="mb-12">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-gray-200 rounded-full shadow-sm text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-6">
+                        <ShieldAlert className="w-3.5 h-3.5 text-indigo-500" />
+                        {role} CLEARANCE
+                    </div>
+                    <div className="flex items-end justify-between">
+                        <div>
+                            <h2 className="text-xl text-gray-500 font-medium mb-1">Welcome back,</h2>
+                            <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-gray-900 leading-tight">
+                                {user?.name || 'Authorized User'}
+                            </h1>
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-heading font-black tracking-tighter text-black uppercase leading-none">
-                            <span className="text-[#FF6B00] block text-xl mb-2 font-mono tracking-widest">Operator:</span>
-                            {user?.name || 'Authorized User'}
-                        </h1>
                     </div>
                 </div>
 
                 {/* SYSTEM DIAGNOSTICS (STATS) */}
                 {role === 'organizer' && (
-                    <div className="mb-16">
-                        <h2 className="text-xl font-heading font-black uppercase tracking-tight text-black mb-6">System Diagnostics</h2>
+                    <div className="mb-12">
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             {[
-                                { label: "Target Squads", val: stats.teams, icon: Users, color: "bg-[#00FF41]" },
-                                { label: "Evaluators", val: stats.evaluators, icon: BarChart3, color: "bg-[#FF6B00]" },
-                                { label: "Active Agents", val: stats.volunteers, icon: Activity, color: "bg-[#03030F] text-white" },
+                                { label: "Target Squads", val: stats.teams, icon: Users, color: "text-indigo-600", bg: "bg-indigo-50" },
+                                { label: "Evaluators", val: stats.evaluators, icon: BarChart3, color: "text-emerald-600", bg: "bg-emerald-50" },
+                                { label: "Active Agents", val: stats.volunteers, icon: Activity, color: "text-blue-600", bg: "bg-blue-50" },
                             ].map((s, i) => (
-                                <div key={i} className={`border-4 border-black p-6 ${s.color} neo-border relative overflow-hidden group hover:scale-[1.02] transition-transform`}>
-                                    <s.icon className="absolute -bottom-4 -right-4 w-24 h-24 opacity-20 group-hover:scale-110 transition-transform" />
-                                    <div className="text-xs font-black uppercase tracking-widest mb-4 relative z-10">{s.label}</div>
-                                    <div className="text-5xl font-mono font-black tracking-tighter relative z-10">{s.val}</div>
+                                <div key={i} className={`bg-white border border-gray-200 rounded-2xl p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-all`}>
+                                    <div className={`w-10 h-10 rounded-xl ${s.bg} ${s.color} flex items-center justify-center mb-4`}>
+                                        <s.icon className="w-5 h-5" />
+                                    </div>
+                                    <div className="text-3xl font-bold tracking-tight text-gray-900 mb-1">{s.val}</div>
+                                    <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">{s.label}</div>
                                 </div>
                             ))}
 
-                            <div className="border-4 border-black p-6 bg-white neo-border col-span-2 lg:col-span-1">
-                                <div className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <Timer className="w-4 h-4 text-red-500" /> Count to Zero
+                            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm col-span-2 lg:col-span-1 flex flex-col justify-center items-center text-center">
+                                <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                                    <Timer className="w-3.5 h-3.5 text-rose-500" /> Countdown
                                 </div>
-                                <div className="text-3xl font-mono font-black tracking-tighter text-red-500">
+                                <div className="text-3xl font-bold tracking-tight text-rose-600 tabular-nums">
                                     <LiveTimer timerEnd={stats.timerEnd} />
                                 </div>
                             </div>
@@ -156,31 +169,33 @@ export default async function HackathonPortalHub() {
 
                 {/* COMMAND MODULES */}
                 <div>
-                    <h2 className="text-xl font-heading font-black uppercase tracking-tight text-black mb-6 border-b-2 border-black pb-2 inline-block">Command Modules</h2>
+                    <h2 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-6 px-1">Command Modules</h2>
                     
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {cards.map((card, i) => (
-                            <Link href={card.href} key={i}>
-                                <div className={`spring-btn border-4 border-black ${card.bgColor} neo-border p-8 h-full flex flex-col justify-between group cursor-pointer relative`}>
+                            <Link href={card.href} key={i} className="block group">
+                                <div className={`${card.bgColor} border border-gray-200 rounded-2xl p-6 h-full flex flex-col justify-between shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-300 transform group-hover:-translate-y-1`}>
                                     
-                                    <div className="flex justify-between items-start mb-12 relative z-10">
-                                        <card.icon className="w-12 h-12 stroke-[2px]" />
+                                    <div className="flex justify-between items-start mb-8">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${card.accentColor}`}>
+                                            <card.icon className="w-6 h-6 stroke-[2px]" />
+                                        </div>
                                         {card.badge && (
-                                            <span className="px-3 py-1 text-xs font-black uppercase tracking-widest border-2 border-black bg-[#FF6B00] text-black">
+                                            <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full bg-red-50 text-red-600 border border-red-100">
                                                 {card.badge}
                                             </span>
                                         )}
                                     </div>
                                     
-                                    <div className="relative z-10 mt-auto">
-                                        <h3 className="text-3xl font-heading font-black tracking-tight uppercase mb-2 group-hover:-translate-y-1 transition-transform">
+                                    <div className="mt-auto">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-2">
                                             {card.title}
                                         </h3>
-                                        <p className="font-sans font-bold opacity-80 text-sm leading-relaxed mb-6">
+                                        <p className="text-sm text-gray-500 leading-relaxed mb-6">
                                             {card.desc}
                                         </p>
-                                        <div className="flex items-center text-xs font-black uppercase tracking-widest gap-2 bg-black text-white w-fit px-4 py-2 group-hover:gap-4 transition-all">
-                                            Execute <ChevronRight className="w-4 h-4" />
+                                        <div className="flex items-center text-sm font-semibold text-indigo-600 gap-1.5 group-hover:gap-2.5 transition-all">
+                                            Open Module <ChevronRight className="w-4 h-4" />
                                         </div>
                                     </div>
                                 </div>
