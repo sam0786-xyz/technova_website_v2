@@ -2,11 +2,73 @@
 
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowLeft, ExternalLink, Timer, Zap, Trophy, ShieldAlert, Cpu, HeartPulse, BookOpen, LineChart, Globe, GraduationCap, ChevronRight, Download, Users, CheckCircle2, Navigation, TrainFront, Plane, Train, Award, IndianRupee, Star, Clock, ListChecks, ArrowUpRight, CheckCircle, Activity } from 'lucide-react'
+import { ArrowLeft, Zap, Trophy, ShieldAlert, Cpu, HeartPulse, BookOpen, LineChart, Globe, GraduationCap, Download, Users, Award, Star, ArrowUpRight, CheckCircle, Sparkles, ChevronDown, MapPin, Wifi, Coffee, ArrowRight } from 'lucide-react'
 import { VenueCarousel } from '@/components/hackathon/venue-carousel'
 import { useEffect, useState, useRef } from 'react'
 
 const REGISTRATION_LINK = "https://docs.google.com/forms/d/e/1FAIpQLScDLjm7HDdkKXJqVIIQr9zp-cG95vnCrdNy2gjEtJtjxaZBXA/viewform"
+
+/* ─── Ease curves (Emil Kowalski philosophy) ─── */
+const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
+const EASE_IN_OUT: [number, number, number, number] = [0.77, 0, 0.175, 1]
+
+/* ─── Floating orb component for ambient background ─── */
+function FloatingOrbs() {
+    return (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+            <div className="absolute top-[10%] left-[15%] w-[500px] h-[500px] rounded-full bg-indigo-600/[0.04] blur-[120px] animate-[drift_25s_ease-in-out_infinite]" />
+            <div className="absolute top-[50%] right-[10%] w-[600px] h-[600px] rounded-full bg-violet-500/[0.03] blur-[150px] animate-[drift_30s_ease-in-out_infinite_reverse]" />
+            <div className="absolute bottom-[10%] left-[30%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.03] blur-[100px] animate-[drift_20s_ease-in-out_infinite]" />
+        </div>
+    )
+}
+
+/* ─── Animated counter for hero stats ─── */
+function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: string }) {
+    const [count, setCount] = useState(0)
+    const ref = useRef<HTMLSpanElement>(null)
+    const hasAnimated = useRef(false)
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !hasAnimated.current) {
+                    hasAnimated.current = true
+                    let start = 0
+                    const duration = 1500
+                    const startTime = performance.now()
+                    const step = (timestamp: number) => {
+                        const progress = Math.min((timestamp - startTime) / duration, 1)
+                        const eased = 1 - Math.pow(1 - progress, 3)
+                        setCount(Math.floor(eased * value))
+                        if (progress < 1) requestAnimationFrame(step)
+                    }
+                    requestAnimationFrame(step)
+                }
+            },
+            { threshold: 0.5 }
+        )
+        if (ref.current) observer.observe(ref.current)
+        return () => observer.disconnect()
+    }, [value])
+
+    return <span ref={ref} className="tabular-nums">{count}{suffix}</span>
+}
+
+/* ─── Section wrapper with scroll reveal ─── */
+function Section({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+    return (
+        <motion.section
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.6, ease: EASE_OUT, delay }}
+            className={className}
+        >
+            {children}
+        </motion.section>
+    )
+}
 
 export default function HackathonPage() {
     const [currentDate, setCurrentDate] = useState<Date | null>(null)
@@ -14,6 +76,12 @@ export default function HackathonPage() {
     const [revealedContacts, setRevealedContacts] = useState<number[]>([])
     const [activeTrack, setActiveTrack] = useState<number | null>(null)
     const [liveData, setLiveData] = useState<{ settings: any; schedule: any[]; shortlistedTeams: any[] } | null>(null)
+    const [openFaq, setOpenFaq] = useState<number | null>(null)
+
+    const { scrollY } = useScroll()
+    const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
+    const heroScale = useTransform(scrollY, [0, 400], [1, 0.96])
+    const heroY = useTransform(scrollY, [0, 400], [0, 60])
 
     // Setup polling for live data
     useEffect(() => {
@@ -36,36 +104,34 @@ export default function HackathonPage() {
     useEffect(() => {
         setCurrentDate(new Date())
         const timer = setInterval(() => setCurrentDate(new Date()), 1000)
-        // Simulated boot
-        setTimeout(() => setIsLoading(false), 800)
+        setTimeout(() => setIsLoading(false), 600)
         return () => clearInterval(timer)
     }, [])
 
     const timelineEvents = [
-        { date: "14 Feb 2026", title: "Registrations Open", timestamp: new Date("2026-02-14").getTime() },
-        { date: "14 Mar 2026", title: "Registration Closes", timestamp: new Date("2026-03-14").getTime() },
-        { date: "16-18 Mar 2026", title: "1st Round Screening", timestamp: new Date("2026-03-16").getTime() },
-        { date: "24 Mar 2026", title: "Shortlisted Teams Declared", timestamp: new Date("2026-03-24").getTime() },
-        { date: "10-11 Apr 2026", title: "Grand Finale (24Hr Offline)", timestamp: new Date("2026-04-10T09:00:00").getTime() }
+        { date: "14 Feb 2026", title: "Registrations Open", timestamp: new Date("2026-02-14").getTime(), desc: "Team formation begins" },
+        { date: "14 Mar 2026", title: "Registration Closes", timestamp: new Date("2026-03-14").getTime(), desc: "Final submissions accepted" },
+        { date: "16-18 Mar 2026", title: "1st Round Screening", timestamp: new Date("2026-03-16").getTime(), desc: "Idea evaluation phase" },
+        { date: "24 Mar 2026", title: "Shortlisted Teams", timestamp: new Date("2026-03-24").getTime(), desc: "Selected teams announced" },
+        { date: "10-11 Apr 2026", title: "Grand Finale", timestamp: new Date("2026-04-10T09:00:00").getTime(), desc: "24hr offline hackathon" }
     ]
 
     const getTimerData = () => {
         if (!currentDate) return null
         const now = currentDate.getTime()
         const nextEvent = timelineEvents.find(e => e.timestamp > now)
-        
-        if (!nextEvent) return { phase: "CONCLUDED", display: "00:00:00:00", active: false }
-        
-        const diff = nextEvent.timestamp - now
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000)
 
+        if (!nextEvent) return { phase: "CONCLUDED", days: '00', hours: '00', minutes: '00', seconds: '00', label: "Event Concluded", active: false }
+
+        const diff = nextEvent.timestamp - now
         const pad = (n: number) => n.toString().padStart(2, '0')
         return {
-            phase: `UNTIL ${nextEvent.title.toUpperCase()}`,
-            display: `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`,
+            phase: nextEvent.title.toUpperCase(),
+            days: pad(Math.floor(diff / (1000 * 60 * 60 * 24))),
+            hours: pad(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))),
+            minutes: pad(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))),
+            seconds: pad(Math.floor((diff % (1000 * 60)) / 1000)),
+            label: `Until ${nextEvent.title}`,
             active: true
         }
     }
@@ -73,382 +139,557 @@ export default function HackathonPage() {
     const timerData = getTimerData()
     const isShortlistPopulated = liveData?.shortlistedTeams && liveData.shortlistedTeams.length > 0;
 
+    const tracks = [
+        { title: "AI & Intelligent Systems", icon: HeartPulse, gradient: "from-violet-500 to-fuchsia-500", problem: "AI-Driven Solutions for Smart India", type: "AI/ML" },
+        { title: "Web & Software", icon: BookOpen, gradient: "from-blue-500 to-cyan-500", problem: "Next-Gen Digital Platforms", type: "Fullstack" },
+        { title: "Cyber & Blockchain", icon: ShieldAlert, gradient: "from-emerald-500 to-teal-500", problem: "Secure Digital Ecosystems", type: "Security" },
+        { title: "Data & Analytics", icon: LineChart, gradient: "from-amber-500 to-orange-500", problem: "Data-Driven Insights", type: "Data" },
+        { title: "Social Impact", icon: Globe, gradient: "from-rose-500 to-pink-500", problem: "Tech for Inclusive Growth", type: "Social" },
+        { title: "School Innovation", icon: GraduationCap, gradient: "from-sky-500 to-indigo-500", problem: "Empowering Young Minds", type: "Junior" }
+    ]
+
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-[#03030F] flex items-center justify-center font-mono">
-                <div className="w-16 h-1 w-full max-w-[200px] bg-white/10 relative overflow-hidden flex">
-                    <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 0.8, ease: "circOut" }} className="absolute left-0 top-0 h-full bg-[#FF6B00]" />
-                </div>
+            <div className="min-h-screen bg-[#050510] flex items-center justify-center">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center gap-6"
+                >
+                    <div className="w-48 h-[2px] bg-white/10 rounded-full overflow-hidden">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: '100%' }}
+                            transition={{ duration: 0.6, ease: EASE_OUT }}
+                            className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full"
+                        />
+                    </div>
+                    <span className="text-[11px] text-white/30 tracking-[0.3em] uppercase font-medium">Loading</span>
+                </motion.div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-[#03030F] text-white font-sans overflow-x-hidden selection:bg-[#00FF41]/30">
-            
-            {/* AGGRESSIVE LIVE TIMER HERO COMPONENT (CYBER-TIRANGA) */}
-            <div className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#03030F]/90 backdrop-blur-xl supports-[backdrop-filter]:bg-[#03030F]/60">
-                <div className="w-full relative overflow-hidden">
-                    {/* Patriotic Glow Behind Timer */}
-                    <div className="absolute top-0 left-0 w-1/3 h-full bg-[#FF6B00]/10 blur-[50px] pointer-events-none" />
-                    <div className="absolute top-0 right-0 w-1/3 h-full bg-[#00FF41]/10 blur-[50px] pointer-events-none" />
-                    
-                    <div className="container mx-auto px-4 py-4 md:py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="flex flex-col">
-                            <div className="flex items-center gap-2 mb-1">
-                                <Activity className="w-4 h-4 text-[#FF6B00] animate-pulse" />
-                                <span className="text-[10px] md:text-xs font-bold tracking-widest text-[#FF6B00] uppercase">
-                                    SYS_STATUS: {timerData?.active ? 'ONLINE' : 'OFFLINE'} | {timerData?.phase}
-                                </span>
-                            </div>
-                            <div className="text-3xl md:text-5xl font-heading font-black tracking-tight font-mono text-white break-words tabular-nums">
-                                {timerData?.display || "00:00:00:00"}
-                            </div>
-                        </div>
+        <div className="min-h-screen bg-[#050510] text-white/90 font-sans overflow-x-hidden selection:bg-indigo-500/30 selection:text-white relative">
+            <FloatingOrbs />
 
-                        <Link href="/hackathon/live" className="spring-btn group shrink-0 relative overflow-hidden inline-flex items-center justify-center gap-3 px-8 py-4 bg-white hover:bg-gray-100 text-black font-black uppercase tracking-wider text-sm transition-colors rounded-none neo-border shadow-[4px_4px_0_#FF6B00] hover:shadow-[4px_4px_0_#00FF41] active:translate-y-1 active:shadow-[0_0_0_transparent]">
-                            <span className="relative z-10 flex items-center gap-2">
-                                Enter Live Dashboard
-                                <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                            </span>
-                        </Link>
+            {/* ═══════════════════ STICKY COUNTDOWN BAR ═══════════════════ */}
+            <div className="sticky top-0 z-50 w-full bg-[#050510]/80 backdrop-blur-2xl border-b border-white/[0.06]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <div className="relative flex items-center justify-center">
+                            <span className="absolute w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-75" />
+                            <span className="relative w-2 h-2 rounded-full bg-emerald-400" />
+                        </div>
+                        <span className="text-[11px] sm:text-xs text-white/50 tracking-widest uppercase font-medium">
+                            {timerData?.label || "Event Status"}
+                        </span>
                     </div>
+
+                    {timerData?.active && (
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            {[
+                                { val: timerData.days, label: 'D' },
+                                { val: timerData.hours, label: 'H' },
+                                { val: timerData.minutes, label: 'M' },
+                                { val: timerData.seconds, label: 'S' },
+                            ].map((unit, i) => (
+                                <div key={i} className="flex items-center gap-1.5 sm:gap-2">
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-lg sm:text-2xl font-heading font-black tabular-nums text-white tracking-tight leading-none">
+                                            {unit.val}
+                                        </span>
+                                        <span className="text-[8px] sm:text-[9px] text-white/30 uppercase tracking-widest mt-0.5">{unit.label}</span>
+                                    </div>
+                                    {i < 3 && <span className="text-white/20 text-sm sm:text-lg font-light self-start mt-0.5">:</span>}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <Link 
+                        href="/hackathon/live" 
+                        className="group flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] hover:border-white/[0.15] rounded-full text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-white transition-all duration-200 active:scale-[0.97]"
+                    >
+                        Live Dashboard
+                        <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
+                    </Link>
                 </div>
-                {/* 1px Tiranga line */}
-                <div className="w-full h-[2px] bg-gradient-to-r from-[#FF6B00] via-white to-[#00FF41]" />
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
             </div>
 
-            <div className="container mx-auto px-4 pt-16 pb-32">
-                <div className="flex flex-wrap items-center gap-4 mb-12">
-                    <Link href="/" className="inline-flex items-center gap-2 text-white/50 hover:text-white transition-colors uppercase tracking-widest text-xs font-bold">
-                        <ArrowLeft className="w-4 h-4" /> REVERT TO BASE
-                    </Link>
-                    <div className="hidden md:block w-px h-5 bg-white/20" />
-                    <Link href="/hackathon/teams" className="inline-flex items-center gap-2 text-[#FF6B00] hover:text-white transition-colors uppercase tracking-widest text-xs font-bold">
-                        <Users className="w-3 h-3" /> View Teams
-                    </Link>
-                    <Link href="/hackathon/update" className="inline-flex items-center gap-2 text-[#00FF41] hover:text-white transition-colors uppercase tracking-widest text-xs font-bold">
-                        <CheckCircle className="w-3 h-3" /> Update Your Team
-                    </Link>
-                </div>
-
-                {/* MASSIVE HERO SECTION */}
-                <div className="grid lg:grid-cols-12 gap-12 items-end mb-32">
-                    <div className="lg:col-span-8">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 text-white/70 uppercase tracking-widest text-xs font-bold mb-8 neo-border">
-                            <Zap className="w-4 h-4 text-[#FF6B00]" /> 8th Edition
-                        </div>
-                        <h1 className="text-6xl md:text-[8rem] font-heading font-black uppercase tracking-tighter leading-[0.85] mb-8">
-                            <span className="block text-[#FF6B00]">Innovate</span>
-                            <span className="block text-white mix-blend-difference">Bharat</span>
-                            <span className="block text-[#00FF41]">Hackathon</span>
-                        </h1>
-                        <p className="max-w-xl text-lg md:text-xl text-white/60 font-sans leading-relaxed">
-                            The ultimate test of endurance, creativity, and raw technical skill. 24 hours to build solutions that power the future of India's digital ecosystem.
-                        </p>
-                    </div>
-
-                    <div className="lg:col-span-4 flex flex-col gap-4">
-                        <a href={REGISTRATION_LINK} target="_blank" rel="noopener noreferrer" className="spring-btn w-full bg-[#FF6B00] text-black font-black uppercase py-6 px-8 flex items-center justify-between group hover:bg-[#FF8533] transition-colors neo-border">
-                            <span>Register Team</span>
-                            <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
-                        </a>
-                        <a href="https://drive.google.com/file/d/1hTMH6CHzvjqZ9pWRB2wRnHlwBS_EpDdh/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="spring-btn w-full bg-transparent border-2 border-white/20 hover:border-white text-white font-bold uppercase py-6 px-8 flex items-center justify-between group transition-colors neo-border">
-                            <span>Get Brochure</span>
-                            <Download className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
-                        </a>
-                    </div>
-                </div>
-
-                {/* GRAND REVEAL: SHORTLISTED TEAMS (Shows only if we have data) */}
-                {isShortlistPopulated && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: 40 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "-100px" }}
-                        className="mb-32 w-full clip-reveal"
+            {/* ═══════════════════ HERO SECTION ═══════════════════ */}
+            <motion.div style={{ opacity: heroOpacity, scale: heroScale, y: heroY }} className="relative z-10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-24 sm:pb-32">
+                    {/* Nav breadcrumbs */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, ease: EASE_OUT }}
+                        className="flex flex-wrap items-center gap-3 sm:gap-4 mb-12 sm:mb-16"
                     >
-                        <div className="w-full bg-[#050510] border border-white/10 p-8 md:p-16 relative overflow-hidden shadow-[0_0_50px_rgba(255,107,0,0.05)] rounded-3xl">
-                            {/* Graphic texture */}
-                            <div className="absolute top-0 right-0 w-full h-[500px] bg-[radial-gradient(ellipse_at_top_right,rgba(0,255,65,0.08),transparent_50%)] pointer-events-none" />
-                            <div className="absolute bottom-0 left-0 w-full h-[500px] bg-[radial-gradient(ellipse_at_bottom_left,rgba(255,107,0,0.08),transparent_50%)] pointer-events-none" />
+                        <Link href="/" className="inline-flex items-center gap-2 text-white/40 hover:text-white/70 transition-colors text-xs font-medium tracking-wider uppercase">
+                            <ArrowLeft className="w-3.5 h-3.5" /> Home
+                        </Link>
+                        <span className="w-px h-4 bg-white/10" />
+                        <Link href="/hackathon/teams" className="inline-flex items-center gap-1.5 text-white/40 hover:text-white/70 transition-colors text-xs font-medium tracking-wider uppercase">
+                            <Users className="w-3 h-3" /> Teams
+                        </Link>
+                        <Link href="/hackathon/update" className="inline-flex items-center gap-1.5 text-white/40 hover:text-white/70 transition-colors text-xs font-medium tracking-wider uppercase">
+                            <CheckCircle className="w-3 h-3" /> Update
+                        </Link>
+                    </motion.div>
 
-                            <div className="relative z-10 mb-16 text-center">
-                                <div className="inline-flex items-center justify-center gap-2 text-[#00FF41] font-mono text-sm tracking-widest mb-6 border border-[#00FF41]/20 bg-[#00FF41]/5 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(0,255,65,0.1)]">
-                                    <Trophy className="w-4 h-4" /> OFFICIAL SEAMLESS ENTRY
-                                </div>
-                                <h2 className="text-5xl md:text-7xl font-heading font-black tracking-tight text-white mb-6 uppercase drop-shadow-2xl">
-                                    The <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] to-[#FFB800]">Shortlist</span>
+                    {/* Hero content */}
+                    <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-end">
+                        <div className="lg:col-span-7 xl:col-span-8">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.1, ease: EASE_OUT }}
+                                className="inline-flex items-center gap-2.5 px-4 py-2 bg-white/[0.04] border border-white/[0.08] rounded-full text-white/60 text-xs font-medium tracking-wider uppercase mb-8"
+                            >
+                                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                                8th Edition · 10-11 April 2026
+                            </motion.div>
+
+                            <motion.h1
+                                initial={{ opacity: 0, y: 24 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: 0.15, ease: EASE_OUT }}
+                                className="text-5xl sm:text-7xl lg:text-8xl xl:text-[7rem] font-heading font-black uppercase tracking-tighter leading-[0.88] mb-6 sm:mb-8"
+                            >
+                                <span className="block text-white">Innovate</span>
+                                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400">Bharat</span>
+                                <span className="block text-white/20">Hackathon</span>
+                            </motion.h1>
+
+                            <motion.p
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.25, ease: EASE_OUT }}
+                                className="max-w-lg text-base sm:text-lg text-white/50 leading-relaxed"
+                            >
+                                The ultimate test of endurance, creativity, and raw technical skill. 24 hours to build solutions that power the future of India's digital ecosystem.
+                            </motion.p>
+                        </div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 24 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.3, ease: EASE_OUT }}
+                            className="lg:col-span-5 xl:col-span-4 flex flex-col gap-3"
+                        >
+                            <a
+                                href={REGISTRATION_LINK}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-4 sm:py-5 px-6 sm:px-8 rounded-2xl flex items-center justify-between transition-all duration-200 active:scale-[0.97] shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30"
+                            >
+                                <span className="text-sm sm:text-base uppercase tracking-wider">Register Team</span>
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                            </a>
+                            <a
+                                href="https://drive.google.com/file/d/1hTMH6CHzvjqZ9pWRB2wRnHlwBS_EpDdh/view?usp=sharing"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group w-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] hover:border-white/[0.2] text-white/80 hover:text-white font-semibold py-4 sm:py-5 px-6 sm:px-8 rounded-2xl flex items-center justify-between transition-all duration-200 active:scale-[0.97]"
+                            >
+                                <span className="text-sm sm:text-base uppercase tracking-wider">Get Brochure</span>
+                                <Download className="w-4.5 h-4.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
+                            </a>
+
+                            {/* Quick stats under buttons */}
+                            <div className="grid grid-cols-3 gap-2 mt-2">
+                                {[
+                                    { val: 97, suffix: '+', label: 'Teams' },
+                                    { val: 24, suffix: 'hrs', label: 'Duration' },
+                                    { val: 205, suffix: 'K', label: 'Prize Pool' },
+                                ].map((stat, i) => (
+                                    <div key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-3 text-center">
+                                        <div className="text-lg sm:text-xl font-heading font-black text-white tracking-tight">
+                                            <AnimatedCounter value={stat.val} suffix={stat.suffix} />
+                                        </div>
+                                        <div className="text-[9px] sm:text-[10px] text-white/30 uppercase tracking-widest mt-0.5">{stat.label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
+            </motion.div>
+
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-32">
+
+                {/* ═══════════════════ SHORTLISTED TEAMS REVEAL ═══════════════════ */}
+                {isShortlistPopulated && liveData && (
+                    <Section className="mb-24 sm:mb-32">
+                        <div className="relative rounded-3xl border border-white/[0.06] bg-[#0A0A1A]/80 backdrop-blur-sm p-6 sm:p-10 md:p-16 overflow-hidden">
+                            {/* Ambient glow */}
+                            <div className="absolute top-0 right-0 w-full h-[400px] bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.08),transparent_50%)] pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 w-full h-[400px] bg-[radial-gradient(ellipse_at_bottom_left,rgba(139,92,246,0.06),transparent_50%)] pointer-events-none" />
+
+                            <div className="relative z-10 mb-10 sm:mb-14 text-center">
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4, ease: EASE_OUT }}
+                                    className="inline-flex items-center gap-2 text-indigo-400 text-xs sm:text-sm font-medium tracking-widest uppercase mb-5 border border-indigo-500/20 bg-indigo-500/5 px-4 py-1.5 rounded-full"
+                                >
+                                    <Trophy className="w-3.5 h-3.5" /> Grand Finale Selections
+                                </motion.div>
+                                <h2 className="text-4xl sm:text-5xl md:text-7xl font-heading font-black tracking-tight text-white mb-4 uppercase">
+                                    The <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Shortlist</span>
                                 </h2>
-                                <p className="text-white/70 max-w-2xl mx-auto text-lg/relaxed font-medium">
-                                    These elite squads have cleared screening criteria and will battle it out in real-time during the 24-hr offline crucible. 
+                                <p className="text-white/40 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
+                                    These elite squads have cleared screening and will battle it out in the 24-hour offline crucible.
                                 </p>
                             </div>
 
-                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative z-10">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 relative z-10">
                                 {liveData.shortlistedTeams
                                     .slice()
                                     .sort((a: any, b: any) => a.name.localeCompare(b.name))
                                     .map((team: any, i: number) => (
-                                    <motion.div 
+                                    <motion.div
                                         key={team.id}
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        whileInView={{ opacity: 1, scale: 1 }}
+                                        initial={{ opacity: 0, y: 16 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
                                         viewport={{ once: true }}
-                                        transition={{ delay: i * 0.05, type: "spring", stiffness: 100 }}
-                                        className="group relative p-[1px] rounded-2xl overflow-hidden bg-gradient-to-b from-white/10 to-transparent hover:from-[#FF6B00]/40 hover:to-[#00FF41]/40 transition-colors duration-500 shadow-2xl"
+                                        transition={{ delay: Math.min(i * 0.03, 0.6), duration: 0.4, ease: EASE_OUT }}
+                                        className="group relative p-[1px] rounded-xl overflow-hidden"
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B00]/0 to-[#00FF41]/0 group-hover:from-[#FF6B00]/20 group-hover:to-[#00FF41]/20 transition-all duration-500 opacity-50 blur-xl" />
-                                        
-                                        <div className="relative h-full bg-[#0A0A15]/90 backdrop-blur-xl p-6 rounded-2xl flex flex-col border border-white/5 group-hover:bg-[#0A0A15]/80 transition-colors">
-                                            <div className="flex justify-between items-start mb-6 w-full">
-                                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
-                                                    <Star className="w-3 h-3 text-[#FFB800] fill-[#FFB800]" />
-                                                    <span className="text-[10px] font-bold tracking-widest text-white/90 uppercase">Elite Squad</span>
+                                        {/* Gradient border on hover */}
+                                        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] to-transparent group-hover:from-indigo-500/30 group-hover:to-violet-500/10 transition-all duration-500 rounded-xl" />
+
+                                        <div className="relative bg-[#0c0c1a] hover:bg-[#0e0e1e] p-4 sm:p-5 rounded-xl transition-colors duration-300 h-full flex flex-col">
+                                            <div className="flex items-center justify-between mb-3 sm:mb-4">
+                                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08]">
+                                                    <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                                                    <span className="text-[9px] sm:text-[10px] font-semibold text-white/60 uppercase tracking-wider">Selected</span>
                                                 </div>
                                                 {team.table_number && (
-                                                    <span className="tabular-nums text-[10px] font-mono text-[#00FF41] bg-[#00FF41]/10 px-2 py-1 rounded-md border border-[#00FF41]/20 shadow-[0_0_10px_rgba(0,255,65,0.1)]">
+                                                    <span className="text-[9px] sm:text-[10px] font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
                                                         TBL-{team.table_number}
                                                     </span>
                                                 )}
                                             </div>
-                                            
-                                            <h3 className="font-heading font-black text-xl text-white uppercase group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-[#00FF41] transition-all line-clamp-2 mt-auto">
+                                            <h3 className="font-heading font-bold text-sm sm:text-base text-white/90 group-hover:text-white transition-colors line-clamp-2 mt-auto leading-snug">
                                                 {team.name}
                                             </h3>
-                                            
                                             {team.idea_title && (
-                                                <div className="mt-4 pt-4 border-t border-white/10">
-                                                    <p className="text-sm text-white/50 line-clamp-2 leading-relaxed font-medium group-hover:text-white/80 transition-colors">
-                                                        {team.idea_title}
-                                                    </p>
-                                                </div>
+                                                <p className="text-[11px] sm:text-xs text-white/30 group-hover:text-white/50 transition-colors mt-2 line-clamp-2 leading-relaxed">
+                                                    {team.idea_title}
+                                                </p>
                                             )}
                                         </div>
                                     </motion.div>
                                 ))}
                             </div>
                         </div>
-                    </motion.div>
+                    </Section>
                 )}
 
-                {/* INNOVATION TRACKS (BENTO GRID REWORK) */}
-                <div className="mb-32">
-                    <div className="mb-12">
-                        <h2 className="text-5xl md:text-7xl font-heading font-black tracking-tight text-white uppercase mb-4">
-                            Innovation <span className="text-[#00FF41]">Tracks</span>
+                {/* ═══════════════════ INNOVATION TRACKS ═══════════════════ */}
+                <Section className="mb-24 sm:mb-32">
+                    <div className="mb-8 sm:mb-12">
+                        <h2 className="text-3xl sm:text-5xl md:text-6xl font-heading font-black tracking-tight text-white uppercase mb-3 sm:mb-4">
+                            Innovation <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Tracks</span>
                         </h2>
-                        <p className="text-white/60 max-w-2xl text-lg">Choose your battlefield. Identify critical problems and forge unshakeable solutions.</p>
+                        <p className="text-white/40 max-w-lg text-sm sm:text-base leading-relaxed">Choose your battlefield. Identify critical problems and forge unbreakable solutions.</p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[
-                            { title: "AI & Intelligent Systems", icon: HeartPulse, color: "#FF6B00", problem: "AI-Driven Solutions for Smart India", type: "AI/ML" },
-                            { title: "Web & Software", icon: BookOpen, color: "#00FF41", problem: "Next-Gen Digital Platforms", type: "Fullstack" },
-                            { title: "Cyber & Blockchain", icon: ShieldAlert, color: "#FFFFFF", problem: "Secure Digital Ecosystems", type: "Security" },
-                            { title: "Data & Analytics", icon: LineChart, color: "#FF6B00", problem: "Data-Driven Insights", type: "Data" },
-                            { title: "Social Impact", icon: Globe, color: "#00FF41", problem: "Tech for Inclusive Growth", type: "Social" },
-                            { title: "School Student Innovation", icon: GraduationCap, color: "#FFFFFF", problem: "Empowering Young Minds", type: "Junior" }
-                        ].map((track, i) => (
-                            <div key={i} className="group relative bg-white/5 border border-white/10 p-8 neo-border overflow-hidden hover:bg-white/10 transition-colors flex flex-col min-h-[300px]">
-                                {/* Decorative Number */}
-                                <div className="absolute -right-4 -bottom-10 text-[120px] font-heading font-black text-white/[0.03] leading-none pointer-events-none group-hover:text-white/[0.08] transition-colors">
-                                    0{i+1}
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                        {tracks.map((track, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: i * 0.06, duration: 0.4, ease: EASE_OUT }}
+                                onMouseEnter={() => setActiveTrack(i)}
+                                onMouseLeave={() => setActiveTrack(null)}
+                                className="group relative bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] hover:border-white/[0.12] rounded-2xl p-6 sm:p-8 transition-all duration-300 active:scale-[0.98] cursor-default min-h-[200px] sm:min-h-[240px] flex flex-col overflow-hidden"
+                            >
+                                {/* Hover glow */}
+                                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br ${track.gradient} blur-3xl`} style={{ opacity: activeTrack === i ? 0.04 : 0 }} />
+
+                                {/* Decorative number */}
+                                <div className="absolute -right-2 -bottom-6 text-[80px] sm:text-[100px] font-heading font-black text-white/[0.02] group-hover:text-white/[0.05] leading-none pointer-events-none transition-colors duration-500">
+                                    0{i + 1}
                                 </div>
-                                
-                                <div className="flex justify-between items-center mb-16 relative z-10">
-                                    <div className="w-12 h-12 bg-[#03030F] border border-white/20 flex items-center justify-center -rotate-6 group-hover:rotate-0 transition-transform">
-                                        <track.icon className="w-5 h-5" style={{ color: track.color }} />
+
+                                <div className="flex justify-between items-center mb-auto relative z-10">
+                                    <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br ${track.gradient} flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg`}>
+                                        <track.icon className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" />
                                     </div>
-                                    <div className="px-3 py-1 bg-white/5 text-[10px] font-bold uppercase tracking-widest text-[#a1a1aa] border border-white/10">
+                                    <span className="px-2.5 py-1 bg-white/[0.04] border border-white/[0.08] rounded-full text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-white/40">
                                         {track.type}
-                                    </div>
+                                    </span>
                                 </div>
-                                
-                                <div className="relative z-10 mt-auto">
-                                    <h3 className="text-2xl font-heading font-black uppercase text-white mb-2 leading-tight">{track.title}</h3>
-                                    <p className="text-sm font-bold opacity-60" style={{ color: track.color }}>{'>'} {track.problem}</p>
+
+                                <div className="relative z-10 mt-auto pt-6">
+                                    <h3 className="text-lg sm:text-xl font-heading font-bold text-white/90 group-hover:text-white mb-1.5 leading-tight transition-colors">{track.title}</h3>
+                                    <p className="text-xs sm:text-sm text-white/30 group-hover:text-white/50 transition-colors">{track.problem}</p>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
-                </div>
+                </Section>
 
-                {/* PRIZES: ACID/NEON METALLIC BANNER */}
-                <div className="mb-32 relative bg-[#FF6B00] border border-white/20 neo-border p-8 md:p-16 overflow-hidden">
-                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-multiply" />
-                    
-                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12 text-black">
+                {/* ═══════════════════ PRIZES ═══════════════════ */}
+                <Section className="mb-24 sm:mb-32">
+                    <div className="relative rounded-3xl overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-violet-700" />
+                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-40" />
+
+                        <div className="relative z-10 p-8 sm:p-12 md:p-16">
+                            <div className="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+                                <div className="text-center lg:text-left">
+                                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60 mb-3 flex items-center justify-center lg:justify-start gap-2">
+                                        <Award className="w-4 h-4" /> Prize Pool
+                                    </div>
+                                    <h2 className="text-6xl sm:text-7xl md:text-8xl font-heading font-black tracking-tighter leading-none text-white mb-3">
+                                        ₹2.05L
+                                    </h2>
+                                    <p className="text-base sm:text-lg text-white/70 max-w-md">Total verified prize pool for the strongest solutions.</p>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full lg:w-auto">
+                                    {[
+                                        { place: '1st Place', amount: '₹1 Lakh', accent: 'from-amber-400 to-yellow-300' },
+                                        { place: '2nd Place', amount: '₹50K', accent: 'from-gray-300 to-gray-100' },
+                                        { place: '3rd Place', amount: '₹25K', accent: 'from-amber-600 to-amber-400' },
+                                    ].map((prize, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, y: 16 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ delay: 0.1 + i * 0.08, duration: 0.4, ease: EASE_OUT }}
+                                            className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-5 sm:p-6 text-center hover:bg-white/15 transition-all duration-200 active:scale-[0.97] min-w-[140px]"
+                                        >
+                                            <div className={`text-xs font-semibold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r ${prize.accent} mb-2`}>
+                                                {prize.place}
+                                            </div>
+                                            <div className="text-2xl sm:text-3xl font-heading font-black text-white">{prize.amount}</div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Section>
+
+                {/* ═══════════════════ THE ARENA (VENUE) ═══════════════════ */}
+                <Section className="mb-24 sm:mb-32">
+                    <div className="mb-8 sm:mb-12">
+                        <h2 className="text-3xl sm:text-5xl md:text-6xl font-heading font-black tracking-tight text-white uppercase mb-3">
+                            The <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Arena</span>
+                        </h2>
+                    </div>
+
+                    <div className="grid lg:grid-cols-2 gap-3 sm:gap-4">
+                        {[
+                            { icon: Cpu, title: "Dedicated Center", desc: "A massive, purpose-built space designed purely for 24-hr productivity — high-speed network, uninterrupted power.", gradient: "from-violet-500 to-indigo-500" },
+                            { icon: Coffee, title: "Complete Provisioning", desc: "3-time meals, late-night caffeine stations, separate resting lounges, and medical teams on site.", gradient: "from-emerald-500 to-teal-500" },
+                            { icon: Wifi, title: "Tech Infrastructure", desc: "Enterprise-grade Wi-Fi, dedicated power outlets, and ergonomic workstations for every team.", gradient: "from-blue-500 to-cyan-500" },
+                            { icon: MapPin, title: "Easy Access", desc: "Direct Metro (Aqua Line) to Pari Chowk/KP-II. Smooth highway connections from IGI Airport.", gradient: "from-rose-500 to-pink-500" },
+                        ].map((feature, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 16 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: i * 0.06, duration: 0.4, ease: EASE_OUT }}
+                                className="group bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] hover:border-white/[0.12] rounded-2xl p-6 sm:p-8 transition-all duration-300"
+                            >
+                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300`}>
+                                    <feature.icon className="w-5 h-5 text-white" />
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-heading font-bold text-white mb-2">{feature.title}</h3>
+                                <p className="text-sm text-white/40 group-hover:text-white/60 transition-colors leading-relaxed">{feature.desc}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Venue Carousel */}
+                    <div className="mt-4">
+                        <VenueCarousel />
+                    </div>
+                </Section>
+
+                {/* ═══════════════════ TIMELINE + REGISTRATION ═══════════════════ */}
+                <Section className="mb-24 sm:mb-32">
+                    <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
                         <div>
-                            <div className="font-mono text-sm font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                                <Award className="w-5 h-5" /> REWARD PROTOCOL
-                            </div>
-                            <h2 className="text-6xl md:text-9xl font-heading font-black tracking-tighter leading-none mb-4">
-                                ₹2.05<br/>LAKH
+                            <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-white uppercase mb-8 sm:mb-10">
+                                Event <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Timeline</span>
                             </h2>
-                            <p className="max-w-md text-xl font-bold opacity-80 uppercase font-sans">Total Prize Pool verified for the strongest solutions.</p>
-                        </div>
-
-                        <div className="w-full md:w-auto grid gap-4 shrink-0 font-heading">
-                            <div className="bg-white p-6 md:p-8 neo-border shadow-[8px_8px_0_#000000] rotate-2 hover:rotate-0 transition-transform">
-                                <div className="text-xs uppercase font-bold text-gray-400 mb-1">Grand Prize</div>
-                                <div className="text-5xl md:text-6xl font-black text-black">₹1 LAKH</div>
-                            </div>
-                            <div className="flex gap-4">
-                                <div className="bg-black text-white p-6 neo-border flex-1 -rotate-1 hover:rotate-0 transition-transform">
-                                    <div className="text-xs uppercase font-bold text-[#FF6B00] mb-1">Runner Up</div>
-                                    <div className="text-3xl font-black">₹50K</div>
-                                </div>
-                                <div className="bg-black text-white p-6 neo-border flex-1 rotate-1 hover:rotate-0 transition-transform">
-                                    <div className="text-xs uppercase font-bold text-[#00FF41] mb-1">2nd Runner</div>
-                                    <div className="text-3xl font-black">₹25K</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* WHY SHARDA - STRUCTURAL GRID */}
-                <div className="mb-32">
-                    <div className="mb-12">
-                        <h2 className="text-5xl md:text-7xl font-heading font-black tracking-tight text-white uppercase">
-                            The <span className="text-[#FF6B00]">Arena</span>
-                        </h2>
-                    </div>
-
-                    <div className="grid lg:grid-cols-2 gap-px bg-white/10 border border-white/10 neo-border overflow-hidden">
-                        {/* Info blocks built symmetrically */}
-                        <div className="bg-[#03030F] p-8 md:p-12 hover:bg-white/5 transition-colors group">
-                            <Cpu className="w-8 h-8 text-[#FF6B00] mb-6 block group-hover:scale-110 transition-transform" />
-                            <h3 className="text-2xl font-heading font-black uppercase text-white mb-4">Dedicated Center</h3>
-                            <p className="text-white/60">A massive, purpose-built space designed purely for 24-hr productivity. High-speed network, uninterrupted power, and ergonomic zones.</p>
-                        </div>
-                        <div className="bg-[#03030F] p-8 md:p-12 hover:bg-white/5 transition-colors">
-                            <VenueCarousel />
-                        </div>
-                        <div className="bg-[#03030F] p-8 md:p-12 hover:bg-white/5 transition-colors group">
-                            <ShieldAlert className="w-8 h-8 text-[#00FF41] mb-6 group-hover:scale-110 transition-transform" />
-                            <h3 className="text-2xl font-heading font-black uppercase text-white mb-4">Complete Provisioning</h3>
-                            <p className="text-white/60">3-time meals, late-night caffeine stations, separate resting lounges, and immediate medical clearance teams on site.</p>
-                        </div>
-                        <div className="bg-[#03030F] p-8 md:p-12 hover:bg-white/5 transition-colors group">
-                            <Navigation className="w-8 h-8 text-white mb-6 group-hover:scale-110 transition-transform" />
-                            <h3 className="text-2xl font-heading font-black uppercase text-white mb-4">Accessibility</h3>
-                            <p className="text-white/60">Direct Metro links (Aqua Line) to Pari Chowk/Knowledge Park II. Smooth highways connecting IGI Airport directly to the venue gates.</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* TIMELINE / LOGISTICS */}
-                <div className="mb-32 grid lg:grid-cols-2 gap-16 items-start">
-                    <div>
-                        <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tight text-white uppercase mb-12">
-                            Deployment <span className="text-[#00FF41]">Timeline</span>
-                        </h2>
-                        <div className="space-y-8 relative before:absolute before:inset-0 before:w-[1px] before:bg-white/20 before:-left-4">
-                            {timelineEvents.map((t, i) => (
-                                <div key={i} className="relative pl-8">
-                                    <div className={`absolute -left-5 top-1.5 w-[10px] h-[10px] border-2 bg-[#03030F] rounded-full ${t.timestamp < (currentDate?.getTime()||0) ? 'border-[#00FF41]/50 bg-[#00FF41]' : 'border-white/50'}`} />
-                                    <div className="text-xs font-mono text-white/50 uppercase tracking-widest mb-1">{t.date}</div>
-                                    <h3 className="text-2xl font-heading font-black text-white uppercase tracking-tight">{t.title}</h3>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div>
-                        <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tight text-white uppercase mb-12">
-                            Secure <span className="text-[#FF6B00]">Access</span>
-                        </h2>
-                        
-                        <div className="bg-white/5 border border-white/10 p-8 neo-border mb-8">
-                            <div className="flex items-center justify-between mb-8">
-                                <div>
-                                    <div className="text-xs font-bold text-[#FF6B00] uppercase tracking-widest mb-1">Registration Ticket</div>
-                                    <div className="text-4xl font-black font-heading tracking-tight text-white">INR 500</div>
-                                </div>
-                                <div className="text-right text-white/50 text-xs font-mono uppercase">Per Team<br/>Base Cost</div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="aspect-square bg-white border-4 border-[#03030F] flex items-center justify-center overflow-hidden">
-                                     <img src="/images/payment-qr.png" alt="Payment QR" className="w-[85%] h-[85%] object-cover grayscale contrast-125 mix-blend-multiply" />
-                                </div>
-                                <div className="aspect-square bg-white border-4 border-[#03030F] flex items-center justify-center overflow-hidden">
-                                    <img src="/images/registration-qr.png" alt="Registration QR" className="w-[85%] h-[85%] object-cover grayscale contrast-125 mix-blend-multiply" />
-                                </div>
-                                <div className="text-center text-xs font-bold uppercase text-white/40 tracking-widest mt-2">Scan Pay</div>
-                                <div className="text-center text-xs font-bold uppercase text-white/40 tracking-widest mt-2">Scan Form</div>
+                            <div className="space-y-0">
+                                {timelineEvents.map((t, i) => {
+                                    const isPast = t.timestamp < (currentDate?.getTime() || 0)
+                                    return (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, x: -16 }}
+                                            whileInView={{ opacity: 1, x: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ delay: i * 0.08, duration: 0.4, ease: EASE_OUT }}
+                                            className="relative pl-8 sm:pl-10 pb-8 last:pb-0"
+                                        >
+                                            {/* Timeline line */}
+                                            {i < timelineEvents.length - 1 && (
+                                                <div className={`absolute left-[11px] sm:left-[13px] top-3 bottom-0 w-px ${isPast ? 'bg-indigo-500/30' : 'bg-white/[0.06]'}`} />
+                                            )}
+                                            {/* Dot */}
+                                            <div className={`absolute left-0 top-1.5 w-[22px] sm:w-[26px] h-[22px] sm:h-[26px] rounded-full border-2 flex items-center justify-center ${isPast ? 'border-indigo-500 bg-indigo-500/20' : 'border-white/20 bg-[#050510]'}`}>
+                                                {isPast && <div className="w-2 h-2 rounded-full bg-indigo-400" />}
+                                            </div>
+                                            <div className="text-[10px] sm:text-xs text-white/30 uppercase tracking-widest font-medium mb-1">{t.date}</div>
+                                            <h3 className="text-lg sm:text-xl font-heading font-bold text-white leading-tight">{t.title}</h3>
+                                            <p className="text-xs sm:text-sm text-white/30 mt-0.5">{t.desc}</p>
+                                        </motion.div>
+                                    )
+                                })}
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            {[
-                                { name: "Dr. Sandeep Gupta", p: "9717577497" },
-                                { name: "Dr. Ambuj Agarwal", p: "9412246459" },
-                                { name: "Dr. Gaurav Raj", p: "8587010020" },
-                                { name: "Ms. Harminder Kaur", p: "9034664521" }
-                            ].map((c, i) => (
-                                <div key={i} className="flex justify-between items-center border-b border-white/10 pb-4">
-                                    <span className="font-bold text-white/80">{c.name}</span>
-                                    {revealedContacts.includes(i) ? (
-                                        <a href={`tel:+91${c.p}`} className="font-mono text-[#00FF41] hover:text-[#FF6B00] transition-colors">+91 {c.p}</a>
-                                    ) : (
-                                        <button onClick={() => setRevealedContacts(p => [...p, i])} className="text-xs font-bold uppercase tracking-widest text-[#FF6B00] hover:text-white transition-colors">Decrypt Number</button>
-                                    )}
+                        <div>
+                            <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-white uppercase mb-8 sm:mb-10">
+                                Registration <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Info</span>
+                            </h2>
+
+                            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 sm:p-8 mb-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div>
+                                        <span className="text-[10px] sm:text-xs text-indigo-400 uppercase tracking-widest font-semibold">Entry Fee</span>
+                                        <div className="text-3xl sm:text-4xl font-heading font-black text-white mt-1">₹500</div>
+                                    </div>
+                                    <div className="text-right text-white/30 text-[10px] sm:text-xs uppercase tracking-widest leading-relaxed">Per Team<br />Registration</div>
                                 </div>
-                            ))}
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center overflow-hidden p-2">
+                                        <img src="/images/payment-qr.png" alt="Payment QR" className="w-full h-full object-contain" />
+                                    </div>
+                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center overflow-hidden p-2">
+                                        <img src="/images/registration-qr.png" alt="Registration QR" className="w-full h-full object-contain" />
+                                    </div>
+                                    <div className="text-center text-[9px] sm:text-[10px] text-white/30 uppercase tracking-widest font-medium">Payment</div>
+                                    <div className="text-center text-[9px] sm:text-[10px] text-white/30 uppercase tracking-widest font-medium">Register</div>
+                                </div>
+                            </div>
+
+                            {/* Contact section */}
+                            <div className="space-y-0">
+                                {[
+                                    { name: "Dr. Sandeep Gupta", p: "9717577497" },
+                                    { name: "Dr. Ambuj Agarwal", p: "9412246459" },
+                                    { name: "Dr. Gaurav Raj", p: "8587010020" },
+                                    { name: "Ms. Harminder Kaur", p: "9034664521" }
+                                ].map((c, i) => (
+                                    <div key={i} className="flex justify-between items-center py-3.5 border-b border-white/[0.06] last:border-0">
+                                        <span className="font-medium text-sm text-white/70">{c.name}</span>
+                                        {revealedContacts.includes(i) ? (
+                                            <a href={`tel:+91${c.p}`} className="font-mono text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
+                                                +91 {c.p}
+                                            </a>
+                                        ) : (
+                                            <button
+                                                onClick={() => setRevealedContacts(p => [...p, i])}
+                                                className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-white/30 hover:text-indigo-400 transition-colors active:scale-[0.97]"
+                                            >
+                                                Reveal
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
+                </Section>
 
-                {/* FAQ SECTION */}
-                <div className="mb-32">
-                    <div className="mb-12">
-                        <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tight text-white uppercase flex items-center gap-3">
-                            <ListChecks className="w-8 h-8 text-[#FF6B00]" /> Intelligence Data
+                {/* ═══════════════════ FAQ ═══════════════════ */}
+                <Section className="mb-24 sm:mb-32">
+                    <div className="mb-8 sm:mb-12">
+                        <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-white uppercase flex items-center gap-3">
+                            Frequently <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Asked</span>
                         </h2>
                     </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-4">
+
+                    <div className="grid md:grid-cols-2 gap-3">
                         {[
                             { q: "Who can participate?", a: "Students of B.Tech and all bachelor degree programs." },
-                            { q: "Can we form teams with other colleges/departments?", a: "Cross colleges team is not allowed, but cross departments are allowed and other department students can participate also." },
-                            { q: "Can I be part of multiple teams?", a: "A student can be part of 2 teams, but if more than one of their teams is selected for the final offline round, they must choose only one to represent." },
-                            { q: "What is the team size?", a: "2–5 members recommended." },
+                            { q: "Cross-college teams allowed?", a: "Cross colleges team is not allowed, but cross departments are allowed and other department students can participate also." },
+                            { q: "Can I be part of multiple teams?", a: "A student can be part of 2 teams, but if more than one is selected for finals, they must choose one." },
+                            { q: "What is the team size?", a: "2–5 members recommended per team." },
                             { q: "Is the hackathon online or offline?", a: "The Grand Finale is fully on-site (offline) at Sharda University." },
                             { q: "Will Wi-Fi be provided?", a: "Yes, secure Wi-Fi access will be arranged. Teams may also use personal hotspots as backup." }
                         ].map((faq, i) => (
-                            <details key={i} className="bg-white/5 border border-white/10 neo-border p-6 hover:bg-white/10 transition-colors group cursor-pointer [&_summary::-webkit-details-marker]:hidden">
-                                <summary className="text-sm font-bold tracking-wider text-white uppercase group-hover:text-[#00FF41] transition-colors flex items-center justify-between list-none">
-                                    <div className="flex items-center gap-3 font-sans font-bold">
-                                        <div className="w-2 h-2 bg-[#FF6B00]" />
-                                        {faq.q}
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 12 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: i * 0.04, duration: 0.3, ease: EASE_OUT }}
+                            >
+                                <button
+                                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                                    className="w-full text-left bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] rounded-xl p-5 sm:p-6 transition-all duration-200 active:scale-[0.99] group"
+                                >
+                                    <div className="flex items-start justify-between gap-4">
+                                        <span className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors leading-relaxed">{faq.q}</span>
+                                        <ChevronDown className={`w-4 h-4 text-white/30 shrink-0 mt-0.5 transition-transform duration-300 ${openFaq === i ? 'rotate-180' : ''}`} />
                                     </div>
-                                    <span className="text-[#00FF41] transition-transform group-open:rotate-180">▼</span>
-                                </summary>
-                                <p className="text-white/60 font-sans mt-4 pl-5 border-l-2 border-[#FF6B00]">{faq.a}</p>
-                            </details>
+                                    <AnimatePresence>
+                                        {openFaq === i && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.25, ease: EASE_OUT }}
+                                                className="overflow-hidden"
+                                            >
+                                                <p className="text-sm text-white/40 mt-4 pt-4 border-t border-white/[0.06] leading-relaxed">{faq.a}</p>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </button>
+                            </motion.div>
                         ))}
                     </div>
-                </div>
+                </Section>
 
-                {/* SPONSORS (TIGHT GRID) */}
-                <div className="mb-32">
-                    <h2 className="text-center text-3xl font-heading font-black tracking-widest text-white/30 uppercase mb-12 border-b border-white/10 pb-8">System Sponsors</h2>
-                    <div className="flex flex-wrap items-center justify-center gap-12">
-                         <div className="opacity-70 hover:opacity-100 transition-opacity flex flex-col items-center gap-4">
-                             <img src="/images/chings-secret-logo.jpg" alt="Chings" className="h-16 w-auto grayscale contrast-200 invert" />
-                             <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Title Provider</span>
-                         </div>
-                         <div className="opacity-70 hover:opacity-100 transition-opacity flex flex-col items-center gap-4">
-                             <img src="/images/prismatix-logo.jpg" alt="Prismatix" className="h-16 w-auto grayscale contrast-200 invert" />
-                             <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Associate Node</span>
-                         </div>
+                {/* ═══════════════════ SPONSORS ═══════════════════ */}
+                <Section className="mb-16">
+                    <div className="text-center mb-10">
+                        <h2 className="text-xl sm:text-2xl font-heading font-bold tracking-widest text-white/20 uppercase">Backed By</h2>
                     </div>
-                </div>
-
+                    <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16">
+                        <div className="opacity-50 hover:opacity-90 transition-opacity duration-300 flex flex-col items-center gap-3">
+                            <img src="/images/chings-secret-logo.jpg" alt="Chings" className="h-12 sm:h-16 w-auto grayscale contrast-200 invert rounded-lg" />
+                            <span className="text-[9px] sm:text-[10px] font-medium uppercase tracking-widest text-white/30">Title Partner</span>
+                        </div>
+                        <div className="opacity-50 hover:opacity-90 transition-opacity duration-300 flex flex-col items-center gap-3">
+                            <img src="/images/prismatix-logo.jpg" alt="Prismatix" className="h-12 sm:h-16 w-auto grayscale contrast-200 invert rounded-lg" />
+                            <span className="text-[9px] sm:text-[10px] font-medium uppercase tracking-widest text-white/30">Associate Partner</span>
+                        </div>
+                    </div>
+                </Section>
             </div>
+
+            {/* ═══════════ GLOBAL KEYFRAMES ═══════════ */}
+            <style jsx global>{`
+                @keyframes drift {
+                    0%, 100% { transform: translate(0, 0) scale(1); }
+                    25% { transform: translate(30px, -20px) scale(1.05); }
+                    50% { transform: translate(-20px, 15px) scale(0.95); }
+                    75% { transform: translate(15px, 25px) scale(1.02); }
+                }
+            `}</style>
         </div>
     )
 }

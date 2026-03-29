@@ -22,7 +22,6 @@ export async function GET(req: NextRequest) {
             theme,
             status,
             table_number,
-            is_shortlisted,
             project_objective,
             hackathon_participants (
                 id,
@@ -34,6 +33,7 @@ export async function GET(req: NextRequest) {
         .order('created_at', { ascending: false })
 
     if (error) {
+        console.error('hackathon-teams API error:', error)
         return NextResponse.json({ error: "Failed to fetch teams" }, { status: 500 })
     }
 
@@ -46,10 +46,10 @@ export async function GET(req: NextRequest) {
         theme: t.theme,
         status: t.status,
         table_number: t.table_number,
-        is_shortlisted: t.is_shortlisted,
+        is_shortlisted: t.status === 'shortlisted',
         project_objective: t.project_objective,
-        member_count: t.hackathon_participants?.length || 0,
-        members: (t.hackathon_participants || []).map(p => ({
+        member_count: (t.hackathon_participants as any[])?.length || 0,
+        members: ((t.hackathon_participants as any[]) || []).map((p: any) => ({
             name: p.name,
             role: p.role,
             college: p.college,

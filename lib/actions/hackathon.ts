@@ -1208,13 +1208,17 @@ export async function getTeamEvaluations(teamId: string, round: number) {
 
 export async function getPublicShortlistedTeams() {
     const supabase = await getSupabase()
-    const { data: teams } = await supabase
+    const { data: teams, error } = await supabase
         .from('hackathon_teams')
         .select(`
             id, name, idea_title, table_number, total_score
         `)
-        .in('status', ['shortlisted', 'shortlisted_notified'])
+        .eq('status', 'shortlisted')
         .order('total_score', { ascending: false })
+
+    if (error) {
+        console.error('[getPublicShortlistedTeams] Supabase error:', error)
+    }
 
     return teams || []
 }
