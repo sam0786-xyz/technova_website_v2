@@ -69,14 +69,14 @@ export default async function HackathonPortalLayout({
     const RoleIcon = badge.icon
 
     return (
-        <div className="min-h-screen bg-[#F7F8FA] text-gray-900">
+        <div className="min-h-screen bg-black text-white selection:bg-[#00FF41] selection:text-black font-sans">
             {/* Premium Dark Header */}
             <header className="sticky top-0 z-50 bg-[#0F0F14]/95 backdrop-blur-2xl border-b border-white/[0.08]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href="/" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 text-sm group">
-                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> 
-                            <span className="hidden sm:inline">Back</span>
+                        <Link href="/" className="bg-white/5 border border-white/10 hover:border-[#00FF41] hover:bg-[#00FF41]/10 hover:text-[#00FF41] text-white/70 px-4 py-2 flex items-center gap-2 text-xs font-mono uppercase tracking-widest transition-all group rounded-none">
+                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
+                            <span className="hidden sm:inline">EXIT CONSOLE</span>
                         </Link>
                         <div className="w-px h-6 bg-white/10" />
                         <div className="flex items-center gap-2.5">

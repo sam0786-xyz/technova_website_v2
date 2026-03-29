@@ -78,8 +78,8 @@ export default function ClubsPage() {
     const clubCount = Object.keys(CLUB_ASSETS).length
 
     return (
-        <div className="min-h-screen bg-black text-white overflow-hidden">
-            <AnimatedBackground variant="purple" intensity="low" />
+        <div className="min-h-screen bg-[var(--sig-bg)] text-[var(--sig-text)] overflow-hidden">
+            <AnimatedBackground />
 
             {/* Hero Section */}
             <section className="relative pt-28 pb-16 overflow-hidden">
@@ -92,11 +92,11 @@ export default function ClubsPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="flex items-center gap-2 text-sm mb-8"
                     >
-                        <Link href="/" className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors">
+                        <Link href="/" className="flex items-center gap-1.5 text-[var(--sig-text-secondary)] hover:text-white transition-colors">
                             <Home className="w-4 h-4" /> Home
                         </Link>
-                        <ChevronRight className="w-4 h-4 text-gray-600" />
-                        <span className="text-purple-400 font-medium">Clubs</span>
+                        <ChevronRight className="w-4 h-4 text-[var(--sig-border-hover)]" />
+                        <span className="text-[var(--sig-amber)] font-medium">Clubs</span>
                     </motion.nav>
 
                     <motion.div
@@ -104,22 +104,22 @@ export default function ClubsPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center max-w-3xl mx-auto"
                     >
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 backdrop-blur-xl mb-6">
-                            <Users className="w-4 h-4 text-purple-400" />
-                            <span className="text-purple-400 font-medium text-sm">Specialized Communities</span>
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--sig-indigo)]/30 bg-[var(--sig-indigo)]/10 backdrop-blur-xl mb-6">
+                            <Users className="w-4 h-4 text-[var(--sig-indigo)]" />
+                            <span className="text-[var(--sig-indigo)] font-medium text-sm tracking-wider uppercase font-mono">Specialized Communities</span>
                         </div>
                         <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
                             Explore Our Clubs
                         </h1>
-                        <p className="text-gray-400 text-lg mb-10">
+                        <p className="text-[var(--sig-text-secondary)] text-lg mb-10">
                             Join specialized communities to master your craft, connect with peers, and build the future together.
                         </p>
 
                         {/* Stats */}
                         <div className="flex justify-center gap-12">
-                            <AnimatedCounter value={clubCount} suffix="+" label="Active Clubs" className="text-purple-400" />
-                            <AnimatedCounter value={2500} suffix="+" label="Total Members" className="text-blue-400" />
-                            <AnimatedCounter value={50} suffix="+" label="Events/Year" className="text-emerald-400" />
+                            <AnimatedCounter value={clubCount} suffix="+" label="Active Clubs" className="text-[var(--sig-amber)]" />
+                            <AnimatedCounter value={2500} suffix="+" label="Total Members" className="text-[var(--sig-indigo)]" />
+                            <AnimatedCounter value={50} suffix="+" label="Events/Year" className="text-[var(--sig-green)]" />
                         </div>
                     </motion.div>
                 </div>
@@ -130,12 +130,12 @@ export default function ClubsPage() {
                 <div className="container mx-auto px-4">
                     {loading ? (
                         <div className="text-center py-20">
-                            <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                            <p className="text-gray-400">Loading clubs...</p>
+                            <div className="w-10 h-10 border-2 border-[var(--sig-amber)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                            <p className="text-[var(--sig-text-secondary)]">Loading clubs...</p>
                         </div>
                     ) : (
                         <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {dbClubs.map((club: any, idx: number) => {
+                            {dbClubs.map((club: any) => {
                                 const assets = CLUB_ASSETS[club.name]
                                 if (!assets) return null
 
@@ -151,7 +151,7 @@ export default function ClubsPage() {
                                                     <motion.div
                                                         className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
                                                         whileHover={{ scale: 1.1, rotate: 3 }}
-                                                        transition={{ type: "spring", stiffness: 300 }}
+                                                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
                                                     >
                                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                                         <img
@@ -163,14 +163,14 @@ export default function ClubsPage() {
 
                                                     {/* Content */}
                                                     <h3 className="text-2xl font-bold mb-3">{club.name}</h3>
-                                                    <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-1">
+                                                    <p className="text-[var(--sig-text-secondary)] text-sm leading-relaxed mb-6 flex-1">
                                                         {club.description}
                                                     </p>
 
                                                     {/* CTA */}
-                                                    <span className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-blue-400 group-hover:text-blue-300">
+                                                    <span className="spring-btn inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[var(--sig-amber)] group-hover:text-[var(--sig-amber)]/80">
                                                         Explore Club
-                                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
                                                     </span>
                                                 </div>
                                             </GlowCard>
@@ -185,18 +185,18 @@ export default function ClubsPage() {
 
             {/* Join CTA */}
             <section className="py-20 relative">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-950/10 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--sig-amber)]/[0.03] to-transparent" />
                 <div className="container mx-auto px-4 relative z-10">
                     <RevealOnScroll>
                         <div className="text-center max-w-2xl mx-auto">
-                            <Sparkles className="w-10 h-10 text-purple-400 mx-auto mb-4" />
+                            <Sparkles className="w-10 h-10 text-[var(--sig-amber)] mx-auto mb-4" />
                             <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Join?</h2>
-                            <p className="text-gray-400 mb-8">
+                            <p className="text-[var(--sig-text-secondary)] mb-8">
                                 Pick a club that matches your interests and start your journey towards becoming a tech leader.
                             </p>
                             <Link
                                 href="/events"
-                                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 rounded-xl font-bold hover:from-purple-500 hover:to-blue-500 transition-all shadow-[0_0_30px_rgba(147,51,234,0.3)] hover:shadow-[0_0_40px_rgba(147,51,234,0.5)]"
+                                className="spring-btn inline-flex items-center gap-2 bg-gradient-to-r from-[var(--sig-amber)] to-amber-500 px-8 py-4 rounded-xl font-bold text-black hover:opacity-90 transition-all shadow-[0_0_30px_var(--sig-amber-dim)] hover:shadow-[0_0_40px_var(--sig-amber-dim)]"
                             >
                                 Browse Upcoming Events
                                 <ArrowRight className="w-5 h-5" />

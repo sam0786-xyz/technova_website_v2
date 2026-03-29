@@ -612,29 +612,29 @@ export default function HackathonManageClient() {
         }
     };
 
-    const inputCls = "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-400 transition-all placeholder-gray-400";
-    const cardCls = "bg-white border border-gray-200 rounded-2xl p-6 shadow-sm";
+    const inputCls = "w-full bg-white/5 border border-white/20 rounded-none neo-border px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:border-[#00FF41] focus:ring-0 focus:outline-none/30 focus:border-purple-400 transition-all placeholder-gray-400";
+    const cardCls = "bg-[#03030F] border border-white/20 rounded-none neo-border p-6 shadow-none";
 
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
             {/* Breadcrumb + Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
-                        <Link href="/hackathon-portal" className="hover:text-gray-600 transition-colors">Dashboard</Link>
+                    <div className="flex items-center gap-2 text-sm text-white/40 font-mono mb-1">
+                        <Link href="/hackathon-portal" className="hover:text-white/70 transition-colors">Dashboard</Link>
                         <ChevronRight className="w-3 h-3" />
-                        <span className="text-gray-600 font-medium">Hackathon Management</span>
+                        <span className="text-white/70 font-medium">Hackathon Management</span>
                     </div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Manage Hackathon</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white">Manage Hackathon</h1>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                    <Link href="/hackathon-portal/scan" className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-medium transition-colors text-sm">
+                    <Link href="/hackathon-portal/scan" className="flex items-center gap-2 bg-white/10 hover:bg-white/5 text-white px-4 py-2 rounded-none neo-border font-medium transition-colors text-sm">
                         <QrCode className="w-4 h-4 text-emerald-400" /> Scanner
                     </Link>
-                    <button onClick={handleDownloadCheckIn} className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm transition-colors">
+                    <button onClick={handleDownloadCheckIn} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/20 text-white/80 px-3 py-2 rounded-none neo-border text-sm transition-colors">
                         <Download className="w-3.5 h-3.5" /> Check-in
                     </button>
-                    <button onClick={handleDownloadFoodLogs} className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm transition-colors">
+                    <button onClick={handleDownloadFoodLogs} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/20 text-white/80 px-3 py-2 rounded-none neo-border text-sm transition-colors">
                         <Download className="w-3.5 h-3.5" /> Food Logs
                     </button>
                 </div>
@@ -642,34 +642,34 @@ export default function HackathonManageClient() {
 
             {/* Summary Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className={cardCls}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Teams</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-gray-900">{teams.length}</span>{teams.length > 0 && <span className="text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full font-medium mb-1">+{teams.filter(t => t.status === 'pending').length} pending</span>}</div></div>
-                <div className={cardCls}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Shortlisted</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-purple-600">{teams.filter(t => t.status === 'shortlisted' || t.status === 'shortlisted_notified').length}</span><span className="text-xs text-gray-400 mb-1">of {teams.length}</span></div></div>
-                <div className={cardCls}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Checked-in</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-blue-600">{teams.filter(t => t.checked_in).length}</span><div className="flex-1 h-1.5 bg-gray-100 rounded-full mb-2 max-w-[80px]"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${teams.length > 0 ? (teams.filter(t => t.checked_in).length / teams.length * 100) : 0}%` }} /></div></div></div>
-                <div className={cardCls}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Average Score</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-amber-600">{avgScore}</span><div className="flex gap-0.5 mb-1">{[1,2,3,4,5].map(i => <Star key={i} className={`w-3 h-3 ${parseFloat(avgScore) >= i * 2 ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />)}</div></div></div>
+                <div className={cardCls}><p className="text-xs font-semibold text-white/40 font-mono uppercase tracking-wider mb-2">Total Teams</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-white">{teams.length}</span>{teams.length > 0 && <span className="text-xs text-[#00FF41] bg-emerald-50 px-1.5 py-0.5 rounded-full font-medium mb-1">+{teams.filter(t => t.status === 'pending').length} pending</span>}</div></div>
+                <div className={cardCls}><p className="text-xs font-semibold text-white/40 font-mono uppercase tracking-wider mb-2">Shortlisted</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-[#00FF41]">{teams.filter(t => t.status === 'shortlisted' || t.status === 'shortlisted_notified').length}</span><span className="text-xs text-white/40 font-mono mb-1">of {teams.length}</span></div></div>
+                <div className={cardCls}><p className="text-xs font-semibold text-white/40 font-mono uppercase tracking-wider mb-2">Checked-in</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-[#00FF41]">{teams.filter(t => t.checked_in).length}</span><div className="flex-1 h-1.5 bg-white/10 rounded-full mb-2 max-w-[80px]"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${teams.length > 0 ? (teams.filter(t => t.checked_in).length / teams.length * 100) : 0}%` }} /></div></div></div>
+                <div className={cardCls}><p className="text-xs font-semibold text-white/40 font-mono uppercase tracking-wider mb-2">Average Score</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-[#FF6B00]">{avgScore}</span><div className="flex gap-0.5 mb-1">{[1,2,3,4,5].map(i => <Star key={i} className={`w-3 h-3 ${parseFloat(avgScore) >= i * 2 ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />)}</div></div></div>
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 {message && (
-                    <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 ${message.type === 'error' ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-emerald-50 border border-emerald-200 text-emerald-700'}`}>
+                    <div className={`mb-6 p-4 rounded-none neo-border flex items-start gap-3 ${message.type === 'error' ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-emerald-50 border border-emerald-200 text-emerald-700'}`}>
                         {message.type === 'error' ? <AlertCircle className="w-5 h-5 flex-shrink-0" /> : <CheckCircle className="w-5 h-5 flex-shrink-0" />}
                         <p className="text-sm">{message.text}</p>
                     </div>
                 )}
-                <TabsList className="bg-white border border-gray-200 p-1 rounded-xl mb-6 md:mb-8 flex overflow-x-auto h-auto gap-1 md:gap-2 shadow-sm">
-                    <TabsTrigger value="teams" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 text-gray-500 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                <TabsList className="bg-[#03030F] border border-white/20 p-1 rounded-none neo-border mb-6 md:mb-8 flex overflow-x-auto h-auto gap-1 md:gap-2 shadow-none">
+                    <TabsTrigger value="teams" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 text-white/50 font-mono tracking-wider rounded-none px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
                         <Users className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Teams & Import
                     </TabsTrigger>
-                    <TabsTrigger value="evaluators" className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700 text-gray-500 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                    <TabsTrigger value="evaluators" className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700 text-white/50 font-mono tracking-wider rounded-none px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
                         <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Evaluators & Grading
                     </TabsTrigger>
-                    <TabsTrigger value="volunteers" className="data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-700 text-gray-500 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                    <TabsTrigger value="volunteers" className="data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-700 text-white/50 font-mono tracking-wider rounded-none px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
                         <UserCheck className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Volunteers
                     </TabsTrigger>
 
-                    <TabsTrigger value="attendance" onClick={() => { if (attendees.length === 0) loadAttendees(); }} className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 text-gray-500 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                    <TabsTrigger value="attendance" onClick={() => { if (attendees.length === 0) loadAttendees(); }} className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 text-white/50 font-mono tracking-wider rounded-none px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
                         <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Attendance
                     </TabsTrigger>
-                    <TabsTrigger value="settings" className="data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700 text-gray-500 rounded-lg px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
+                    <TabsTrigger value="settings" className="data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700 text-white/50 font-mono tracking-wider rounded-none px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
                         <Settings className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Settings & Roles
                     </TabsTrigger>
                 </TabsList>
@@ -678,18 +678,18 @@ export default function HackathonManageClient() {
                 {/* Teams Tab */}
                 <TabsContent value="teams" className="mt-0 space-y-6">
                     {/* Search / Filter / Actions Bar */}
-                    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                    <div className="bg-[#03030F] border border-white/20 rounded-none neo-border p-4 shadow-none">
                         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
                             <div className="flex items-center gap-3 flex-1">
                                 <div className="relative flex-1 max-w-sm">
-                                    <input type="text" placeholder="Search teams, members..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-9 pr-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300 placeholder-gray-400" />
-                                    <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                    <input type="text" placeholder="Search teams, members..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="w-full bg-white/5 border border-white/20 rounded-none pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:border-[#00FF41] focus:ring-0 focus:outline-none/20 focus:border-purple-300 placeholder-gray-400" />
+                                    <Search className="w-4 h-4 text-white/40 font-mono absolute left-3 top-1/2 -translate-y-1/2" />
                                 </div>
-                                <select value={selectedTheme} onChange={e => { setSelectedTheme(e.target.value); setCurrentPage(1); }} className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none appearance-none cursor-pointer">
+                                <select value={selectedTheme} onChange={e => { setSelectedTheme(e.target.value); setCurrentPage(1); }} className="bg-white/5 border border-white/20 rounded-none px-3 py-2.5 text-sm text-white/80 focus:outline-none appearance-none cursor-pointer">
                                     <option value="ALL">All Tracks</option>
                                     {uniqueThemes.map(t => <option key={t} value={t}>{t}</option>)}
                                 </select>
-                                <select value={selectedStatus} onChange={e => { setSelectedStatus(e.target.value); setCurrentPage(1); }} className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none appearance-none cursor-pointer">
+                                <select value={selectedStatus} onChange={e => { setSelectedStatus(e.target.value); setCurrentPage(1); }} className="bg-white/5 border border-white/20 rounded-none px-3 py-2.5 text-sm text-white/80 focus:outline-none appearance-none cursor-pointer">
                                     <option value="ALL">All Status</option>
                                     <option value="pending">Pending</option>
                                     <option value="shortlisted">Shortlisted</option>
@@ -698,13 +698,13 @@ export default function HackathonManageClient() {
                                 </select>
                             </div>
                             <div className="flex gap-2 flex-wrap">
-                                <button onClick={() => { const exportData = filteredTeams.map(t => ({ 'Team': t.name, 'Idea': t.idea_title, 'Track': t.theme, 'Score': t.final_score || 0, 'Status': t.status })); downloadCSV(exportData, 'teams_export.csv'); }} className="flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm transition-colors">
+                                <button onClick={() => { const exportData = filteredTeams.map(t => ({ 'Team': t.name, 'Idea': t.idea_title, 'Track': t.theme, 'Score': t.final_score || 0, 'Status': t.status })); downloadCSV(exportData, 'teams_export.csv'); }} className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/20 text-white/80 px-3 py-2 rounded-none text-sm transition-colors">
                                     <Download className="w-3.5 h-3.5" /> Export CSV
                                 </button>
-                                <button onClick={async () => { setMessage({ type: 'success', text: 'Sending QR code emails to shortlisted teams...' }); const res = await emailShortlistedTeams(); if (res.error) setMessage({ type: 'error', text: res.error }); else setMessage({ type: 'success', text: res.message || 'QR code emails sent!' }); }} className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm transition-colors">
+                                <button onClick={async () => { setMessage({ type: 'success', text: 'Sending QR code emails to shortlisted teams...' }); const res = await emailShortlistedTeams(); if (res.error) setMessage({ type: 'error', text: res.error }); else setMessage({ type: 'success', text: res.message || 'QR code emails sent!' }); }} className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 px-3 py-2 rounded-none text-sm transition-colors">
                                     <Mail className="w-3.5 h-3.5" /> Send QR Codes
                                 </button>
-                                <button onClick={() => setShowManualAdd(true)} className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                                <button onClick={() => setShowManualAdd(true)} className="flex items-center gap-1.5 bg-[#00FF41] hover:bg-white text-black font-black uppercase tracking-widest spring-btn text-white px-4 py-2 rounded-none text-sm font-medium transition-colors shadow-none">
                                     <Plus className="w-3.5 h-3.5" /> Add Team
                                 </button>
                             </div>
@@ -712,22 +712,22 @@ export default function HackathonManageClient() {
                     </div>
 
                     {/* Data Table */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div className="bg-[#03030F] border border-white/20 rounded-none neo-border shadow-none overflow-hidden">
                         {loading ? (
                             <div className="text-center py-16">
                                 <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                                <p className="text-gray-400 text-sm">Loading teams...</p>
+                                <p className="text-white/40 font-mono text-sm">Loading teams...</p>
                             </div>
                         ) : filteredTeams.length === 0 ? (
                             <div className="text-center py-16">
                                 <FileDown className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                                <p className="text-gray-400 text-sm">No teams found. Import a file or add manually.</p>
+                                <p className="text-white/40 font-mono text-sm">No teams found. Import a file or add manually.</p>
                             </div>
                         ) : (
                             <>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm text-left">
-                                        <thead className="text-xs text-gray-500 uppercase bg-gray-50/80 border-b border-gray-100">
+                                        <thead className="text-xs text-white/50 font-mono tracking-wider uppercase bg-white/5/80 border-b border-white/20">
                                             <tr>
                                                 <th className="px-4 py-3 font-semibold w-12">#</th>
                                                 <th className="px-4 py-3 font-semibold">Team ID</th>
@@ -746,25 +746,25 @@ export default function HackathonManageClient() {
                                                 const r1Avg = r1.length > 0 ? r1.reduce((sum: number, e: any) => sum + Number(e.total_score), 0) / r1.length : 0;
                                                 const members = team.hackathon_participants || [];
                                                 return (
-                                                <tr key={team.id} className="hover:bg-gray-50/50 transition-colors">
-                                                    <td className="px-4 py-3.5 text-gray-400 font-mono text-xs">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
-                                                    <td className="px-4 py-3.5 text-gray-500 font-mono text-xs">{team.team_code || '—'}</td>
-                                                    <td className="px-4 py-3.5 font-semibold text-gray-900">{team.name}</td>
-                                                    <td className="px-4 py-3.5 text-gray-600 max-w-[200px] truncate">{team.idea_title || 'TBD'}</td>
-                                                    <td className="px-4 py-3.5">{team.theme && <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md text-xs font-medium border border-purple-100">{team.theme}</span>}</td>
+                                                <tr key={team.id} className="hover:bg-white/5/50 transition-colors">
+                                                    <td className="px-4 py-3.5 text-white/40 font-mono font-mono text-xs">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
+                                                    <td className="px-4 py-3.5 text-white/50 font-mono tracking-wider font-mono text-xs">{team.team_code || '—'}</td>
+                                                    <td className="px-4 py-3.5 font-semibold text-white">{team.name}</td>
+                                                    <td className="px-4 py-3.5 text-white/70 max-w-[200px] truncate">{team.idea_title || 'TBD'}</td>
+                                                    <td className="px-4 py-3.5">{team.theme && <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-none text-xs font-medium border border-purple-100">{team.theme}</span>}</td>
                                                     <td className="px-4 py-3.5">
                                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                                             team.status === 'shortlisted' || team.status === 'shortlisted_notified' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                                                             team.status === 'evaluating' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
                                                             team.status === 'checked_in' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                                                            'bg-gray-50 text-gray-600 border border-gray-200'
+                                                            'bg-white/5 text-white/70 border border-white/20'
                                                         }`}>{team.status === 'shortlisted_notified' ? 'Shortlisted' : (team.status || 'pending')?.replace('_', ' ')}</span>
                                                     </td>
-                                                    <td className="px-4 py-3.5 text-center font-mono font-bold text-gray-900">{r1Avg > 0 ? r1Avg.toFixed(1) : '—'}</td>
+                                                    <td className="px-4 py-3.5 text-center font-mono font-bold text-white">{r1Avg > 0 ? r1Avg.toFixed(1) : '—'}</td>
                                                     <td className="px-4 py-3.5 text-center">
                                                         <div className="flex items-center justify-center gap-1">
-                                                            <button onClick={() => { setEditingTeam(team); setEditFormData({ teamName: team.name || '', ideaTitle: team.idea_title || '', teamCode: team.team_code || '', theme: team.theme || '', projectObjective: team.project_objective || '', leader: { id: (members.find((p: any) => p.role === 'leader') || members[0] || {}).id || '', name: (members.find((p: any) => p.role === 'leader') || members[0] || {}).name || '', email: (members.find((p: any) => p.role === 'leader') || members[0] || {}).email || '', phone: (members.find((p: any) => p.role === 'leader') || members[0] || {}).phone || '', course: '', section: '', system_id: '', year: '', college: '' }, members: members.filter((p: any) => p.role !== 'leader').map((m: any) => ({ id: m.id || '', name: m.name || '', email: m.email || '', phone: m.phone || '', course: '', section: '', system_id: '', year: '', college: '' })) }); }} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-700 transition-colors" title="Edit"><Edit className="w-3.5 h-3.5" /></button>
-                                                            <button onClick={() => handleToggleShortlist(team.id, team.status)} className={`p-1.5 rounded-lg transition-colors ${team.status === 'shortlisted' || team.status === 'shortlisted_notified' ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-amber-50 text-gray-400 hover:text-amber-600'}`} title="Toggle shortlist"><Star className="w-3.5 h-3.5" /></button>
+                                                            <button onClick={() => { setEditingTeam(team); setEditFormData({ teamName: team.name || '', ideaTitle: team.idea_title || '', teamCode: team.team_code || '', theme: team.theme || '', projectObjective: team.project_objective || '', leader: { id: (members.find((p: any) => p.role === 'leader') || members[0] || {}).id || '', name: (members.find((p: any) => p.role === 'leader') || members[0] || {}).name || '', email: (members.find((p: any) => p.role === 'leader') || members[0] || {}).email || '', phone: (members.find((p: any) => p.role === 'leader') || members[0] || {}).phone || '', course: '', section: '', system_id: '', year: '', college: '' }, members: members.filter((p: any) => p.role !== 'leader').map((m: any) => ({ id: m.id || '', name: m.name || '', email: m.email || '', phone: m.phone || '', course: '', section: '', system_id: '', year: '', college: '' })) }); }} className="p-1.5 hover:bg-white/10 rounded-none text-white/40 font-mono hover:text-white/80 transition-colors" title="Edit"><Edit className="w-3.5 h-3.5" /></button>
+                                                            <button onClick={() => handleToggleShortlist(team.id, team.status)} className={`p-1.5 rounded-none transition-colors ${team.status === 'shortlisted' || team.status === 'shortlisted_notified' ? 'bg-emerald-50 text-[#00FF41]' : 'hover:bg-amber-50 text-white/40 font-mono hover:text-[#FF6B00]'}`} title="Toggle shortlist"><Star className="w-3.5 h-3.5" /></button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -774,14 +774,14 @@ export default function HackathonManageClient() {
                                     </table>
                                 </div>
                                 {totalPages > 1 && (
-                                    <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-                                        <span className="text-sm text-gray-500">Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredTeams.length)} of {filteredTeams.length}</span>
+                                    <div className="flex items-center justify-between px-4 py-3 border-t border-white/20">
+                                        <span className="text-sm text-white/50 font-mono tracking-wider">Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredTeams.length)} of {filteredTeams.length}</span>
                                         <div className="flex gap-1">
-                                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 text-sm"><ChevronLeft className="w-4 h-4" /></button>
-                                            {Array.from({ length: Math.min(7, totalPages) }, (_, i) => { const page = currentPage <= 4 ? i + 1 : currentPage + i - 3; if (page < 1 || page > totalPages) return null; return <button key={page} onClick={() => setCurrentPage(page)} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${page === currentPage ? 'bg-purple-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{page}</button>; })}
-                                            {totalPages > 7 && <span className="px-2 py-1.5 text-gray-400">...</span>}
-                                            {totalPages > 7 && <button onClick={() => setCurrentPage(totalPages)} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${totalPages === currentPage ? 'bg-purple-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{totalPages}</button>}
-                                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 text-sm"><ChevronRight className="w-4 h-4" /></button>
+                                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1.5 rounded-none bg-[#03030F] border border-white/20 text-white/70 hover:bg-white/5 disabled:opacity-40 text-sm"><ChevronLeft className="w-4 h-4" /></button>
+                                            {Array.from({ length: Math.min(7, totalPages) }, (_, i) => { const page = currentPage <= 4 ? i + 1 : currentPage + i - 3; if (page < 1 || page > totalPages) return null; return <button key={page} onClick={() => setCurrentPage(page)} className={`px-3 py-1.5 rounded-none text-sm font-medium ${page === currentPage ? 'bg-purple-600 text-white' : 'bg-[#03030F] border border-white/20 text-white/70 hover:bg-white/5'}`}>{page}</button>; })}
+                                            {totalPages > 7 && <span className="px-2 py-1.5 text-white/40 font-mono">...</span>}
+                                            {totalPages > 7 && <button onClick={() => setCurrentPage(totalPages)} className={`px-3 py-1.5 rounded-none text-sm font-medium ${totalPages === currentPage ? 'bg-purple-600 text-white' : 'bg-[#03030F] border border-white/20 text-white/70 hover:bg-white/5'}`}>{totalPages}</button>}
+                                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1.5 rounded-none bg-[#03030F] border border-white/20 text-white/70 hover:bg-white/5 disabled:opacity-40 text-sm"><ChevronRight className="w-4 h-4" /></button>
                                         </div>
                                     </div>
                                 )}
@@ -792,40 +792,40 @@ export default function HackathonManageClient() {
                     {/* Timer + Schedule (full width, no evaluators management) */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Timer & Announcement */}
-                        <div className="bg-gray-900 rounded-2xl p-6 text-white relative">
-                            <a href="/hackathon/live" target="_blank" className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors group" title="Open Live Dashboard">
-                                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-white" />
+                        <div className="bg-white/10 rounded-none neo-border p-6 text-white relative">
+                            <a href="/hackathon/live" target="_blank" className="absolute top-4 right-4 p-2 bg-[#03030F]/10 hover:bg-[#03030F]/20 rounded-none transition-colors group" title="Open Live Dashboard">
+                                <ExternalLink className="w-4 h-4 text-white/40 font-mono group-hover:text-white" />
                             </a>
-                            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 text-center">Timer</p>
+                            <p className="text-xs font-bold uppercase tracking-widest text-white/40 font-mono mb-3 text-center">Timer</p>
                             <div className="text-4xl font-black font-mono tracking-wider mb-2 text-center">
                                 <LiveTimer timerEnd={settings?.timer_start && settings?.duration_hours && settings?.is_running ? new Date(new Date(settings.timer_start).getTime() + settings.duration_hours * 3600000).toISOString() : null} />
                             </div>
-                            <div className="flex gap-2 justify-center text-[10px] text-gray-500 uppercase tracking-wider mb-4">
+                            <div className="flex gap-2 justify-center text-[10px] text-white/50 font-mono tracking-wider uppercase tracking-wider mb-4">
                                 <span className="w-14 text-center">Hours</span><span className="w-14 text-center">Minutes</span><span className="w-14 text-center">Seconds</span>
                             </div>
                             <div className="flex gap-3 justify-center mb-5">
-                                <button onClick={() => handleTimerAction('start')} className="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">Start</button>
-                                <button onClick={() => handleTimerAction('reset')} className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">Stop</button>
+                                <button onClick={() => handleTimerAction('start')} className="bg-[#00FF41] hover:bg-white text-black font-black uppercase tracking-widest spring-btn text-white px-6 py-2 rounded-none text-sm font-medium transition-colors">Start</button>
+                                <button onClick={() => handleTimerAction('reset')} className="bg-white/10 hover:bg-white text-white hover:text-black font-bold uppercase tracking-widest spring-btn border border-white/20 text-white px-6 py-2 rounded-none text-sm font-medium transition-colors">Stop</button>
                             </div>
                             {/* Announcement */}
-                            <div className="border-t border-gray-700 pt-4">
-                                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Live Announcement</label>
+                            <div className="border-t border-white/20 pt-4">
+                                <label className="block text-xs font-semibold text-white/40 font-mono uppercase tracking-wider mb-2">Live Announcement</label>
                                 <textarea
                                     value={announcement}
                                     onChange={(e) => setAnnouncement(e.target.value)}
                                     placeholder={settings?.active_announcement || "Type an announcement for all screens..."}
-                                    className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 focus:outline-none focus:border-purple-500 resize-none h-20 text-sm text-white placeholder-gray-500"
+                                    className="w-full bg-white/5 border border-white/20 rounded-none neo-border p-3 focus:outline-none focus:border-[#00FF41] focus:ring-0 focus:outline-none resize-none h-20 text-sm text-white placeholder-gray-500"
                                 />
                                 <div className="flex gap-2 mt-2">
-                                    <button onClick={handlePushAnnouncement} className="flex-1 bg-purple-600 hover:bg-purple-500 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5">
+                                    <button onClick={handlePushAnnouncement} className="flex-1 bg-[#00FF41] hover:bg-white text-black font-black uppercase tracking-widest spring-btn py-2 rounded-none text-sm font-medium transition-colors flex items-center justify-center gap-1.5">
                                         <Send className="w-3.5 h-3.5" /> Push
                                     </button>
                                     {settings?.active_announcement && (
-                                        <button onClick={handleClearAnnouncement} className="bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded-lg text-sm font-medium transition-colors text-red-400 hover:text-red-300">Clear</button>
+                                        <button onClick={handleClearAnnouncement} className="bg-white/10 hover:bg-white text-white hover:text-black font-bold uppercase tracking-widest spring-btn border border-white/20 py-2 px-4 rounded-none text-sm font-medium transition-colors text-red-400 hover:text-red-300">Clear</button>
                                     )}
                                 </div>
                                 {settings?.active_announcement && (
-                                    <div className="mt-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                    <div className="mt-2 p-2 rounded-none bg-emerald-500/10 border border-emerald-500/20">
                                         <p className="text-[11px] text-emerald-400 flex items-center gap-1 truncate">
                                             <CheckCircle className="w-3 h-3 flex-shrink-0" /> Showing: &quot;{settings.active_announcement}&quot;
                                         </p>
@@ -835,17 +835,17 @@ export default function HackathonManageClient() {
                         </div>
 
                         {/* Event Schedule */}
-                        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-purple-600" /> Event Schedule</h3>
+                        <div className="bg-[#03030F] border border-white/20 rounded-none neo-border p-6 shadow-none">
+                            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-[#00FF41]" /> Event Schedule</h3>
                             <form onSubmit={handleAddSchedule} className="space-y-3 mb-5">
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-[10px] text-gray-500 uppercase font-semibold">Title</label>
-                                        <input type="text" name="title" required className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-purple-500" />
+                                        <label className="text-[10px] text-white/50 font-mono tracking-wider uppercase font-semibold">Title</label>
+                                        <input type="text" name="title" required className="w-full bg-white/5 border border-white/20 rounded-none px-3 py-2 text-sm text-white focus:outline-none focus:border-[#00FF41] focus:ring-0 focus:outline-none" />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] text-gray-500 uppercase font-semibold">Type</label>
-                                        <select name="event_type" required className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none [&>option]:bg-white">
+                                        <label className="text-[10px] text-white/50 font-mono tracking-wider uppercase font-semibold">Type</label>
+                                        <select name="event_type" required className="w-full bg-white/5 border border-white/20 rounded-none px-3 py-2 text-sm text-white focus:outline-none [&>option]:bg-[#03030F]">
                                             <option value="Activity">Activity</option>
                                             <option value="Meal">Meal</option>
                                             <option value="Evaluation">Evaluation</option>
@@ -854,67 +854,67 @@ export default function HackathonManageClient() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-[10px] text-gray-500 uppercase font-semibold">Start Time</label>
-                                        <input type="datetime-local" name="start_time" required className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none" />
+                                        <label className="text-[10px] text-white/50 font-mono tracking-wider uppercase font-semibold">Start Time</label>
+                                        <input type="datetime-local" name="start_time" required className="w-full bg-white/5 border border-white/20 rounded-none px-3 py-2 text-sm text-white focus:outline-none" />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] text-gray-500 uppercase font-semibold">End Time <span className="text-gray-300">(opt.)</span></label>
-                                        <input type="datetime-local" name="end_time" className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none" />
+                                        <label className="text-[10px] text-white/50 font-mono tracking-wider uppercase font-semibold">End Time <span className="text-gray-300">(opt.)</span></label>
+                                        <input type="datetime-local" name="end_time" className="w-full bg-white/5 border border-white/20 rounded-none px-3 py-2 text-sm text-white focus:outline-none" />
                                     </div>
                                 </div>
-                                <input type="text" name="description" placeholder="Description (optional)" className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none placeholder-gray-400" />
-                                <button type="submit" className="w-full bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg text-sm font-medium transition-colors">Add Schedule Item</button>
+                                <input type="text" name="description" placeholder="Description (optional)" className="w-full bg-white/5 border border-white/20 rounded-none px-3 py-2 text-sm text-white focus:outline-none placeholder-gray-400" />
+                                <button type="submit" className="w-full bg-[#00FF41] hover:bg-white text-black font-black uppercase tracking-widest spring-btn text-white py-2 rounded-none text-sm font-medium transition-colors">Add Schedule Item</button>
                             </form>
                             <div className="space-y-2 max-h-52 overflow-y-auto">
                                 {schedule.map((item: any) => (
-                                    <div key={item.id} className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                                    <div key={item.id} className="flex items-center justify-between bg-white/5 border border-white/20 rounded-none px-3 py-2">
                                         <div className="flex items-center gap-2 min-w-0">
                                             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${item.event_type === 'Meal' ? 'bg-orange-400' : item.event_type === 'Evaluation' ? 'bg-blue-500' : 'bg-purple-500'}`} />
-                                            <span className="text-sm font-medium text-gray-900 truncate">{item.title}</span>
-                                            <span className="text-[10px] text-gray-400 font-mono flex-shrink-0">{new Date(item.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span className="text-sm font-medium text-white truncate">{item.title}</span>
+                                            <span className="text-[10px] text-white/40 font-mono font-mono flex-shrink-0">{new Date(item.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                         </div>
                                         <button onClick={() => handleDeleteScheduleItem(item.id)} className="p-1 text-red-400/60 hover:text-red-500 hover:bg-red-50 rounded transition-colors flex-shrink-0" title="Delete">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 ))}
-                                {schedule.length === 0 && <p className="text-sm text-gray-400 text-center py-4 italic">No events scheduled yet.</p>}
+                                {schedule.length === 0 && <p className="text-sm text-white/40 font-mono text-center py-4 italic">No events scheduled yet.</p>}
                             </div>
                         </div>
                     </div>
 
                     {/* Import & Tools */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4"><Upload className="w-5 h-5 text-blue-600" /> Import Data</h3>
-                            <p className="text-sm text-gray-500 mb-4">Upload an Excel (.xlsx) or CSV file from Google Forms.</p>
+                        <div className="bg-[#03030F] border border-white/20 rounded-none neo-border p-6 shadow-none">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4"><Upload className="w-5 h-5 text-[#00FF41]" /> Import Data</h3>
+                            <p className="text-sm text-white/50 font-mono tracking-wider mb-4">Upload an Excel (.xlsx) or CSV file from Google Forms.</p>
                             <form onSubmit={handleUpload} className="space-y-3">
-                                <input type="file" name="file" accept=".csv,.xlsx" ref={fileInputRef} required className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:bg-gray-50 file:text-gray-700 file:font-semibold hover:file:bg-gray-100 cursor-pointer" />
-                                <button type="submit" disabled={uploading} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm">{uploading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Importing...</> : 'Upload & Sync Teams'}</button>
+                                <input type="file" name="file" accept=".csv,.xlsx" ref={fileInputRef} required className="block w-full text-sm text-white/50 font-mono tracking-wider file:mr-4 file:py-2 file:px-4 file:rounded-none file:border file:border-white/20 file:bg-white/5 file:text-white/80 file:font-semibold hover:file:bg-white/10 cursor-pointer" />
+                                <button type="submit" disabled={uploading} className="w-full bg-[#00FF41] hover:bg-white text-black font-black uppercase tracking-widest spring-btn text-white font-medium py-2.5 rounded-none neo-border transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm">{uploading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Importing...</> : 'Upload & Sync Teams'}</button>
                                 <div className="flex gap-2">
-                                    <button type="button" onClick={() => window.open('/api/admin/hackathon-template', '_blank')} className="flex-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-medium py-2 rounded-lg text-sm flex items-center justify-center gap-1"><Download className="w-3.5 h-3.5" /> Template</button>
-                                    <button type="button" onClick={() => setShowManualAdd(true)} className="flex-1 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 font-medium py-2 rounded-lg text-sm flex items-center justify-center gap-1"><Plus className="w-3.5 h-3.5" /> Manual</button>
+                                    <button type="button" onClick={() => window.open('/api/admin/hackathon-template', '_blank')} className="flex-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-medium py-2 rounded-none text-sm flex items-center justify-center gap-1"><Download className="w-3.5 h-3.5" /> Template</button>
+                                    <button type="button" onClick={() => setShowManualAdd(true)} className="flex-1 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 font-medium py-2 rounded-none text-sm flex items-center justify-center gap-1"><Plus className="w-3.5 h-3.5" /> Manual</button>
                                 </div>
                             </form>
                         </div>
-                        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4"><Mail className="w-5 h-5 text-blue-600" /> Email Blast</h3>
+                        <div className="bg-[#03030F] border border-white/20 rounded-none neo-border p-6 shadow-none">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4"><Mail className="w-5 h-5 text-[#00FF41]" /> Email Blast</h3>
                             <div className="space-y-3">
-                                <input type="text" value={customEmailSubject} onChange={e => setCustomEmailSubject(e.target.value)} placeholder="Subject line..." className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none placeholder-gray-400" />
-                                <textarea value={customEmailBody} onChange={e => setCustomEmailBody(e.target.value)} placeholder="Message body..." rows={3} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none placeholder-gray-400 resize-none" />
+                                <input type="text" value={customEmailSubject} onChange={e => setCustomEmailSubject(e.target.value)} placeholder="Subject line..." className="w-full bg-white/5 border border-white/20 rounded-none px-3 py-2 text-sm text-white focus:outline-none placeholder-gray-400" />
+                                <textarea value={customEmailBody} onChange={e => setCustomEmailBody(e.target.value)} placeholder="Message body..." rows={3} className="w-full bg-white/5 border border-white/20 rounded-none px-3 py-2 text-sm text-white focus:outline-none placeholder-gray-400 resize-none" />
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex gap-1">
-                                        <button onClick={() => setCustomEmailTarget('all')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${customEmailTarget === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>All</button>
-                                        <button onClick={() => setCustomEmailTarget('shortlisted')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${customEmailTarget === 'shortlisted' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Shortlisted</button>
+                                        <button onClick={() => setCustomEmailTarget('all')} className={`px-3 py-1.5 rounded-none text-xs font-medium transition-all ${customEmailTarget === 'all' ? 'bg-blue-600 text-white' : 'bg-white/10 text-white/70 hover:bg-gray-200'}`}>All</button>
+                                        <button onClick={() => setCustomEmailTarget('shortlisted')} className={`px-3 py-1.5 rounded-none text-xs font-medium transition-all ${customEmailTarget === 'shortlisted' ? 'bg-emerald-600 text-white' : 'bg-white/10 text-white/70 hover:bg-gray-200'}`}>Shortlisted</button>
                                     </div>
-                                    <button onClick={async () => { if (!customEmailSubject || !customEmailBody) { setMessage({ type: 'error', text: 'Subject and Body required!' }); return; } if (!confirm(`Send to ${customEmailTarget === 'all' ? 'ALL participants' : 'SHORTLISTED teams'}?`)) return; setBlastingEmail(true); try { const res = await blastCustomEmail(customEmailSubject, customEmailBody, customEmailTarget); if (res.error) setMessage({ type: 'error', text: res.error }); else { setMessage({ type: 'success', text: res.message || 'Sent!' }); setCustomEmailSubject(''); setCustomEmailBody(''); } } catch { setMessage({ type: 'error', text: 'Failed.' }); } setBlastingEmail(false); }} disabled={blastingEmail} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-1.5"><Send className="w-3.5 h-3.5" /> {blastingEmail ? '...' : 'Send'}</button>
+                                    <button onClick={async () => { if (!customEmailSubject || !customEmailBody) { setMessage({ type: 'error', text: 'Subject and Body required!' }); return; } if (!confirm(`Send to ${customEmailTarget === 'all' ? 'ALL participants' : 'SHORTLISTED teams'}?`)) return; setBlastingEmail(true); try { const res = await blastCustomEmail(customEmailSubject, customEmailBody, customEmailTarget); if (res.error) setMessage({ type: 'error', text: res.error }); else { setMessage({ type: 'success', text: res.message || 'Sent!' }); setCustomEmailSubject(''); setCustomEmailBody(''); } } catch { setMessage({ type: 'error', text: 'Failed.' }); } setBlastingEmail(false); }} disabled={blastingEmail} className="px-4 py-2 rounded-none text-sm font-medium bg-white/10 text-white hover:bg-white/5 transition-colors disabled:opacity-50 flex items-center gap-1.5"><Send className="w-3.5 h-3.5" /> {blastingEmail ? '...' : 'Send'}</button>
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-white border border-red-100 rounded-2xl p-6 shadow-sm">
+                        <div className="bg-[#03030F] border border-red-100 rounded-none neo-border p-6 shadow-none">
                             <h3 className="text-lg font-bold text-red-600 flex items-center gap-2 mb-2"><Trash2 className="w-5 h-5" /> Danger Zone</h3>
-                            <p className="text-sm text-gray-500 mb-4">Permanently delete all teams, evaluations, and participant data.</p>
-                            <button onClick={handleDeleteAllTeams} disabled={uploading || deletingTeams} className="bg-red-600 hover:bg-red-500 text-white font-medium py-2.5 px-6 rounded-xl text-sm transition-all disabled:opacity-50 flex items-center gap-2">
+                            <p className="text-sm text-white/50 font-mono tracking-wider mb-4">Permanently delete all teams, evaluations, and participant data.</p>
+                            <button onClick={handleDeleteAllTeams} disabled={uploading || deletingTeams} className="bg-[#FF6B00] hover:bg-white text-black font-black uppercase tracking-widest spring-btn text-white font-medium py-2.5 px-6 rounded-none neo-border text-sm transition-all disabled:opacity-50 flex items-center gap-2">
                                 {deletingTeams ? <><div className="w-4 h-4 border-2 border-red-300 border-t-white rounded-full animate-spin" /> Deleting...</> : <><Trash2 className="w-4 h-4" /> Clear All Data</>}
                             </button>
                         </div>
@@ -923,15 +923,15 @@ export default function HackathonManageClient() {
 
                 <TabsContent value="evaluators" className="mt-0 space-y-8">
                     {/* Evaluation Period Toggle */}
-                    <div className="border border-gray-200 bg-white rounded-2xl p-6 shadow-sm  flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="border border-white/20 bg-[#03030F] rounded-none neo-border p-6 shadow-none  flex flex-col md:flex-row items-center justify-between gap-6">
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900 mb-1">Global Evaluation Period</h2>
-                            <p className="text-gray-500 text-sm">When open, evaluators can submit scores. When closed, they can only view final peer-reviewed results.</p>
+                            <h2 className="text-xl font-bold text-white mb-1">Global Evaluation Period</h2>
+                            <p className="text-white/50 font-mono tracking-wider text-sm">When open, evaluators can submit scores. When closed, they can only view final peer-reviewed results.</p>
                         </div>
                         <button
                             onClick={handleToggleEvaluationPeriod}
-                            className={`px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${settings?.evaluation_open
-                                ? 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                            className={`px-6 py-3 rounded-none neo-border font-bold transition-all whitespace-nowrap ${settings?.evaluation_open
+                                ? 'bg-emerald-500/20 text-[#00FF41] hover:bg-emerald-500/30 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
                                 : 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
                                 }`}
                         >
@@ -939,11 +939,11 @@ export default function HackathonManageClient() {
                         </button>
                     </div>
 
-                    <div className="border border-gray-200 bg-white rounded-2xl p-6 shadow-sm ">
+                    <div className="border border-white/20 bg-[#03030F] rounded-none neo-border p-6 shadow-none ">
                         <div className="flex flex-col md:flex-row gap-8">
                             <div className="flex-1 max-w-md">
-                                <h2 className="text-xl font-bold text-gray-900 mb-2">Evaluator Management</h2>
-                                <p className="text-gray-500 text-sm mb-6">Add evaluator emails here so they can securely access the evaluation portal to score teams. They will log in using this email.</p>
+                                <h2 className="text-xl font-bold text-white mb-2">Evaluator Management</h2>
+                                <p className="text-white/50 font-mono tracking-wider text-sm mb-6">Add evaluator emails here so they can securely access the evaluation portal to score teams. They will log in using this email.</p>
 
                                 <form onSubmit={handleAddEvaluator} className="flex gap-3">
                                     <input
@@ -951,33 +951,33 @@ export default function HackathonManageClient() {
                                         value={evalEmail}
                                         onChange={(e) => setEvalEmail(e.target.value)}
                                         placeholder="Evaluator Email (e.g. judge@company.com)"
-                                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-amber-500 text-gray-900"
+                                        className="flex-1 bg-white/5 border border-white/20 rounded-none neo-border px-4 py-2 focus:outline-none focus:border-amber-500 text-white"
                                         required
                                     />
-                                    <button type="submit" className="bg-amber-600 hover:bg-amber-500 px-6 py-2 rounded-xl text-gray-900 font-medium transition-colors whitespace-nowrap">
+                                    <button type="submit" className="bg-amber-600 hover:bg-amber-500 px-6 py-2 rounded-none neo-border text-white font-medium transition-colors whitespace-nowrap">
                                         Add
                                     </button>
                                 </form>
-                                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                                    <p className="text-sm text-blue-600 font-medium mb-1">Evaluator Portal Link</p>
-                                    <p className="text-xs text-gray-500 mb-2">Share this secure link with your evaluators after adding them:</p>
-                                    <div className="flex items-center gap-2 bg-gray-100 p-2.5 rounded-lg border border-gray-100 overflow-hidden">
-                                        <code className="text-xs text-amber-600 select-all flex-1 truncate overflow-hidden break-all">https://www.technovashardauniversity.in/hackathon-portal</code>
-                                        <Link href="/hackathon-portal/evaluate" target="_blank" className="text-blue-600 hover:text-blue-300 text-xs underline whitespace-nowrap flex-shrink-0">
+                                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-none neo-border">
+                                    <p className="text-sm text-[#00FF41] font-medium mb-1">Evaluator Portal Link</p>
+                                    <p className="text-xs text-white/50 font-mono tracking-wider mb-2">Share this secure link with your evaluators after adding them:</p>
+                                    <div className="flex items-center gap-2 bg-white/10 p-2.5 rounded-none border border-white/20 overflow-hidden">
+                                        <code className="text-xs text-[#FF6B00] select-all flex-1 truncate overflow-hidden break-all">https://www.technovashardauniversity.in/hackathon-portal</code>
+                                        <Link href="/hackathon-portal/evaluate" target="_blank" className="text-[#00FF41] hover:text-blue-300 text-xs underline whitespace-nowrap flex-shrink-0">
                                             Open Portal
                                         </Link>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex-1 border-l border-gray-200 pl-0 md:pl-8">
+                            <div className="flex-1 border-l border-white/20 pl-0 md:pl-8">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-lg font-semibold text-gray-900">Current Evaluators</h3>
+                                    <h3 className="text-lg font-semibold text-white">Current Evaluators</h3>
                                     {evaluators.length > 0 && (
                                         <button
                                             onClick={() => handleSendEvaluatorInvite()}
                                             disabled={sendingEmails}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-500/30 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-500/30 rounded-none text-sm font-medium transition-colors disabled:opacity-50"
                                         >
                                             <Send className="w-4 h-4" />
                                             Send to All
@@ -985,27 +985,27 @@ export default function HackathonManageClient() {
                                     )}
                                 </div>
                                 {evaluators.length === 0 ? (
-                                    <p className="text-gray-500 text-sm italic">No evaluators added yet.</p>
+                                    <p className="text-white/50 font-mono tracking-wider text-sm italic">No evaluators added yet.</p>
                                 ) : (
                                     <div className="space-y-3">
                                         {evaluators.map(ev => (
-                                            <div key={ev.id} className="group flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-white/20 transition-colors">
+                                            <div key={ev.id} className="group flex items-center justify-between p-3 rounded-none bg-white/5 border border-white/20 hover:border-white/20 transition-colors">
                                                 <div>
-                                                    <p className="font-medium text-gray-900">{ev.name}</p>
-                                                    <p className="text-xs text-gray-500">{ev.email}</p>
+                                                    <p className="font-medium text-white">{ev.name}</p>
+                                                    <p className="text-xs text-white/50 font-mono tracking-wider">{ev.email}</p>
                                                 </div>
                                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={() => handleSendEvaluatorInvite(ev.id)}
                                                         disabled={sendingEmails}
-                                                        className="p-2 text-blue-600 hover:bg-blue-400/10 rounded-lg transition-colors"
+                                                        className="p-2 text-[#00FF41] hover:bg-blue-400/10 rounded-none transition-colors"
                                                         title="Send Magic Link"
                                                     >
                                                         <Send className="w-4 h-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleRemoveEvaluator(ev.id)}
-                                                        className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                                                        className="p-2 text-red-400 hover:bg-red-400/10 rounded-none transition-colors"
                                                         title="Remove Evaluator"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -1020,35 +1020,35 @@ export default function HackathonManageClient() {
                     </div>
 
                     {/* Edit Request Approvals */}
-                    <div className="border border-gray-200 bg-white rounded-2xl p-6 shadow-sm">
+                    <div className="border border-white/20 bg-[#03030F] rounded-none neo-border p-6 shadow-none">
                         <div className="mb-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <AlertCircle className="w-5 h-5 text-amber-500" />
                                 <div>
-                                    <h2 className="text-lg font-bold text-gray-900">Edit Requests</h2>
-                                    <p className="text-sm text-gray-500">Evaluators who have requested permission to re-edit their submitted scores.</p>
+                                    <h2 className="text-lg font-bold text-white">Edit Requests</h2>
+                                    <p className="text-sm text-white/50 font-mono tracking-wider">Evaluators who have requested permission to re-edit their submitted scores.</p>
                                 </div>
                             </div>
-                            <button onClick={async () => { const r = await getEditRequests(); setEditRequests(r); }} className="text-sm text-blue-600 hover:text-blue-500 font-medium">
+                            <button onClick={async () => { const r = await getEditRequests(); setEditRequests(r); }} className="text-sm text-[#00FF41] hover:text-blue-500 font-medium">
                                 Refresh
                             </button>
                         </div>
                         {editRequests.length === 0 ? (
-                            <p className="text-sm text-gray-400 italic text-center py-6">No pending edit requests.</p>
+                            <p className="text-sm text-white/40 font-mono italic text-center py-6">No pending edit requests.</p>
                         ) : (
                             <div className="space-y-3">
                                 {editRequests.map((req: any) => (
-                                    <div key={req.id} className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                    <div key={req.id} className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-none neo-border p-4">
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-900">
+                                            <p className="text-sm font-semibold text-white">
                                                 {req.hackathon_evaluators?.name || req.hackathon_evaluators?.email || 'Unknown Evaluator'}
-                                                <span className="text-gray-400 font-normal ml-1.5">requests edit for</span>
+                                                <span className="text-white/40 font-mono font-normal ml-1.5">requests edit for</span>
                                             </p>
-                                            <p className="text-sm text-gray-700 mt-0.5">
+                                            <p className="text-sm text-white/80 mt-0.5">
                                                 Team: <strong>{req.hackathon_teams?.name || 'Unknown'}</strong>
-                                                {req.hackathon_teams?.team_code && <span className="text-gray-400 ml-1">({req.hackathon_teams.team_code})</span>}
-                                                <span className="text-gray-400 ml-2">• Round {req.evaluation_round}</span>
-                                                <span className="text-gray-400 ml-2">• Score: {req.total_score}</span>
+                                                {req.hackathon_teams?.team_code && <span className="text-white/40 font-mono ml-1">({req.hackathon_teams.team_code})</span>}
+                                                <span className="text-white/40 font-mono ml-2">• Round {req.evaluation_round}</span>
+                                                <span className="text-white/40 font-mono ml-2">• Score: {req.total_score}</span>
                                             </p>
                                         </div>
                                         <button
@@ -1061,7 +1061,7 @@ export default function HackathonManageClient() {
                                                     setMessage({ type: 'error', text: res.error || 'Failed to approve' });
                                                 }
                                             }}
-                                            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                                            className="bg-[#00FF41] hover:bg-white text-black font-black uppercase tracking-widest spring-btn text-white px-4 py-2 rounded-none text-sm font-medium transition-colors whitespace-nowrap"
                                         >
                                             Approve Edit
                                         </button>
@@ -1073,11 +1073,11 @@ export default function HackathonManageClient() {
                 </TabsContent>
 
                 {/* Volunteers Tab */}
-                <TabsContent value="volunteers" className="mt-0 border border-gray-200 bg-white rounded-2xl p-6 shadow-sm ">
+                <TabsContent value="volunteers" className="mt-0 border border-white/20 bg-[#03030F] rounded-none neo-border p-6 shadow-none ">
                     <div className="flex flex-col md:flex-row gap-8">
                         <div className="flex-1 max-w-md">
-                            <h2 className="text-xl font-bold text-gray-900 mb-2">Volunteer Management</h2>
-                            <p className="text-gray-500 text-sm mb-6">Add student volunteers who can scan QR codes for check-in, checkout, and meals. They will log in with their Sharda University email.</p>
+                            <h2 className="text-xl font-bold text-white mb-2">Volunteer Management</h2>
+                            <p className="text-white/50 font-mono tracking-wider text-sm mb-6">Add student volunteers who can scan QR codes for check-in, checkout, and meals. They will log in with their Sharda University email.</p>
 
                             <form onSubmit={async (e) => {
                                 e.preventDefault();
@@ -1099,12 +1099,12 @@ export default function HackathonManageClient() {
                                         value={volName}
                                         onChange={(e) => setVolName(e.target.value)}
                                         placeholder="Volunteer Name"
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 text-gray-900"
+                                        className="w-full bg-white/5 border border-white/20 rounded-none neo-border px-4 py-2 focus:outline-none focus:border-emerald-500 text-white"
                                     />
                                     <select
                                         value={volTeam}
                                         onChange={(e) => setVolTeam(e.target.value)}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 text-gray-900"
+                                        className="w-full bg-white/5 border border-white/20 rounded-none neo-border px-4 py-2 focus:outline-none focus:border-emerald-500 text-white"
                                     >
                                         <option value="Registration & Stage Team">Registration & Stage Team</option>
                                         <option value="Media Team">Media Team</option>
@@ -1116,7 +1116,7 @@ export default function HackathonManageClient() {
                                     <select
                                         value={volShift}
                                         onChange={(e) => setVolShift(e.target.value)}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 text-gray-900"
+                                        className="w-full bg-white/5 border border-white/20 rounded-none neo-border px-4 py-2 focus:outline-none focus:border-emerald-500 text-white"
                                     >
                                         <option value="Morning">Morning Shift</option>
                                         <option value="Night">Night Shift</option>
@@ -1129,19 +1129,19 @@ export default function HackathonManageClient() {
                                         value={volEmail}
                                         onChange={(e) => setVolEmail(e.target.value)}
                                         placeholder="student@ug.sharda.ac.in"
-                                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 text-gray-900"
+                                        className="flex-1 bg-white/5 border border-white/20 rounded-none neo-border px-4 py-2 focus:outline-none focus:border-emerald-500 text-white"
                                         required
                                     />
-                                    <button type="submit" className="bg-emerald-600 hover:bg-emerald-500 px-6 py-2 rounded-xl text-gray-900 font-medium transition-colors whitespace-nowrap">
+                                    <button type="submit" className="bg-[#00FF41] hover:bg-white text-black font-black uppercase tracking-widest spring-btn px-6 py-2 rounded-none neo-border text-white font-medium transition-colors whitespace-nowrap">
                                         Add
                                     </button>
                                 </div>
                             </form>
 
                             {/* Bulk Upload */}
-                            <div className="mt-6 p-4 bg-violet-500/10 border border-violet-500/20 rounded-xl">
+                            <div className="mt-6 p-4 bg-violet-500/10 border border-violet-500/20 rounded-none neo-border">
                                 <p className="text-sm text-violet-400 font-bold mb-1">📁 Bulk Upload Volunteers</p>
-                                <p className="text-xs text-gray-500 mb-3">Upload an Excel file with columns: S.No, Name, Role, System ID, Section, Year, Mobile Number, Department, Email</p>
+                                <p className="text-xs text-white/50 font-mono tracking-wider mb-3">Upload an Excel file with columns: S.No, Name, Role, System ID, Section, Year, Mobile Number, Department, Email</p>
                                 <form onSubmit={async (e) => {
                                     e.preventDefault();
                                     const formData = new FormData(e.currentTarget);
@@ -1172,29 +1172,29 @@ export default function HackathonManageClient() {
                                         type="file"
                                         name="volFile"
                                         accept=".xlsx,.xls,.csv"
-                                        className="flex-1 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 file:mr-3 file:px-3 file:py-1 file:rounded-md file:bg-violet-600 file:text-gray-900 file:border-0 file:text-xs file:cursor-pointer"
+                                        className="flex-1 bg-white/10 border border-white/20 rounded-none px-3 py-2 text-xs text-white file:mr-3 file:px-3 file:py-1 file:rounded-none file:bg-violet-600 file:text-white file:border-0 file:text-xs file:cursor-pointer"
                                     />
                                     <button
                                         type="submit"
                                         disabled={uploading}
-                                        className="bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-lg text-gray-900 text-xs font-bold transition-colors disabled:opacity-50 whitespace-nowrap"
+                                        className="bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-none text-white text-xs font-bold transition-colors disabled:opacity-50 whitespace-nowrap"
                                     >
                                         {uploading ? 'Uploading...' : 'Upload'}
                                     </button>
                                 </form>
                             </div>
 
-                            <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                                <p className="text-sm text-emerald-600 font-medium mb-1">Scanner Links</p>
-                                <p className="text-xs text-gray-500 mb-2">Share these links with respective roles:</p>
+                            <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-none neo-border">
+                                <p className="text-sm text-[#00FF41] font-medium mb-1">Scanner Links</p>
+                                <p className="text-xs text-white/50 font-mono tracking-wider mb-2">Share these links with respective roles:</p>
                                 <div className="space-y-2">
-                                    <div className="flex items-center gap-2 bg-gray-100 p-2.5 rounded-lg border border-gray-100 overflow-hidden">
-                                        <code className="text-xs text-emerald-600 select-all flex-1 truncate">Participant Scanner</code>
+                                    <div className="flex items-center gap-2 bg-white/10 p-2.5 rounded-none border border-white/20 overflow-hidden">
+                                        <code className="text-xs text-[#00FF41] select-all flex-1 truncate">Participant Scanner</code>
                                         <Link href="/hackathon-portal/scan" target="_blank" className="text-green-400 hover:text-green-300 text-xs underline whitespace-nowrap flex-shrink-0">
                                             Open
                                         </Link>
                                     </div>
-                                    <div className="flex items-center gap-2 bg-gray-100 p-2.5 rounded-lg border border-gray-100 overflow-hidden">
+                                    <div className="flex items-center gap-2 bg-white/10 p-2.5 rounded-none border border-white/20 overflow-hidden">
                                         <code className="text-xs text-violet-400 select-all flex-1 truncate">Volunteer Scanner</code>
                                         <Link href="/hackathon-portal/volunteer-scan" target="_blank" className="text-violet-400 hover:text-violet-300 text-xs underline whitespace-nowrap flex-shrink-0">
                                             Open
@@ -1204,39 +1204,39 @@ export default function HackathonManageClient() {
                             </div>
                         </div>
 
-                        <div className="flex-1 border-l border-gray-200 pl-0 md:pl-8">
+                        <div className="flex-1 border-l border-white/20 pl-0 md:pl-8">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900">Current Volunteers</h3>
+                                <h3 className="text-lg font-semibold text-white">Current Volunteers</h3>
                                 <button
                                     type="button"
                                     onClick={handleDownloadVolunteers}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-xs font-medium text-emerald-600 transition-colors"
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 rounded-none text-xs font-medium text-[#00FF41] transition-colors"
                                 >
                                     <Download className="w-3.5 h-3.5" /> Download CSV
                                 </button>
                             </div>
                             
                             {volunteers.length === 0 ? (
-                                <p className="text-gray-500 text-sm italic">No volunteers added yet.</p>
+                                <p className="text-white/50 font-mono tracking-wider text-sm italic">No volunteers added yet.</p>
                             ) : (
                                 <div className="space-y-3">
                                     {volunteers.map((v: any) => (
-                                        <div key={v.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
+                                        <div key={v.id} className="flex items-center justify-between p-3 rounded-none bg-white/5 border border-white/20">
                                             <div>
-                                                <p className="font-medium text-gray-900 flex flex-wrap items-center gap-2">
+                                                <p className="font-medium text-white flex flex-wrap items-center gap-2">
                                                     {v.name}
                                                     {v.team_name && (
-                                                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[10px] uppercase tracking-wider font-bold">
+                                                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-[#00FF41] border border-emerald-500/20 text-[10px] uppercase tracking-wider font-bold">
                                                             {v.team_name}
                                                         </span>
                                                     )}
                                                     {v.shift && (
-                                                        <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 border border-blue-500/20 text-[10px] uppercase tracking-wider font-bold">
+                                                        <span className="px-2 py-0.5 rounded bg-blue-500/10 text-[#00FF41] border border-blue-500/20 text-[10px] uppercase tracking-wider font-bold">
                                                             {v.shift} Shift
                                                         </span>
                                                     )}
                                                 </p>
-                                                <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                                                <div className="text-xs text-white/50 font-mono tracking-wider mt-1 flex flex-wrap gap-x-3 gap-y-1">
                                                     <span>{v.email}</span>
                                                     {v.mobile && <span>• Phone: {v.mobile}</span>}
                                                     {v.system_id && <span>• Sys ID: {v.system_id}</span>}
@@ -1245,7 +1245,7 @@ export default function HackathonManageClient() {
                                             </div>
                                             <button
                                                 onClick={async () => { await removeVolunteer(v.id); loadData(); }}
-                                                className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                                                className="p-2 text-red-400 hover:bg-red-400/10 rounded-none transition-colors"
                                                 title="Remove Volunteer"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -1260,27 +1260,27 @@ export default function HackathonManageClient() {
 
 
                 {/* Settings Tab */}
-                <TabsContent value="settings" className="mt-0 border border-gray-200 bg-white rounded-2xl p-6 shadow-sm ">
+                <TabsContent value="settings" className="mt-0 border border-white/20 bg-[#03030F] rounded-none neo-border p-6 shadow-none ">
                     <div className="max-w-xl">
-                        <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                             <Settings className="w-5 h-5 text-yellow-400" /> Platform Settings
                         </h2>
-                        <p className="text-gray-500 text-sm mb-8">Manage global platform configurations and tracking schemas.</p>
+                        <p className="text-white/50 font-mono tracking-wider text-sm mb-8">Manage global platform configurations and tracking schemas.</p>
 
-                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 relative overflow-hidden">
+                        <div className="bg-white/5 border border-white/20 rounded-none neo-border p-6 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-3xl rounded-full" />
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                                 <Utensils className="w-4 h-4 text-orange-400" /> Verify & Track Custom Meals
                             </h3>
-                            <p className="text-xs text-gray-500 mb-6">Define exactly which meals food volunteers can scan and distribute. This syncs directly to all volunteers' Verify & Track dropdowns.</p>
+                            <p className="text-xs text-white/50 font-mono tracking-wider mb-6">Define exactly which meals food volunteers can scan and distribute. This syncs directly to all volunteers' Verify & Track dropdowns.</p>
 
                             <div className="space-y-3 mb-6">
                                 {customMeals.map((meal, idx) => (
-                                    <div key={idx} className="flex items-center justify-between bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl hover:border-orange-500/30 transition-colors">
-                                        <span className="text-sm font-medium text-gray-700">{meal}</span>
+                                    <div key={idx} className="flex items-center justify-between bg-white/5 border border-white/20 px-4 py-3 rounded-none neo-border hover:border-orange-500/30 transition-colors">
+                                        <span className="text-sm font-medium text-white/80">{meal}</span>
                                         <button
                                             onClick={() => setCustomMeals(customMeals.filter((_, i) => i !== idx))}
-                                            className="text-red-400 hover:bg-red-500/10 hover:text-red-300 p-1.5 rounded-lg transition-colors"
+                                            className="text-red-400 hover:bg-red-500/10 hover:text-red-300 p-1.5 rounded-none transition-colors"
                                             title="Delete Meal Round"
                                         >
                                             <X className="w-4 h-4" />
@@ -1288,7 +1288,7 @@ export default function HackathonManageClient() {
                                     </div>
                                 ))}
                                 {customMeals.length === 0 && (
-                                    <p className="text-sm text-gray-500 italic py-4 text-center border border-dashed border-gray-200 rounded-xl">No meals currently defined.</p>
+                                    <p className="text-sm text-white/50 font-mono tracking-wider italic py-4 text-center border border-dashed border-white/20 rounded-none neo-border">No meals currently defined.</p>
                                 )}
                             </div>
 
@@ -1304,7 +1304,7 @@ export default function HackathonManageClient() {
                                         }
                                     }}
                                     placeholder="Add a new meal (e.g. Day 3 Breakfast)"
-                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-orange-500 transition-colors"
+                                    className="flex-1 bg-white/5 border border-white/20 rounded-none neo-border px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
                                 />
                                 <button
                                     onClick={() => {
@@ -1313,7 +1313,7 @@ export default function HackathonManageClient() {
                                             setNewMeal('');
                                         }
                                     }}
-                                    className="bg-orange-600 hover:bg-orange-500 text-gray-900 px-6 py-3 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-orange-500/20"
+                                    className="bg-[#FF6B00] hover:bg-white text-black font-black uppercase tracking-widest spring-btn text-white px-6 py-3 rounded-none neo-border text-sm font-bold transition-colors shadow-lg shadow-orange-500/20"
                                 >
                                     Add Meal
                                 </button>
@@ -1321,17 +1321,17 @@ export default function HackathonManageClient() {
 
                             <button
                                 onClick={handleSaveMeals}
-                                className="w-full bg-gray-100 hover:bg-white/20 py-3 rounded-xl text-gray-900 mt-6 font-bold transition-colors border border-gray-200 flex items-center justify-center gap-2"
+                                className="w-full bg-white/10 hover:bg-[#03030F]/20 py-3 rounded-none neo-border text-white mt-6 font-bold transition-colors border border-white/20 flex items-center justify-center gap-2"
                             >
                                 <CheckCircle className="w-4 h-4" /> Save Meal Rounds
                             </button>
                         </div>
 
-                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mt-6 relative overflow-hidden">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                                <Star className="w-4 h-4 text-amber-600" /> Evaluation Rounds
+                        <div className="bg-white/5 border border-white/20 rounded-none neo-border p-6 mt-6 relative overflow-hidden">
+                            <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                                <Star className="w-4 h-4 text-[#FF6B00]" /> Evaluation Rounds
                             </h3>
-                            <p className="text-xs text-gray-500 mb-6">Set how many rounds of evaluation are required for this hackathon (e.g., 1 for screening, 2 for grand finale).</p>
+                            <p className="text-xs text-white/50 font-mono tracking-wider mb-6">Set how many rounds of evaluation are required for this hackathon (e.g., 1 for screening, 2 for grand finale).</p>
 
                             <div className="flex items-center gap-4">
                                 <input
@@ -1340,7 +1340,7 @@ export default function HackathonManageClient() {
                                     max="5"
                                     value={evaluationRounds}
                                     onChange={(e) => setEvaluationRounds(parseInt(e.target.value) || 1)}
-                                    className="w-24 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-center font-bold focus:outline-none focus:border-amber-500 transition-colors"
+                                    className="w-24 bg-white/5 border border-white/20 rounded-none neo-border px-4 py-3 text-white text-center font-bold focus:outline-none focus:border-amber-500 transition-colors"
                                 />
                                 <button
                                     onClick={async () => {
@@ -1351,7 +1351,7 @@ export default function HackathonManageClient() {
                                             setMessage({ type: 'error', text: res.error || "Failed to update rounds" });
                                         }
                                     }}
-                                    className="bg-amber-600 hover:bg-amber-500 text-gray-900 px-6 py-3 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-amber-500/20"
+                                    className="bg-amber-600 hover:bg-amber-500 text-white px-6 py-3 rounded-none neo-border text-sm font-bold transition-colors shadow-lg shadow-amber-500/20"
                                 >
                                     Update Rounds
                                 </button>
@@ -1360,13 +1360,13 @@ export default function HackathonManageClient() {
                     </div>
 
                     {/* Roles Section (merged) */}
-                    <div className="border border-gray-200 bg-white rounded-2xl p-6 shadow-sm mt-6">
+                    <div className="border border-white/20 bg-[#03030F] rounded-none neo-border p-6 shadow-none mt-6">
                         <div className="flex flex-col md:flex-row gap-8">
-                            <div className="w-full md:w-1/3 bg-gray-50 border border-gray-200 rounded-xl p-6 relative overflow-hidden h-fit">
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                            <div className="w-full md:w-1/3 bg-white/5 border border-white/20 rounded-none neo-border p-6 relative overflow-hidden h-fit">
+                                <h3 className="text-xl font-semibold text-white mb-2 flex items-center gap-2">
                                     <Shield className="w-5 h-5 text-rose-600" /> Assign Role
                                 </h3>
-                                <p className="text-xs text-gray-500 mb-6">Assign special permissions to users based on their email. Super Admins always have full access.</p>
+                                <p className="text-xs text-white/50 font-mono tracking-wider mb-6">Assign special permissions to users based on their email. Super Admins always have full access.</p>
                                 
                                 <form onSubmit={async (e) => {
                                     e.preventDefault();
@@ -1381,22 +1381,22 @@ export default function HackathonManageClient() {
                                     }
                                 }} className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">User Email</label>
+                                        <label className="block text-xs font-semibold text-white/50 font-mono tracking-wider uppercase tracking-wider mb-2">User Email</label>
                                         <input
                                             type="email"
                                             required
                                             value={roleEmail}
                                             onChange={(e) => setRoleEmail(e.target.value)}
                                             placeholder="admin@example.com"
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-rose-500 transition-colors"
+                                            className="w-full bg-white/5 border border-white/20 rounded-none neo-border px-4 py-3 text-sm text-white focus:outline-none focus:border-rose-500 transition-colors"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Role Type</label>
+                                        <label className="block text-xs font-semibold text-white/50 font-mono tracking-wider uppercase tracking-wider mb-2">Role Type</label>
                                         <select
                                             value={roleType}
                                             onChange={(e) => setRoleType(e.target.value)}
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-rose-500 transition-colors appearance-none"
+                                            className="w-full bg-white/5 border border-white/20 rounded-none neo-border px-4 py-3 text-sm text-white focus:outline-none focus:border-rose-500 transition-colors appearance-none"
                                         >
                                             <option value="admin">Admin</option>
                                             <option value="student_lead">Student Lead</option>
@@ -1405,23 +1405,23 @@ export default function HackathonManageClient() {
                                     </div>
                                     <button
                                         type="submit"
-                                        className="w-full bg-rose-600 hover:bg-rose-500 text-white px-6 py-3 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-rose-500/20"
+                                        className="w-full bg-rose-600 hover:bg-rose-500 text-white px-6 py-3 rounded-none neo-border text-sm font-bold transition-colors shadow-lg shadow-rose-500/20"
                                     >
                                         Assign Role
                                     </button>
                                 </form>
                             </div>
 
-                            <div className="flex-1 border border-gray-200 bg-white rounded-2xl p-6 shadow-sm ">
-                                <h3 className="text-xl font-semibold text-gray-900 mb-6">Assigned Roles</h3>
+                            <div className="flex-1 border border-white/20 bg-[#03030F] rounded-none neo-border p-6 shadow-none ">
+                                <h3 className="text-xl font-semibold text-white mb-6">Assigned Roles</h3>
                                 {roles.length === 0 ? (
-                                    <p className="text-gray-500 text-sm italic">No custom roles assigned yet.</p>
+                                    <p className="text-white/50 font-mono tracking-wider text-sm italic">No custom roles assigned yet.</p>
                                 ) : (
                                     <div className="space-y-3">
                                         {roles.map((r, idx) => (
-                                            <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-gray-200 transition-colors gap-4">
+                                            <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white/5 border border-white/20 rounded-none neo-border hover:border-white/20 transition-colors gap-4">
                                                 <div>
-                                                    <p className="font-semibold text-gray-900 text-sm">{r.email}</p>
+                                                    <p className="font-semibold text-white text-sm">{r.email}</p>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
                                                             r.role === 'admin' ? 'bg-amber-50 text-amber-700' :
@@ -1430,7 +1430,7 @@ export default function HackathonManageClient() {
                                                         }`}>
                                                             {r.role.replace('_', ' ')}
                                                         </span>
-                                                        <span className="text-xs text-gray-500">
+                                                        <span className="text-xs text-white/50 font-mono tracking-wider">
                                                             Assigned {new Date(r.created_at).toLocaleDateString()}
                                                         </span>
                                                     </div>
@@ -1445,7 +1445,7 @@ export default function HackathonManageClient() {
                                                             setMessage({ type: 'error', text: res.error || 'Failed to remove role' });
                                                         }
                                                     }}
-                                                    className="self-end md:self-auto p-2 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded-lg transition-colors group"
+                                                    className="self-end md:self-auto p-2 hover:bg-red-500/20 text-white/50 font-mono tracking-wider hover:text-red-400 rounded-none transition-colors group"
                                                     title="Remove Role"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -1462,36 +1462,36 @@ export default function HackathonManageClient() {
             {/* Edit Team Modal */}
             {editingTeam && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setEditingTeam(null)}>
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200" onClick={e => e.stopPropagation()}>
+                    <div className="bg-[#03030F] rounded-none neo-border p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-gray-900">Edit Team: {editingTeam.name}</h2>
-                            <button onClick={() => setEditingTeam(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5 text-gray-500" /></button>
+                            <h2 className="text-xl font-bold text-white">Edit Team: {editingTeam.name}</h2>
+                            <button onClick={() => setEditingTeam(null)} className="p-2 hover:bg-white/10 rounded-none transition-colors"><X className="w-5 h-5 text-white/50 font-mono tracking-wider" /></button>
                         </div>
                         <form onSubmit={handleUpdateTeam} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Team Name</label>
+                                    <label className="block text-xs font-semibold text-white/50 font-mono tracking-wider uppercase tracking-wider mb-1">Team Name</label>
                                     <input type="text" value={editFormData.teamName} onChange={e => setEditFormData({ ...editFormData, teamName: e.target.value })} className={inputCls} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Team Code</label>
+                                    <label className="block text-xs font-semibold text-white/50 font-mono tracking-wider uppercase tracking-wider mb-1">Team Code</label>
                                     <input type="text" value={editFormData.teamCode} onChange={e => setEditFormData({ ...editFormData, teamCode: e.target.value })} className={inputCls} />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Idea Title</label>
+                                <label className="block text-xs font-semibold text-white/50 font-mono tracking-wider uppercase tracking-wider mb-1">Idea Title</label>
                                 <input type="text" value={editFormData.ideaTitle} onChange={e => setEditFormData({ ...editFormData, ideaTitle: e.target.value })} className={inputCls} />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Track / Theme</label>
+                                <label className="block text-xs font-semibold text-white/50 font-mono tracking-wider uppercase tracking-wider mb-1">Track / Theme</label>
                                 <input type="text" value={editFormData.theme} onChange={e => setEditFormData({ ...editFormData, theme: e.target.value })} className={inputCls} />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Project Description</label>
+                                <label className="block text-xs font-semibold text-white/50 font-mono tracking-wider uppercase tracking-wider mb-1">Project Description</label>
                                 <textarea value={editFormData.projectObjective} onChange={e => setEditFormData({ ...editFormData, projectObjective: e.target.value })} rows={3} className={inputCls + " resize-none"} />
                             </div>
-                            <div className="border-t border-gray-200 pt-4">
-                                <h3 className="text-sm font-bold text-gray-900 mb-3">Team Leader</h3>
+                            <div className="border-t border-white/20 pt-4">
+                                <h3 className="text-sm font-bold text-white mb-3">Team Leader</h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     <input type="text" placeholder="Name" value={editFormData.leader.name} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, name: e.target.value } })} className={inputCls} />
                                     <input type="email" placeholder="Email" value={editFormData.leader.email} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, email: e.target.value } })} className={inputCls} />
@@ -1499,10 +1499,10 @@ export default function HackathonManageClient() {
                                     <input type="text" placeholder="College" value={editFormData.leader.college} onChange={e => setEditFormData({ ...editFormData, leader: { ...editFormData.leader, college: e.target.value } })} className={inputCls} />
                                 </div>
                             </div>
-                            <div className="border-t border-gray-200 pt-4">
+                            <div className="border-t border-white/20 pt-4">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-sm font-bold text-gray-900">Team Members ({editFormData.members.length})</h3>
-                                    <button type="button" onClick={() => setEditFormData({ ...editFormData, members: [...editFormData.members, { id: '', name: '', email: '', phone: '', course: '', section: '', system_id: '', year: '', college: '' }] })} className="flex items-center gap-1 text-xs font-medium text-purple-600 hover:text-purple-500 bg-purple-50 hover:bg-purple-100 px-2.5 py-1.5 rounded-lg transition-colors">
+                                    <h3 className="text-sm font-bold text-white">Team Members ({editFormData.members.length})</h3>
+                                    <button type="button" onClick={() => setEditFormData({ ...editFormData, members: [...editFormData.members, { id: '', name: '', email: '', phone: '', course: '', section: '', system_id: '', year: '', college: '' }] })} className="flex items-center gap-1 text-xs font-medium text-[#00FF41] hover:text-purple-500 bg-purple-50 hover:bg-purple-100 px-2.5 py-1.5 rounded-none transition-colors">
                                         <Plus className="w-3 h-3" /> Add Member
                                     </button>
                                 </div>
@@ -1514,17 +1514,17 @@ export default function HackathonManageClient() {
                                                 <input type="email" placeholder="Email" value={m.email} onChange={e => { const members = [...editFormData.members]; members[idx] = { ...members[idx], email: e.target.value }; setEditFormData({ ...editFormData, members }); }} className={inputCls} />
                                                 <input type="text" placeholder="Phone" value={m.phone} onChange={e => { const members = [...editFormData.members]; members[idx] = { ...members[idx], phone: e.target.value }; setEditFormData({ ...editFormData, members }); }} className={inputCls} />
                                             </div>
-                                            <button type="button" onClick={() => { const members = editFormData.members.filter((_, i) => i !== idx); setEditFormData({ ...editFormData, members }); }} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0 mt-0.5" title="Remove member">
+                                            <button type="button" onClick={() => { const members = editFormData.members.filter((_, i) => i !== idx); setEditFormData({ ...editFormData, members }); }} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-none transition-colors flex-shrink-0 mt-0.5" title="Remove member">
                                                 <Minus className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
                                     ))}
-                                    {editFormData.members.length === 0 && <p className="text-sm text-gray-400 italic text-center py-3">No members added. Click &quot;Add Member&quot; above.</p>}
+                                    {editFormData.members.length === 0 && <p className="text-sm text-white/40 font-mono italic text-center py-3">No members added. Click &quot;Add Member&quot; above.</p>}
                                 </div>
                             </div>
-                            <div className="flex gap-3 pt-4 border-t border-gray-200">
-                                <button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-medium py-2.5 rounded-xl transition-all text-sm">Save Changes</button>
-                                <button type="button" onClick={() => setEditingTeam(null)} className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-all text-sm">Cancel</button>
+                            <div className="flex gap-3 pt-4 border-t border-white/20">
+                                <button type="submit" className="flex-1 bg-[#00FF41] hover:bg-white text-black font-black uppercase tracking-widest spring-btn text-white font-medium py-2.5 rounded-none neo-border transition-all text-sm">Save Changes</button>
+                                <button type="button" onClick={() => setEditingTeam(null)} className="px-6 py-2.5 bg-white/10 hover:bg-gray-200 text-white/80 font-medium rounded-none neo-border transition-all text-sm">Cancel</button>
                             </div>
                         </form>
                     </div>
@@ -1534,16 +1534,16 @@ export default function HackathonManageClient() {
                 {/* Attendance Tab */}
                 <TabsContent value="attendance" className="mt-0 space-y-6">
                     {/* Event Config */}
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-4"><MapPin className="w-4 h-4 text-violet-500" /> Event Attendance Tracking</h3>
+                    <div className="bg-[#03030F] border border-white/20 rounded-none neo-border p-5 shadow-none">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4"><MapPin className="w-4 h-4 text-violet-500" /> Event Attendance Tracking</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Event Tag (ID)</label>
-                                <input type="text" value={attEventTag} onChange={e => { setAttEventTag(e.target.value); setAttSettingsSaved(false); }} placeholder="e.g. hackathon_2026" className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
+                                <label className="block text-xs font-semibold text-white/50 font-mono tracking-wider uppercase tracking-wider mb-1">Event Tag (ID)</label>
+                                <input type="text" value={attEventTag} onChange={e => { setAttEventTag(e.target.value); setAttSettingsSaved(false); }} placeholder="e.g. hackathon_2026" className="w-full bg-white/5 border border-white/20 rounded-none px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Event Name (for emails)</label>
-                                <input type="text" value={attEventName} onChange={e => { setAttEventName(e.target.value); setAttSettingsSaved(false); }} placeholder="e.g. AWS Student Community Day" className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
+                                <label className="block text-xs font-semibold text-white/50 font-mono tracking-wider uppercase tracking-wider mb-1">Event Name (for emails)</label>
+                                <input type="text" value={attEventName} onChange={e => { setAttEventName(e.target.value); setAttSettingsSaved(false); }} placeholder="e.g. AWS Student Community Day" className="w-full bg-white/5 border border-white/20 rounded-none px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
                             </div>
                             <div className="flex items-end gap-2">
                                 <button onClick={async () => {
@@ -1551,49 +1551,49 @@ export default function HackathonManageClient() {
                                     setAttSettingsSaved(true);
                                     loadAttendees(attEventTag);
                                     setTimeout(() => setAttSettingsSaved(false), 3000);
-                                }} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${attSettingsSaved ? 'bg-emerald-100 text-emerald-700' : 'bg-violet-600 hover:bg-violet-500 text-white'}`}>
+                                }} className={`flex items-center gap-2 px-5 py-2.5 rounded-none neo-border text-sm font-bold transition-all ${attSettingsSaved ? 'bg-emerald-100 text-emerald-700' : 'bg-violet-600 hover:bg-violet-500 text-white'}`}>
                                     {attSettingsSaved ? <><CheckCircle className="w-4 h-4" /> Saved!</> : 'Save & Load'}
                                 </button>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-violet-50 border border-violet-200 rounded-xl">
+                        <div className="flex items-center gap-3 p-3 bg-violet-50 border border-violet-200 rounded-none neo-border">
                             <MapPin className="w-4 h-4 text-violet-500 flex-shrink-0" />
                             <div className="flex-1">
                                 <p className="text-xs text-violet-700 font-medium">Student Self-Registration Form</p>
                                 <p className="text-[11px] text-violet-500">Share this link with students so they can fill in their System ID, Section, and Department.</p>
                             </div>
-                            <a href="/attendance/register" target="_blank" className="flex items-center gap-1 px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-medium transition-all">
+                            <a href="/attendance/register" target="_blank" className="flex items-center gap-1 px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-none text-xs font-medium transition-all">
                                 <ExternalLink className="w-3 h-3" /> Open Form
                             </a>
                         </div>
                     </div>
 
                     {/* Import + Actions */}
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                    <div className="bg-[#03030F] border border-white/20 rounded-none neo-border p-5 shadow-none">
                         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between mb-4">
-                            <h3 className="text-sm font-bold text-gray-900">Import Attendees</h3>
+                            <h3 className="text-sm font-bold text-white">Import Attendees</h3>
                             <div className="flex gap-2 flex-wrap">
-                                <label className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all ${attUploading ? 'bg-gray-100 text-gray-400' : 'bg-violet-600 hover:bg-violet-500 text-white'}`}>
+                                <label className={`flex items-center gap-2 px-4 py-2 rounded-none neo-border text-sm font-medium cursor-pointer transition-all ${attUploading ? 'bg-white/10 text-white/40 font-mono' : 'bg-violet-600 hover:bg-violet-500 text-white'}`}>
                                     <Upload className="w-4 h-4" /> {attUploading ? 'Importing...' : 'Upload CSV/XLSX'}
                                     <input ref={attFileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleAttUpload} className="hidden" disabled={attUploading} />
                                 </label>
-                                <button onClick={() => loadAttendees()} className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-all">
+                                <button onClick={() => loadAttendees()} className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-gray-200 text-white/80 rounded-none neo-border text-sm font-medium transition-all">
                                     <RefreshCw className="w-4 h-4" /> Refresh
                                 </button>
-                                <button onClick={handleExportAttendance} className="flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-sm font-medium transition-all">
+                                <button onClick={handleExportAttendance} className="flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-none neo-border text-sm font-medium transition-all">
                                     <Download className="w-4 h-4" /> Export Report
                                 </button>
                             </div>
                         </div>
-                        <p className="text-xs text-gray-400">Upload a CSV/XLSX with columns: Name, Email, Mobile, System ID, Section, Department, College. The event tag above filters which attendees are shown.</p>
+                        <p className="text-xs text-white/40 font-mono">Upload a CSV/XLSX with columns: Name, Email, Mobile, System ID, Section, Department, College. The event tag above filters which attendees are shown.</p>
                     </div>
 
                     {/* Checkpoints Config */}
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                        <h3 className="text-sm font-bold text-gray-900 mb-3">Checkpoints</h3>
+                    <div className="bg-[#03030F] border border-white/20 rounded-none neo-border p-5 shadow-none">
+                        <h3 className="text-sm font-bold text-white mb-3">Checkpoints</h3>
                         <div className="flex flex-wrap gap-2 mb-3">
                             {attCheckpoints.map((cp, i) => (
-                                <span key={i} className="flex items-center gap-1.5 bg-violet-50 border border-violet-200 text-violet-700 px-3 py-1.5 rounded-lg text-xs font-medium">
+                                <span key={i} className="flex items-center gap-1.5 bg-violet-50 border border-violet-200 text-violet-700 px-3 py-1.5 rounded-none text-xs font-medium">
                                     {cp}
                                     <button onClick={async () => { const updated = attCheckpoints.filter((_, idx) => idx !== i); setAttCheckpoints(updated); await updateAttendanceCheckpoints(updated); }} className="text-violet-400 hover:text-red-500 ml-1">
                                         <X className="w-3 h-3" />
@@ -1602,22 +1602,22 @@ export default function HackathonManageClient() {
                             ))}
                         </div>
                         <div className="flex gap-2">
-                            <input type="text" value={newCheckpoint} onChange={e => setNewCheckpoint(e.target.value)} placeholder="New checkpoint name" className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
-                            <button onClick={async () => { if (!newCheckpoint.trim()) return; const updated = [...attCheckpoints, newCheckpoint.trim()]; setAttCheckpoints(updated); setNewCheckpoint(''); await updateAttendanceCheckpoints(updated); }} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-sm font-medium transition-all">
+                            <input type="text" value={newCheckpoint} onChange={e => setNewCheckpoint(e.target.value)} placeholder="New checkpoint name" className="flex-1 bg-white/5 border border-white/20 rounded-none px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
+                            <button onClick={async () => { if (!newCheckpoint.trim()) return; const updated = [...attCheckpoints, newCheckpoint.trim()]; setAttCheckpoints(updated); setNewCheckpoint(''); await updateAttendanceCheckpoints(updated); }} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-none text-sm font-medium transition-all">
                                 <Plus className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
 
                     {/* QR Email Section */}
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-3"><Mail className="w-4 h-4 text-violet-500" /> Send QR Code Emails</h3>
+                    <div className="bg-[#03030F] border border-white/20 rounded-none neo-border p-5 shadow-none">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-3"><Mail className="w-4 h-4 text-violet-500" /> Send QR Code Emails</h3>
                         <div className="flex items-center gap-4 mb-3">
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 text-sm">
-                                    <span className="text-gray-500">Total: <strong className="text-gray-900">{attendees.length}</strong></span>
-                                    <span className="text-emerald-600">Emailed: <strong>{attendees.filter(a => a.qr_emailed).length}</strong></span>
-                                    <span className="text-amber-600">Pending: <strong>{attendees.filter(a => !a.qr_emailed && a.email).length}</strong></span>
+                                    <span className="text-white/50 font-mono tracking-wider">Total: <strong className="text-white">{attendees.length}</strong></span>
+                                    <span className="text-[#00FF41]">Emailed: <strong>{attendees.filter(a => a.qr_emailed).length}</strong></span>
+                                    <span className="text-[#FF6B00]">Pending: <strong>{attendees.filter(a => !a.qr_emailed && a.email).length}</strong></span>
                                 </div>
                             </div>
                             <button onClick={async () => {
@@ -1626,12 +1626,12 @@ export default function HackathonManageClient() {
                                 setAttEmailResult(result);
                                 setAttSendingEmails(false);
                                 loadAttendees();
-                            }} disabled={attSendingEmails} className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-sm font-bold transition-all disabled:opacity-50">
+                            }} disabled={attSendingEmails} className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-none neo-border text-sm font-bold transition-all disabled:opacity-50">
                                 {attSendingEmails ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending...</> : <><Send className="w-4 h-4" /> Send All QR Emails</>}
                             </button>
                         </div>
                         {attEmailResult && (
-                            <div className={`p-3 rounded-xl text-sm ${attEmailResult.error && !attEmailResult.sent ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                            <div className={`p-3 rounded-none neo-border text-sm ${attEmailResult.error && !attEmailResult.sent ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
                                 <p className="font-medium">{attEmailResult.message || attEmailResult.error}</p>
                                 {attEmailResult.failedEmails && attEmailResult.failedEmails.length > 0 && (
                                     <div className="mt-2">
@@ -1644,30 +1644,30 @@ export default function HackathonManageClient() {
                     </div>
 
                     {/* Attendee List */}
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                    <div className="bg-[#03030F] border border-white/20 rounded-none neo-border p-5 shadow-none">
                         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between mb-4">
-                            <h3 className="text-sm font-bold text-gray-900">Attendees ({filteredAttendees.length})</h3>
+                            <h3 className="text-sm font-bold text-white">Attendees ({filteredAttendees.length})</h3>
                             <div className="flex gap-2 items-center">
                                 <div className="relative flex-1 md:w-64">
-                                    <input type="text" placeholder="Search attendees..." value={attSearchQuery} onChange={e => { setAttSearchQuery(e.target.value); setAttCurrentPage(1); }} className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
-                                    <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                    <input type="text" placeholder="Search attendees..." value={attSearchQuery} onChange={e => { setAttSearchQuery(e.target.value); setAttCurrentPage(1); }} className="w-full bg-white/5 border border-white/20 rounded-none pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
+                                    <Search className="w-4 h-4 text-white/40 font-mono absolute left-3 top-1/2 -translate-y-1/2" />
                                 </div>
-                                <button onClick={async () => { if (confirm('Delete ALL attendees for this event tag? This cannot be undone.')) { await deleteEventAttendees(attEventTag); setAttendees([]); setMessage({ type: 'success', text: 'All attendees deleted.' }); }}} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete all attendees">
+                                <button onClick={async () => { if (confirm('Delete ALL attendees for this event tag? This cannot be undone.')) { await deleteEventAttendees(attEventTag); setAttendees([]); setMessage({ type: 'success', text: 'All attendees deleted.' }); }}} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-none transition-colors" title="Delete all attendees">
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>
 
                         {attLoading ? (
-                            <div className="text-center py-8"><div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-2" /><p className="text-gray-500 text-sm">Loading attendees...</p></div>
+                            <div className="text-center py-8"><div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-2" /><p className="text-white/50 font-mono tracking-wider text-sm">Loading attendees...</p></div>
                         ) : filteredAttendees.length === 0 ? (
-                            <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl">No attendees found. Import a CSV/XLSX file above.</div>
+                            <div className="text-center py-8 text-white/40 font-mono text-sm border-2 border-dashed border-white/20 rounded-none neo-border">No attendees found. Import a CSV/XLSX file above.</div>
                         ) : (
                             <>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead>
-                                            <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
+                                            <tr className="bg-white/5 text-white/50 font-mono tracking-wider text-xs uppercase">
                                                 <th className="px-3 py-2 text-left font-semibold">#</th>
                                                 <th className="px-3 py-2 text-left font-semibold">Name</th>
                                                 <th className="px-3 py-2 text-left font-semibold">System ID</th>
@@ -1686,24 +1686,24 @@ export default function HackathonManageClient() {
                                             {paginatedAttendees.map((a: any, idx: number) => {
                                                 const isEditing = editingAttendeeId === a.id;
                                                 return (
-                                                    <tr key={a.id} className="border-t border-gray-100 hover:bg-gray-50">
-                                                        <td className="px-3 py-2 text-gray-400 text-xs">{(attCurrentPage - 1) * ATT_ITEMS_PER_PAGE + idx + 1}</td>
+                                                    <tr key={a.id} className="border-t border-white/20 hover:bg-white/5">
+                                                        <td className="px-3 py-2 text-white/40 font-mono text-xs">{(attCurrentPage - 1) * ATT_ITEMS_PER_PAGE + idx + 1}</td>
                                                         <td className="px-3 py-2">
-                                                            {isEditing ? <input value={editAttendeeFormData.name} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, name: e.target.value })} className="w-full text-xs p-1 border rounded" /> : <span className="font-medium text-gray-900">{a.name}</span>}
+                                                            {isEditing ? <input value={editAttendeeFormData.name} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, name: e.target.value })} className="w-full text-xs p-1 border rounded" /> : <span className="font-medium text-white">{a.name}</span>}
                                                         </td>
                                                         <td className="px-3 py-2 text-violet-600 font-mono text-xs">
                                                             {isEditing ? <input value={editAttendeeFormData.system_id || ''} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, system_id: e.target.value })} className="w-full text-xs p-1 border rounded" /> : (a.system_id || '—')}
                                                         </td>
-                                                        <td className="px-3 py-2 text-gray-600 text-xs">
+                                                        <td className="px-3 py-2 text-white/70 text-xs">
                                                             {isEditing ? <input value={editAttendeeFormData.section || ''} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, section: e.target.value })} className="w-full text-xs p-1 border rounded" /> : (a.section || '—')}
                                                         </td>
-                                                        <td className="px-3 py-2 text-gray-600 text-xs">
+                                                        <td className="px-3 py-2 text-white/70 text-xs">
                                                             {isEditing ? <input value={editAttendeeFormData.department || ''} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, department: e.target.value })} className="w-full text-xs p-1 border rounded" /> : (a.department || '—')}
                                                         </td>
-                                                        <td className="px-3 py-2 text-gray-600 text-xs">
+                                                        <td className="px-3 py-2 text-white/70 text-xs">
                                                             {isEditing ? <input value={editAttendeeFormData.year || ''} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, year: e.target.value })} className="w-full text-xs p-1 border rounded" /> : (a.year || '—')}
                                                         </td>
-                                                        <td className="px-3 py-2 text-gray-500 text-xs truncate max-w-[150px]">
+                                                        <td className="px-3 py-2 text-white/50 font-mono tracking-wider text-xs truncate max-w-[150px]">
                                                             {isEditing ? <input value={editAttendeeFormData.email || ''} onChange={e => setEditAttendeeFormData({ ...editAttendeeFormData, email: e.target.value })} className="w-full text-xs p-1 border rounded" /> : (a.email || '—')}
                                                         </td>
                                                         <td className="px-3 py-2 text-center">
@@ -1720,11 +1720,11 @@ export default function HackathonManageClient() {
                                                         <td className="px-3 py-2 text-center">
                                                             {isEditing ? (
                                                                 <div className="flex items-center justify-center gap-2">
-                                                                    <button onClick={handleEditSave} disabled={editSaving} className="text-emerald-600 hover:text-emerald-700 disabled:opacity-50"><Save className="w-4 h-4" /></button>
-                                                                    <button onClick={handleEditCancel} disabled={editSaving} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                                                                    <button onClick={handleEditSave} disabled={editSaving} className="text-[#00FF41] hover:text-emerald-700 disabled:opacity-50"><Save className="w-4 h-4" /></button>
+                                                                    <button onClick={handleEditCancel} disabled={editSaving} className="text-white/40 font-mono hover:text-white/70"><X className="w-4 h-4" /></button>
                                                                 </div>
                                                             ) : (
-                                                                <button onClick={() => handleEditStart(a)} className="text-violet-600 hover:text-violet-700 p-1 bg-violet-50 rounded-md"><Edit2 className="w-3.5 h-3.5" /></button>
+                                                                <button onClick={() => handleEditStart(a)} className="text-violet-600 hover:text-violet-700 p-1 bg-violet-50 rounded-none"><Edit2 className="w-3.5 h-3.5" /></button>
                                                             )}
                                                         </td>
                                                     </tr>
@@ -1734,11 +1734,11 @@ export default function HackathonManageClient() {
                                     </table>
                                 </div>
                                 {attTotalPages > 1 && (
-                                    <div className="flex items-center justify-between px-3 py-3 border-t border-gray-100">
-                                        <span className="text-xs text-gray-500">Page {attCurrentPage} of {attTotalPages}</span>
+                                    <div className="flex items-center justify-between px-3 py-3 border-t border-white/20">
+                                        <span className="text-xs text-white/50 font-mono tracking-wider">Page {attCurrentPage} of {attTotalPages}</span>
                                         <div className="flex gap-1">
-                                            <button onClick={() => setAttCurrentPage(p => Math.max(1, p - 1))} disabled={attCurrentPage === 1} className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-30"><ChevronLeft className="w-4 h-4" /></button>
-                                            <button onClick={() => setAttCurrentPage(p => Math.min(attTotalPages, p + 1))} disabled={attCurrentPage === attTotalPages} className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-30"><ChevronRight className="w-4 h-4" /></button>
+                                            <button onClick={() => setAttCurrentPage(p => Math.max(1, p - 1))} disabled={attCurrentPage === 1} className="p-1.5 rounded-none bg-white/5 hover:bg-white/10 disabled:opacity-30"><ChevronLeft className="w-4 h-4" /></button>
+                                            <button onClick={() => setAttCurrentPage(p => Math.min(attTotalPages, p + 1))} disabled={attCurrentPage === attTotalPages} className="p-1.5 rounded-none bg-white/5 hover:bg-white/10 disabled:opacity-30"><ChevronRight className="w-4 h-4" /></button>
                                         </div>
                                     </div>
                                 )}

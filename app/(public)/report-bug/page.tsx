@@ -10,16 +10,16 @@ export const metadata: Metadata = {
 
 export default function BugReportPage() {
     return (
-        <div className="min-h-screen bg-black text-white py-12">
+        <div className="min-h-screen bg-[var(--sig-bg)] text-[var(--sig-text)] py-12">
             <div className="container mx-auto px-4">
                 <div className="mb-8">
-                    <div className="flex items-center gap-2 text-blue-400 mb-4">
+                    <div className="flex items-center gap-2 text-[var(--sig-amber)] mb-4">
                         <Sparkles className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase tracking-widest">DevSpace</span>
+                        <span className="text-xs font-bold uppercase tracking-widest font-mono">DevSpace</span>
                     </div>
                     <Link
                         href="/community"
-                        className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                        className="spring-btn inline-flex items-center gap-2 text-[var(--sig-text-secondary)] hover:text-white transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Back to Community

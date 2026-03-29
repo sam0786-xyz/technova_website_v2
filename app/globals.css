@@ -33,6 +33,25 @@
     --ring: 221.2 83.2% 53.3%;
 
     --radius: 0.5rem;
+
+    /* === Signal Design Tokens === */
+    --sig-bg: #0A0A0B;
+    --sig-surface: #141416;
+    --sig-surface-hover: #1C1C1F;
+    --sig-amber: #F5A623;
+    --sig-amber-dim: #F5A62340;
+    --sig-indigo: #6366F1;
+    --sig-green: #22C55E;
+    --sig-text: #FAFAF9;
+    --sig-text-secondary: #71717A;
+    --sig-border: #27272A;
+    --sig-border-hover: #3F3F46;
+
+    /* === Design Engineering Easings === */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    --spring-duration: 400ms;
   }
 
   .dark {
@@ -63,6 +82,11 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    --spring-duration: 400ms;
   }
 }
 
@@ -71,7 +95,10 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
   }
   html {
     scroll-behavior: smooth;
@@ -83,27 +110,24 @@
    ============================================ */
 
 @layer components {
-  /* Base glass effect */
   .glass {
     @apply bg-white/[0.03] backdrop-blur-xl border border-white/10;
-    box-shadow: 
+    box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 
-  /* Glass card with stronger effect */
   .glass-card {
     @apply bg-white/[0.05] backdrop-blur-2xl border border-white/10 rounded-2xl;
-    box-shadow: 
+    box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.4),
       0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   }
 
-  /* Glass card with gradient border */
   .glass-gradient {
     @apply relative bg-black/40 backdrop-blur-2xl rounded-2xl overflow-hidden;
   }
-  
+
   .glass-gradient::before {
     content: '';
     @apply absolute inset-0 rounded-2xl;
@@ -114,49 +138,222 @@
       rgba(147, 51, 234, 0.2) 50%,
       rgba(59, 130, 246, 0.1) 100%
     );
-    -webkit-mask: 
-      linear-gradient(#fff 0 0) content-box, 
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
-    mask: 
-      linear-gradient(#fff 0 0) content-box, 
+    mask:
+      linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
   }
 
-  /* Hover glow effect */
   .glass-glow {
     @apply transition-all duration-500;
   }
-  
+
   .glass-glow:hover {
-    box-shadow: 
+    box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.4),
       0 0 40px rgba(59, 130, 246, 0.15),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
     border-color: rgba(59, 130, 246, 0.3);
   }
 
-  /* Navigation glass */
   .glass-nav {
     @apply bg-black/60 backdrop-blur-2xl border-b border-white/10;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
   }
 
-  /* Button glass effect */
   .glass-button {
-    @apply bg-white/10 backdrop-blur-xl border border-white/20 
-           hover:bg-white/20 hover:border-white/30 
+    @apply bg-white/10 backdrop-blur-xl border border-white/20
+           hover:bg-white/20 hover:border-white/30
            transition-all duration-300;
+  }
+
+  /* === Signal Design — Spring Buttons === */
+  .spring-btn {
+    transition: transform 160ms var(--ease-out), background-color 200ms var(--ease-out), color 200ms var(--ease-out), border-color 200ms var(--ease-out);
+    transform-origin: center;
+  }
+
+  .spring-btn:active {
+    transform: scale(0.97);
+  }
+
+  .neo-border {
+    @apply border border-white/10 relative overflow-hidden;
+  }
+
+  .neo-border::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    border: 1px solid rgba(255,255,255,0.05);
+    z-index: 10;
+  }
+
+  .clip-reveal {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 800ms var(--ease-out);
+  }
+  .clip-reveal.is-visible {
+    clip-path: inset(0 0 0 0);
+  }
+
+  .blur-transition {
+    transition: filter 300ms var(--ease-out), opacity 300ms var(--ease-out);
+  }
+  .blur-transition.is-hidden {
+    filter: blur(8px);
+    opacity: 0;
+  }
+
+  /* === Signal Bento Card === */
+  .sig-card {
+    background: var(--sig-surface);
+    border: 1px solid var(--sig-border);
+    transition: transform 200ms var(--ease-out), border-color 200ms ease, background-color 200ms ease;
+  }
+
+  .sig-card:hover {
+    border-color: var(--sig-border-hover);
+    transform: translateY(-4px);
+  }
+
+  .sig-card:active {
+    transform: translateY(-2px) scale(0.99);
   }
 }
 
 /* ============================================
-   ANIMATED BACKGROUNDS
+   ANIMATION KEYFRAMES
+   ============================================ */
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* Signal: Live pulse beacon */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  50% { opacity: 0.8; box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+}
+
+/* Signal: Gentle float for particles */
+@keyframes node-drift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(8px, -12px); }
+  50% { transform: translate(-6px, -20px); }
+  75% { transform: translate(10px, -8px); }
+}
+
+/* Signal: Marquee for hackathon strip */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Signal: Text reveal (word by word) */
+@keyframes text-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Signal: Subtle grain overlay */
+@keyframes grain-shift {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  30% { transform: translate(3%, -15%); }
+  50% { transform: translate(12%, 9%); }
+  70% { transform: translate(9%, 4%); }
+  90% { transform: translate(-1%, 7%); }
+}
+
+/* Signal: Stagger children reveal */
+.stagger-reveal > * {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: stagger-in 500ms var(--ease-out) forwards;
+}
+
+.stagger-reveal > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-reveal > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-reveal > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-reveal > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-reveal > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-reveal > *:nth-child(6) { animation-delay: 300ms; }
+.stagger-reveal > *:nth-child(7) { animation-delay: 360ms; }
+.stagger-reveal > *:nth-child(8) { animation-delay: 420ms; }
+
+@keyframes stagger-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Signal: Mesh gradient drift (slow organic movement) */
+@keyframes mesh-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(40px, -30px) scale(1.05); }
+  50% { transform: translate(-20px, 40px) scale(0.95); }
+  75% { transform: translate(30px, 20px) scale(1.02); }
+}
+
+/* Signal: Mesh gradient drift reverse */
+@keyframes mesh-drift-reverse {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-30px, 40px) scale(0.98); }
+  50% { transform: translate(40px, -20px) scale(1.04); }
+  75% { transform: translate(-20px, -30px) scale(1); }
+}
+
+/* Signal: Floating geometric shapes */
+@keyframes float-shape {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-20px) rotate(5deg); }
+  50% { transform: translateY(-10px) rotate(-3deg); }
+  75% { transform: translateY(-25px) rotate(2deg); }
+}
+
+/* Signal: Scan line sweep */
+@keyframes scanline {
+  0% { top: -2px; }
+  100% { top: 100%; }
+}
+
+/* ============================================
+   UTILITIES
    ============================================ */
 
 @layer utilities {
-  /* Animated gradient orb */
   .glow-orb {
     animation: float 8s ease-in-out infinite;
   }
@@ -166,7 +363,6 @@
     animation-delay: 2s;
   }
 
-  /* Shimmer effect for text */
   .shimmer {
     background: linear-gradient(
       90deg,
@@ -180,76 +376,91 @@
     animation: shimmer 3s ease-in-out infinite;
   }
 
-  /* Gradient border animation */
   .animate-gradient-border {
     background-size: 400% 400%;
     animation: gradient-shift 8s ease infinite;
   }
-}
 
-/* ============================================
-   KEYFRAME ANIMATIONS
-   ============================================ */
+  .animate-live-pulse {
+    animation: live-pulse 2s ease-in-out infinite;
+  }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) scale(1);
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
   }
-  50% {
-    transform: translateY(-20px) scale(1.05);
-  }
-}
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% center;
+  .animate-grain {
+    animation: grain-shift 8s steps(10) infinite;
   }
-  100% {
-    background-position: 200% center;
-  }
-}
 
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
+  .animate-mesh-drift {
+    animation: mesh-drift 20s ease-in-out infinite;
   }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
 
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 0.6;
-    transform: scale(1);
+  .animate-mesh-drift-reverse {
+    animation: mesh-drift-reverse 25s ease-in-out infinite;
   }
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
+
+  .animate-float-shape {
+    animation: float-shape 12s ease-in-out infinite;
+  }
+
+  .animate-scanline {
+    animation: scanline 8s linear infinite;
   }
 }
 
 /* ============================================
-   ENHANCED SCROLLBAR
+   SCROLLBAR — Signal Theme
    ============================================ */
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: #0A0A0B;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.3);
-  border-radius: 4px;
+  background: #27272A;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.5);
+  background: #3F3F46;
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger-reveal > * {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .animate-marquee {
+    animation: none;
+  }
+
+  .animate-live-pulse {
+    animation: none;
+  }
+
+  .animate-mesh-drift,
+  .animate-mesh-drift-reverse {
+    animation: none;
+  }
+
+  .animate-float-shape {
+    animation: none;
+  }
+
+  .animate-scanline {
+    animation: none;
+  }
 }

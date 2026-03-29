@@ -843,7 +843,7 @@ export async function getSchedule() {
 
 export async function addScheduleItem(data: { title: string, description?: string, start_time: string, end_time?: string, event_type: string }) {
     const session = await auth()
-    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) return { error: "Unauthorized" }
+    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead', 'organizer'].includes(session.user.role as string))) return { error: "Unauthorized" }
 
     const supabase = await getSupabase()
     const { error } = await supabase
@@ -859,7 +859,7 @@ export async function addScheduleItem(data: { title: string, description?: strin
 
 export async function deleteScheduleItem(id: string) {
     const session = await auth()
-    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) return { error: "Unauthorized" }
+    if (!session || !session.user || (!['admin', 'super_admin', 'student_lead', 'organizer'].includes(session.user.role as string))) return { error: "Unauthorized" }
 
     const supabase = await getSupabase()
     const { error } = await supabase

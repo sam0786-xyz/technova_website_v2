@@ -76,17 +76,16 @@ export function ClubsCarousel() {
 
     const scroll = (direction: 'left' | 'right') => {
         if (scrollContainerRef.current) {
-            const scrollAmount = 400
+            const scrollAmount = 380
             scrollContainerRef.current.scrollBy({
                 left: direction === 'left' ? -scrollAmount : scrollAmount,
                 behavior: 'smooth'
             })
-            // Check scroll after animation roughly matches
-            setTimeout(checkScroll, 300)
+            setTimeout(checkScroll, 350)
         }
     }
 
-    // Auto-scroll effect (paused on hover)
+    // Auto-scroll
     useEffect(() => {
         const interval = setInterval(() => {
             if (scrollContainerRef.current) {
@@ -96,76 +95,78 @@ export function ClubsCarousel() {
                 } else {
                     scrollContainerRef.current.scrollBy({ left: 350, behavior: 'smooth' })
                 }
-                setTimeout(checkScroll, 300)
+                setTimeout(checkScroll, 350)
             }
         }, 5000)
         return () => clearInterval(interval)
     }, [])
 
     return (
-        <div className="relative group w-full max-w-7xl mx-auto px-4">
+        <div className="relative group w-full">
 
             {/* Left Button */}
             <button
                 onClick={() => scroll('left')}
                 disabled={!canScrollLeft}
-                className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all duration-300 ${!canScrollLeft ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-lg bg-[var(--sig-surface)] border border-[var(--sig-border)] flex items-center justify-center text-[var(--sig-text-secondary)] hover:bg-[var(--sig-surface-hover)] hover:text-[var(--sig-text)] transition-all duration-200 spring-btn ${!canScrollLeft ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                style={{ transitionTimingFunction: 'var(--ease-out)' }}
                 aria-label="Scroll left"
             >
-                <ChevronLeft className="w-8 h-8" />
+                <ChevronLeft className="w-5 h-5" />
             </button>
 
             {/* Right Button */}
             <button
                 onClick={() => scroll('right')}
                 disabled={!canScrollRight}
-                className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all duration-300 ${!canScrollRight ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-lg bg-[var(--sig-surface)] border border-[var(--sig-border)] flex items-center justify-center text-[var(--sig-text-secondary)] hover:bg-[var(--sig-surface-hover)] hover:text-[var(--sig-text)] transition-all duration-200 spring-btn ${!canScrollRight ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                style={{ transitionTimingFunction: 'var(--ease-out)' }}
                 aria-label="Scroll right"
             >
-                <ChevronRight className="w-8 h-8" />
+                <ChevronRight className="w-5 h-5" />
             </button>
 
             {/* Scroll Container */}
             <div
                 ref={scrollContainerRef}
                 onScroll={checkScroll}
-                className="flex gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-12 px-4"
+                className="flex gap-5 overflow-x-auto snap-x snap-mandatory py-4 px-1"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
                 {clubs.map((club) => (
                     <div
                         key={club.slug}
-                        className="snap-center shrink-0 w-[320px] md:w-[400px] group/card"
+                        className="snap-center shrink-0 w-[300px] md:w-[340px]"
                     >
                         <Link
                             href={`/clubs/${club.slug}`}
-                            className="block h-full relative"
+                            className="block h-full group/card"
                         >
-                            {/* Gradient Border & Glow */}
-                            <div className="absolute -inset-0.5 bg-gradient-to-br from-blue-500/30 to-purple-600/30 rounded-[34px] blur opacity-30 group-hover/card:opacity-100 transition duration-500" />
-
-                            <div className="relative h-full bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 flex flex-col items-center text-center transition-all duration-300 group-hover/card:scale-[1.02] group-hover/card:-translate-y-2">
-                                {/* Logo Container - Circular White Background */}
-                                <div className="h-40 w-40 mb-8 relative flex items-center justify-center rounded-full bg-white shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-hover/card:shadow-[0_12px_40px_rgba(59,130,246,0.3)] transition-all duration-500">
+                            <div
+                                className="h-full bg-[var(--sig-surface)] border border-[var(--sig-border)] rounded-lg p-7 flex flex-col items-center text-center transition-all duration-200 hover:border-[var(--sig-border-hover)] hover:-translate-y-1"
+                                style={{ transitionTimingFunction: 'var(--ease-out)' }}
+                            >
+                                {/* Logo */}
+                                <div className="h-28 w-28 mb-6 relative flex items-center justify-center rounded-xl bg-white shadow-sm group-hover/card:shadow-md transition-shadow duration-300 overflow-hidden">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                         src={club.logo}
                                         alt={club.name}
-                                        className="w-32 h-32 object-contain"
+                                        className="w-20 h-20 object-contain"
                                     />
                                 </div>
 
-                                <h3 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 group-hover/card:from-blue-400 group-hover/card:to-purple-400 transition-all duration-300">
+                                <h3 className="text-xl font-heading font-bold mb-3 text-[var(--sig-text)] group-hover/card:text-[var(--sig-amber)] transition-colors duration-200">
                                     {club.name}
                                 </h3>
 
-                                <p className="text-gray-400 text-base leading-relaxed mb-8 line-clamp-3 group-hover/card:text-gray-300">
+                                <p className="text-[var(--sig-text-secondary)] text-sm leading-relaxed mb-6 line-clamp-3 font-medium">
                                     {club.desc}
                                 </p>
 
-                                <div className="mt-auto w-full pt-6 border-t border-white/5 group-hover/card:border-blue-500/20 transition-colors">
-                                    <span className="inline-flex items-center gap-2 text-blue-400 font-semibold group-hover/card:gap-3 transition-all">
-                                        View Details <ArrowRight className="w-5 h-5" />
+                                <div className="mt-auto w-full pt-5 border-t border-[var(--sig-border)] group-hover/card:border-[var(--sig-amber)]/20 transition-colors duration-200">
+                                    <span className="inline-flex items-center gap-2 text-[var(--sig-amber)] font-semibold text-sm group-hover/card:gap-3 transition-all duration-200" style={{ transitionTimingFunction: 'var(--ease-out)' }}>
+                                        View Details <ArrowRight className="w-4 h-4" />
                                     </span>
                                 </div>
                             </div>
@@ -173,6 +174,10 @@ export function ClubsCarousel() {
                     </div>
                 ))}
             </div>
+
+            {/* Edge fade indicators */}
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[var(--sig-bg)] to-transparent pointer-events-none z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[var(--sig-bg)] to-transparent pointer-events-none z-10" />
         </div>
     )
 }

@@ -322,7 +322,7 @@ function PastEventsSection({ slug, theme }: { slug: string; theme: typeof CLUB_T
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <span className={`text-sm font-bold ${colors.text} uppercase tracking-widest`}>Memories</span>
+                    <span className={`text-sm font-bold ${colors.text} uppercase tracking-widest font-mono`}>Memories</span>
                     <h2 className="text-4xl font-bold mt-2">Past Events</h2>
                 </motion.div>
 
@@ -391,11 +391,11 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
 
     if (!club || !theme) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center text-white">
+            <div className="min-h-screen bg-[var(--sig-bg)] flex items-center justify-center text-[var(--sig-text)]">
                 <div className="text-center">
                     <h1 className="text-4xl font-bold mb-4">Club Not Found</h1>
-                    <p className="text-gray-400 mb-8">The club you're looking for is coming soon.</p>
-                    <Link href="/clubs" className="text-blue-400 hover:underline">← Back to Clubs</Link>
+                    <p className="text-[var(--sig-text-secondary)] mb-8">The club you&apos;re looking for is coming soon.</p>
+                    <Link href="/clubs" className="spring-btn text-[var(--sig-amber)] hover:underline">← Back to Clubs</Link>
                 </div>
             </div>
         )
@@ -443,7 +443,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
     const displayDescription = dbClub?.description || club.description
 
     return (
-        <div className="min-h-screen bg-black text-white overflow-hidden">
+        <div className="min-h-screen bg-[var(--sig-bg)] text-[var(--sig-text)] overflow-hidden">
             {/* =============== HERO SECTION =============== */}
             <section className="relative min-h-[90vh] flex items-center">
                 {/* Background */}
@@ -471,12 +471,12 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                         animate={{ opacity: 1, y: 0 }}
                         className="flex items-center gap-2 text-sm mb-8"
                     >
-                        <Link href="/" className="text-gray-400 hover:text-white transition-colors flex items-center gap-1">
+                        <Link href="/" className="text-[var(--sig-text-secondary)] hover:text-white transition-colors flex items-center gap-1">
                             <Home className="w-4 h-4" /> Home
                         </Link>
-                        <ChevronRight className="w-4 h-4 text-gray-600" />
-                        <Link href="/clubs" className="text-gray-400 hover:text-white transition-colors">Clubs</Link>
-                        <ChevronRight className="w-4 h-4 text-gray-600" />
+                        <ChevronRight className="w-4 h-4 text-[var(--sig-border-hover)]" />
+                        <Link href="/clubs" className="text-[var(--sig-text-secondary)] hover:text-white transition-colors">Clubs</Link>
+                        <ChevronRight className="w-4 h-4 text-[var(--sig-border-hover)]" />
                         <span className={colors.text}>{club.name}</span>
                     </motion.nav>
 
@@ -636,7 +636,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                         viewport={{ once: true }}
                         className="text-center mb-16"
                     >
-                        <span className={`text-sm font-bold ${colors.text} uppercase tracking-widest`}>What We Offer</span>
+                        <span className={`text-sm font-bold ${colors.text} uppercase tracking-widest font-mono`}>What We Offer</span>
                         <h2 className="text-4xl font-bold mt-2">Why Join Us?</h2>
                         <p className="text-gray-400 max-w-2xl mx-auto mt-4">{club.whyJoin}</p>
                     </motion.div>
@@ -674,7 +674,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ slug: st
                         viewport={{ once: true }}
                         className="text-center mb-16"
                     >
-                        <span className={`text-sm font-bold ${colors.text} uppercase tracking-widest`}>Our Team</span>
+                        <span className={`text-sm font-bold ${colors.text} uppercase tracking-widest font-mono`}>Our Team</span>
                         <h2 className="text-4xl font-bold mt-2">Meet the Team</h2>
                     </motion.div>
 

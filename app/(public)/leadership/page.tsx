@@ -5,6 +5,10 @@ import { Mail, Linkedin, Github, User, Award, TrendingUp, Users, Target, BookOpe
 import Image from "next/image"
 import { getClubMembersByName } from "@/lib/actions/clubs"
 import { getMemberPhotoPath } from "@/lib/constants/team-photos"
+import { AnimatedBackground } from "@/components/ui/animated-background"
+import Link from "next/link"
+import { Home, ChevronRight } from "lucide-react"
+import { motion } from "framer-motion"
 
 const MENTORS = [
     {
@@ -46,22 +50,22 @@ const MENTORS = [
 const TEAM_METADATA: Record<string, any> = {
     "Mohammad Sameer": {
         bio: "Leading the vision and strategy of Technova.",
-        color: "text-blue-500",
-        bg: "bg-blue-500/10",
+        color: "text-[var(--sig-amber)]",
+        bg: "bg-[var(--sig-amber)]/10",
         icon: Award,
         imagePath: "/assets/team/technova_main/mohammad_sameer.png"
     },
     "Masood Aslam": {
         bio: "Driving operational excellence and team coordination.",
-        color: "text-purple-500",
-        bg: "bg-purple-500/10",
+        color: "text-[var(--sig-indigo)]",
+        bg: "bg-[var(--sig-indigo)]/10",
         icon: TrendingUp,
         imagePath: "/assets/team/technova_main/masood_aslam.png"
     },
     "Khushi Narang": {
         bio: "Managing administrative efficiency and documentation.",
-        color: "text-green-500",
-        bg: "bg-green-500/10",
+        color: "text-[var(--sig-green)]",
+        bg: "bg-[var(--sig-green)]/10",
         icon: Target,
         imagePath: "/assets/team/technova_main/khushi_narang.png"
     },
@@ -81,8 +85,8 @@ const TEAM_METADATA: Record<string, any> = {
     },
     "Farhan Khan": {
         bio: "Curating content and managing editorial strategy.",
-        color: "text-amber-500",
-        bg: "bg-amber-500/10",
+        color: "text-[var(--sig-amber)]",
+        bg: "bg-[var(--sig-amber)]/10",
         icon: BookOpen,
         imagePath: "/assets/team/farhan_khan.png"
     }
@@ -114,15 +118,14 @@ export default function LeadershipPage() {
                     const merged = members.map((m: any) => {
                         const meta = TEAM_METADATA[m.name] || {
                             bio: "Core Team Member",
-                            color: "text-blue-500",
-                            bg: "bg-blue-500/10",
+                            color: "text-[var(--sig-amber)]",
+                            bg: "bg-[var(--sig-amber)]/10",
                             icon: Users,
                             imagePath: null
                         }
                         return {
                             ...m,
                             ...meta,
-                            // Use metadata imagePath if defined, otherwise try getMemberPhotoPath
                             imagePath: meta.imagePath || getMemberPhotoPath(m.name)
                         }
                     })
@@ -140,39 +143,59 @@ export default function LeadershipPage() {
     }, [])
 
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-blue-500 selection:text-white">
+        <div className="min-h-screen bg-[var(--sig-bg)] text-[var(--sig-text)] selection:bg-[var(--sig-amber)] selection:text-black">
+            <AnimatedBackground />
 
             {/* HERO */}
             <section className="relative pt-32 pb-20 overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-black to-black" />
-                <div className="container mx-auto px-4 relative z-10 text-center">
-                    <div className="inline-block mb-6 px-5 py-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 backdrop-blur-xl shadow-[0_0_30px_rgba(99,102,241,0.2)]">
-                        <span className="text-indigo-400 font-medium text-sm tracking-wider uppercase">The Council & Mentors</span>
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_70%)]" />
+                <div className="container mx-auto px-4 relative z-10">
+                    {/* Breadcrumb */}
+                    <motion.nav
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-2 text-sm mb-8"
+                    >
+                        <Link href="/" className="flex items-center gap-1.5 text-[var(--sig-text-secondary)] hover:text-white transition-colors">
+                            <Home className="w-4 h-4" /> Home
+                        </Link>
+                        <ChevronRight className="w-4 h-4 text-[var(--sig-border-hover)]" />
+                        <span className="text-[var(--sig-amber)] font-medium">Leadership</span>
+                    </motion.nav>
+
+                    <div className="text-center">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                        >
+                            <div className="inline-block mb-6 px-5 py-2 rounded-full border border-[var(--sig-amber)]/30 bg-[var(--sig-amber)]/10 backdrop-blur-xl shadow-[0_0_30px_var(--sig-amber-dim)]">
+                                <span className="text-[var(--sig-amber)] font-medium text-sm tracking-wider uppercase font-mono">The Council & Mentors</span>
+                            </div>
+
+                            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
+                                Our Leadership
+                            </h1>
+
+                            <p className="text-xl text-[var(--sig-text-secondary)] max-w-2xl mx-auto leading-relaxed">
+                                Guided by experience, driven by innovation.
+                            </p>
+                        </motion.div>
                     </div>
-
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
-                        Our Leadership
-                    </h1>
-
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-                        Guided by experience, driven by innovation.
-                    </p>
                 </div>
             </section>
 
             {/* MENTORS CAROUSEL */}
-            <section className="py-24 bg-zinc-900/30 border-y border-white/5 relative overflow-hidden">
+            <section className="py-24 bg-[var(--sig-surface)]/50 border-y border-[var(--sig-border)] relative overflow-hidden">
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
                 <div className="container mx-auto px-4 relative z-10">
                     <h2 className="text-4xl md:text-5xl font-bold mb-20 text-center flex items-center justify-center gap-4">
-                        <BookOpen className="w-12 h-12 text-blue-500" />
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-white">
+                        <BookOpen className="w-12 h-12 text-[var(--sig-amber)]" />
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-100 to-white">
                             From The Administration
                         </span>
                     </h2>
 
                     <div className="max-w-7xl mx-auto">
-                        {/* Increased min-height to accommodate long text on mobile */}
                         <div className="relative min-h-[1350px] md:min-h-[750px] transition-[height] duration-500">
                             {MENTORS.map((mentor, index) => (
                                 <div
@@ -182,16 +205,16 @@ export default function LeadershipPage() {
                                         : "opacity-0 translate-x-24 scale-90 blur-xl z-10 pointer-events-none"
                                         }`}
                                 >
-                                    <div className="h-full bg-zinc-900/40 backdrop-blur-3xl p-6 md:p-16 rounded-[3rem] border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+                                    <div className="h-full bg-[var(--sig-surface)]/60 backdrop-blur-3xl p-6 md:p-16 rounded-[3rem] border border-[var(--sig-border)] shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden group">
                                         {/* Background Effects */}
-                                        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
-                                        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/10 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2" />
+                                        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--sig-amber)]/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+                                        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[var(--sig-indigo)]/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2" />
 
                                         <div className="flex flex-col md:flex-row items-center gap-10 md:gap-20 relative z-10 h-full">
-                                            {/* Image Section - Floating Card Style */}
-                                            <div className="relative shrink-0 group-hover:scale-[1.02] transition-transform duration-700 ease-out">
-                                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 blur-2xl opacity-40 rounded-[2.5rem]" />
-                                                <div className="w-64 h-64 md:w-80 md:h-80 bg-zinc-800 rounded-[2.5rem] overflow-hidden border border-white/20 shadow-2xl relative z-10">
+                                            {/* Image Section */}
+                                            <div className="relative shrink-0 group-hover:scale-[1.02] transition-transform duration-700 ease-[var(--ease-out)]">
+                                                <div className="absolute inset-0 bg-gradient-to-br from-[var(--sig-amber)] to-[var(--sig-indigo)] blur-2xl opacity-30 rounded-[2.5rem]" />
+                                                <div className="w-64 h-64 md:w-80 md:h-80 bg-[var(--sig-surface)] rounded-[2.5rem] overflow-hidden border border-[var(--sig-border-hover)] shadow-2xl relative z-10">
                                                     <img
                                                         src={mentor.imagePath}
                                                         alt={mentor.name}
@@ -202,43 +225,42 @@ export default function LeadershipPage() {
                                                     />
                                                 </div>
 
-                                                {/* Decorative Elements */}
-                                                <div className="absolute -bottom-6 -right-6 bg-zinc-900/90 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-xl hidden md:block">
-                                                    <Sparkles className="w-8 h-8 text-amber-400" />
+                                                {/* Decorative */}
+                                                <div className="absolute -bottom-6 -right-6 bg-[var(--sig-surface)]/90 backdrop-blur-md border border-[var(--sig-border)] p-4 rounded-2xl shadow-xl hidden md:block">
+                                                    <Sparkles className="w-8 h-8 text-[var(--sig-amber)]" />
                                                 </div>
                                             </div>
 
-                                            {/* Content Section */}
+                                            {/* Content */}
                                             <div className="text-center md:text-left flex-1 flex flex-col justify-center">
                                                 <div className="mb-8">
                                                     <h3 className="text-3xl md:text-5xl font-bold mb-4 text-white tracking-tight leading-tight">
                                                         {mentor.name}
                                                     </h3>
-                                                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-sm md:text-base uppercase tracking-widest">
+                                                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--sig-amber)]/10 border border-[var(--sig-amber)]/20 text-[var(--sig-amber)] font-bold text-sm md:text-base uppercase tracking-widest font-mono">
                                                         <Award className="w-4 h-4" />
                                                         {mentor.role}
                                                     </div>
                                                 </div>
 
                                                 <div className="relative group/quote">
-                                                    <span className="hidden md:block absolute -top-10 -left-6 text-8xl text-white/5 font-serif group-hover/quote:text-blue-500/10 transition-colors">"</span>
+                                                    <span className="hidden md:block absolute -top-10 -left-6 text-8xl text-white/5 font-serif group-hover/quote:text-[var(--sig-amber)]/10 transition-colors">&ldquo;</span>
                                                     <div className="text-gray-200 relative z-10">
                                                         <p className="text-base md:text-xl leading-relaxed font-light mb-6">
                                                             {mentor.message}
                                                         </p>
 
-                                                        {/* Render separate quote if available */}
                                                         {/* @ts-ignore */}
                                                         {mentor.quote && (
-                                                            <div className="border-l-4 border-blue-500 pl-4 py-1 mt-6">
-                                                                <p className="text-xl md:text-2xl font-bold text-blue-100 italic leading-relaxed">
+                                                            <div className="border-l-4 border-[var(--sig-amber)] pl-4 py-1 mt-6">
+                                                                <p className="text-xl md:text-2xl font-bold text-amber-100 italic leading-relaxed">
                                                                     {/* @ts-ignore */}
-                                                                    "{mentor.quote}"
+                                                                    &ldquo;{mentor.quote}&rdquo;
                                                                 </p>
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <span className="hidden md:block absolute -bottom-16 -right-6 text-8xl text-white/5 font-serif rotate-180 group-hover/quote:text-blue-500/10 transition-colors">"</span>
+                                                    <span className="hidden md:block absolute -bottom-16 -right-6 text-8xl text-white/5 font-serif rotate-180 group-hover/quote:text-[var(--sig-amber)]/10 transition-colors">&ldquo;</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -247,14 +269,14 @@ export default function LeadershipPage() {
                             ))}
                         </div>
 
-                        {/* Navigation Dots */}
+                        {/* Navigation Dots — amber active */}
                         <div className="flex justify-center gap-4 mt-8 md:mt-16 relative z-20">
                             {MENTORS.map((_, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => setActiveIndex(idx)}
                                     className={`h-1.5 rounded-full transition-all duration-500 ${idx === activeIndex
-                                        ? "bg-gradient-to-r from-blue-500 to-purple-500 w-16 opacity-100 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                                        ? "bg-gradient-to-r from-[var(--sig-amber)] to-amber-400 w-16 opacity-100 shadow-[0_0_15px_var(--sig-amber-dim)]"
                                         : "bg-white/20 w-3 hover:bg-white/40"
                                         }`}
                                     aria-label={`Go to slide ${idx + 1}`}
@@ -266,18 +288,18 @@ export default function LeadershipPage() {
             </section>
 
             {/* TEAM GRID */}
-            <section className="py-12 pb-24">
+            <section className="py-12 pb-24 relative z-10">
                 <div className="container mx-auto px-4">
                     <h2 className="text-3xl font-bold mb-12 text-center flex items-center justify-center gap-3">
-                        <Star className="w-8 h-8 text-amber-500" />
+                        <Star className="w-8 h-8 text-[var(--sig-amber)]" />
                         Executive Council
                     </h2>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                         {teamMembers.map((member) => (
-                            <div key={member.name} className="group bg-white/[0.03] backdrop-blur-xl border border-white/10 p-8 rounded-3xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-500 hover:-translate-y-1 overflow-hidden relative shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_rgba(59,130,246,0.12)]">
+                            <div key={member.name} className="group sig-card rounded-3xl p-8 overflow-hidden relative shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_40px_var(--sig-amber-dim)]">
                                 <div className="flex justify-between items-start mb-6 relative z-10">
-                                    <div className={`w-32 h-32 ${member.bg} ${member.color} backdrop-blur-xl rounded-2xl flex items-center justify-center text-current group-hover:scale-110 transition-transform duration-500 overflow-hidden relative border border-white/10`}>
+                                    <div className={`w-32 h-32 ${member.bg} ${member.color} backdrop-blur-xl rounded-2xl flex items-center justify-center text-current group-hover:scale-110 transition-transform duration-500 overflow-hidden relative border border-[var(--sig-border)]`}>
                                         {/* @ts-ignore */}
                                         {member.imagePath ? (
                                             <img
@@ -286,7 +308,6 @@ export default function LeadershipPage() {
                                                 alt={member.name}
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => {
-                                                    // Fallback to avatar if image fails
                                                     e.currentTarget.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name) + "&background=random"
                                                 }}
                                             />
@@ -294,14 +315,14 @@ export default function LeadershipPage() {
                                             <member.icon className="w-12 h-12" />
                                         )}
                                     </div>
-                                    <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                         {/* @ts-ignore */}
                                         {member.linkedin_id && (
                                             <a
                                                 href={ensureAbsoluteUrl(member.linkedin_id)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="p-2.5 bg-white/5 rounded-xl hover:bg-blue-500/20 hover:text-blue-400 transition-all duration-300"
+                                                className="spring-btn p-2.5 bg-[var(--sig-surface)] rounded-xl hover:bg-[var(--sig-amber)]/20 hover:text-[var(--sig-amber)] transition-all duration-200 border border-[var(--sig-border)]"
                                                 title="LinkedIn"
                                             >
                                                 <Linkedin className="w-5 h-5" />
@@ -310,7 +331,7 @@ export default function LeadershipPage() {
                                         <a
                                             // @ts-ignore
                                             href={`mailto:${member.email}`}
-                                            className="p-2.5 bg-white/5 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-300"
+                                            className="spring-btn p-2.5 bg-[var(--sig-surface)] rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 border border-[var(--sig-border)]"
                                             title="Email"
                                         >
                                             <Mail className="w-5 h-5" />
@@ -319,11 +340,11 @@ export default function LeadershipPage() {
                                 </div>
 
                                 <h3 className="text-xl font-bold mb-1 relative z-10">{member.name}</h3>
-                                <p className={`text-sm font-bold uppercase tracking-wider mb-4 ${member.color} relative z-10`}>
+                                <p className={`text-sm font-bold uppercase tracking-wider mb-4 ${member.color} relative z-10 font-mono`}>
                                     {member.role}
                                 </p>
 
-                                <p className="text-gray-400 text-sm leading-relaxed relative z-10">
+                                <p className="text-[var(--sig-text-secondary)] text-sm leading-relaxed relative z-10">
                                     {member.bio}
                                 </p>
                             </div>
