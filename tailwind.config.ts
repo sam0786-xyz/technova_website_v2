@@ -54,8 +54,8 @@ const config = {
         },
       },
       fontFamily: {
-        sans: ['var(--font-manrope)', 'sans-serif'],
-        heading: ['var(--font-bricolage)', 'sans-serif'],
+        sans: ['var(--font-dm-sans)', 'sans-serif'],
+        heading: ['var(--font-sora)', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",

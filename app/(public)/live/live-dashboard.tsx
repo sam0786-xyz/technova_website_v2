@@ -73,6 +73,11 @@ export default function LiveDashboardClient({
     const [totalSeconds, setTotalSeconds] = useState(0);
     const [totalDurationSeconds, setTotalDurationSeconds] = useState(0);
 
+    const [shortlistPage, setShortlistPage] = useState(1);
+    const ITEMS_PER_PAGE = 12;
+    const paginatedShortlist = initialShortlisted.slice((shortlistPage - 1) * ITEMS_PER_PAGE, shortlistPage * ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(initialShortlisted.length / ITEMS_PER_PAGE);
+
     // GLITCH ENGINE STATE
     const [glitchActive, setGlitchActive] = useState(false);
     const [glitchText, setGlitchText] = useState({ hours: "00", minutes: "00", seconds: "00" });
@@ -449,16 +454,53 @@ export default function LiveDashboardClient({
                             </div>
                             
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {initialShortlisted.map((team, idx) => (
-                                    <div key={team.id} className="bg-[#03030F] border border-white/10 hover:border-[#FF6B00] transition-colors p-4 flex flex-col gap-2">
-                                        <div className="flex justify-between items-center w-full">
-                                            <span className="text-xs font-bold text-[#FF6B00] tracking-widest">RANK {idx + 1}</span>
-                                            {team.table_number && <span className="text-[10px] text-black bg-[#00FF41] font-bold px-2 py-0.5">TBL-{team.table_number}</span>}
-                                        </div>
-                                        <h3 className="font-bold text-lg text-white font-sans uppercase truncate">{team.name}</h3>
-                                    </div>
-                                ))}
+                                <AnimatePresence mode="popLayout" initial={false}>
+                                    {paginatedShortlist.map((team, idx) => (
+                                        <motion.div 
+                                            key={team.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            layout
+                                            className="bg-[#03030F] border border-white/10 hover:border-[#FF6B00] transition-colors p-4 flex flex-col gap-2"
+                                        >
+                                            <div className="flex justify-between items-center w-full">
+                                                <span className="text-xs font-bold text-[#FF6B00] tracking-widest">SQD-{(shortlistPage - 1) * ITEMS_PER_PAGE + idx + 1}</span>
+                                                {team.table_number && <span className="text-[10px] text-black bg-[#00FF41] font-bold px-2 py-0.5">TBL-{team.table_number}</span>}
+                                            </div>
+                                            <h3 className="font-bold text-lg text-white font-sans uppercase truncate">{team.name}</h3>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
                             </div>
+                            
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="mt-8 flex flex-col items-center justify-center gap-4 relative z-10 w-full mb-2">
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setShortlistPage(Math.max(1, shortlistPage - 1))}
+                                            disabled={shortlistPage === 1}
+                                            className={`pg-btn flex items-center gap-1 ${shortlistPage === 1 ? 'pg-btn--disabled' : 'pg-btn--inactive'}`}
+                                        >
+                                            Prev
+                                        </button>
+                                        <div className="px-4 py-1.5 bg-white/[0.03] border border-white/[0.08] rounded-lg text-xs font-bold text-white/80">
+                                            Page {shortlistPage} <span className="text-white/30 font-medium">of {totalPages}</span>
+                                        </div>
+                                        <button
+                                            onClick={() => setShortlistPage(Math.min(totalPages, shortlistPage + 1))}
+                                            disabled={shortlistPage === totalPages}
+                                            className={`pg-btn flex items-center gap-1 ${shortlistPage === totalPages ? 'pg-btn--disabled' : 'pg-btn--inactive'}`}
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                    <div className="text-[10px] uppercase tracking-widest text-white/30 font-semibold">
+                                        Showing {(shortlistPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(shortlistPage * ITEMS_PER_PAGE, initialShortlisted.length)} of {initialShortlisted.length} Squads
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

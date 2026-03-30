@@ -340,17 +340,33 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Main Heading */}
+            {/* Main Heading — TECHNOVA single line with character stagger */}
             <motion.h1
-              className="text-[clamp(3.5rem,12vw,9rem)] font-heading font-black tracking-[-0.04em] leading-[0.85] uppercase mb-8"
-              initial={{ opacity: 0, y: 60 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.1 }}
+              className="text-[clamp(3.5rem,14vw,10rem)] font-heading font-extrabold tracking-[-0.05em] leading-[0.85] uppercase mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.1, delay: 0.1 }}
             >
-              <span className="block text-[var(--sig-text)]">Tech</span>
-              <span className="block text-[var(--sig-text)]">
-                Nova<span className="text-[var(--sig-amber)]">.</span>
-              </span>
+              {'TECHNOVA'.split('').map((char, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 0, y: 60, filter: 'blur(8px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1], delay: 0.15 + i * 0.04 }}
+                  className={`inline-block ${i === 7 ? 'text-[var(--sig-amber)]' : 'text-[var(--sig-text)]'}`}
+                  style={{
+                    textShadow: i === 7 ? '0 0 40px rgba(245, 166, 35, 0.3)' : 'none',
+                  }}
+                >
+                  {char}
+                </motion.span>
+              ))}
+              <motion.span
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.55 }}
+                className="text-[var(--sig-amber)] inline-block"
+              >.</motion.span>
             </motion.h1>
 
             {/* Rotating subtitle */}
@@ -358,7 +374,7 @@ export default function LandingPage() {
               className="text-xl md:text-2xl font-medium text-[var(--sig-text-secondary)] mb-12 max-w-xl leading-relaxed"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.3 }}
+              transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.5 }}
             >
               We build{' '}
               <TextCycle words={['Engineers', 'Innovators', 'Problem Solvers', 'Designers', 'Leaders']} />
@@ -371,7 +387,7 @@ export default function LandingPage() {
               className="flex flex-wrap gap-4 mb-20"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.5 }}
+              transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.65 }}
             >
               <Link
                 href="/events"
@@ -394,7 +410,7 @@ export default function LandingPage() {
               className="grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-[var(--sig-border)] pt-10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.7 }}
+              transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.8 }}
             >
               <AnimatedStat value={8} suffix="+" label="Specialized Clubs" />
               <AnimatedStat value={50} suffix="+" label="Events Yearly" />

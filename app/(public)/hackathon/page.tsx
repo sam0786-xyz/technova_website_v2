@@ -4,9 +4,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, Zap, Trophy, ShieldAlert, Cpu, HeartPulse, BookOpen, LineChart, Globe, GraduationCap, Download, Users, Award, Star, ArrowUpRight, CheckCircle, Sparkles, ChevronDown, MapPin, Wifi, Coffee, ArrowRight } from 'lucide-react'
 import { VenueCarousel } from '@/components/hackathon/venue-carousel'
-import { useEffect, useState, useRef } from 'react'
-
-const REGISTRATION_LINK = "https://docs.google.com/forms/d/e/1FAIpQLScDLjm7HDdkKXJqVIIQr9zp-cG95vnCrdNy2gjEtJtjxaZBXA/viewform"
+import { useEffect, useState, useRef, useMemo } from 'react'
 
 /* ─── Ease curves (Emil Kowalski philosophy) ─── */
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
@@ -78,6 +76,9 @@ export default function HackathonPage() {
     const [liveData, setLiveData] = useState<{ settings: any; schedule: any[]; shortlistedTeams: any[] } | null>(null)
     const [openFaq, setOpenFaq] = useState<number | null>(null)
 
+    const [shortlistPage, setShortlistPage] = useState(1);
+    const ITEMS_PER_PAGE = 12;
+
     const { scrollY } = useScroll()
     const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
     const heroScale = useTransform(scrollY, [0, 400], [1, 0.96])
@@ -138,6 +139,14 @@ export default function HackathonPage() {
 
     const timerData = getTimerData()
     const isShortlistPopulated = liveData?.shortlistedTeams && liveData.shortlistedTeams.length > 0;
+
+    const sortedShortlist = useMemo(() => {
+        if (!liveData?.shortlistedTeams) return [];
+        return [...liveData.shortlistedTeams].sort((a: any, b: any) => a.name.localeCompare(b.name));
+    }, [liveData?.shortlistedTeams]);
+    
+    const paginatedShortlist = sortedShortlist.slice((shortlistPage - 1) * ITEMS_PER_PAGE, shortlistPage * ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(sortedShortlist.length / ITEMS_PER_PAGE);
 
     const tracks = [
         { title: "AI & Intelligent Systems", icon: HeartPulse, gradient: "from-violet-500 to-fuchsia-500", problem: "AI-Driven Solutions for Smart India", type: "AI/ML" },
@@ -279,41 +288,36 @@ export default function HackathonPage() {
                             initial={{ opacity: 0, y: 24 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: 0.3, ease: EASE_OUT }}
-                            className="lg:col-span-5 xl:col-span-4 flex flex-col gap-3"
+                            className="lg:col-span-5 xl:col-span-4 flex flex-col gap-4"
                         >
-                            <a
-                                href={REGISTRATION_LINK}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-4 sm:py-5 px-6 sm:px-8 rounded-2xl flex items-center justify-between transition-all duration-200 active:scale-[0.97] shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30"
-                            >
-                                <span className="text-sm sm:text-base uppercase tracking-wider">Register Team</span>
-                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-                            </a>
-                            <a
-                                href="https://drive.google.com/file/d/1hTMH6CHzvjqZ9pWRB2wRnHlwBS_EpDdh/view?usp=sharing"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group w-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] hover:border-white/[0.2] text-white/80 hover:text-white font-semibold py-4 sm:py-5 px-6 sm:px-8 rounded-2xl flex items-center justify-between transition-all duration-200 active:scale-[0.97]"
-                            >
-                                <span className="text-sm sm:text-base uppercase tracking-wider">Get Brochure</span>
-                                <Download className="w-4.5 h-4.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
-                            </a>
+                            <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center text-center">
+                                <span className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-3">Grand Finale Loading</span>
+                                <div className="text-sm text-white/50 mb-6 leading-relaxed">Registrations have officially <strong className="text-white/80">closed</strong>. We are gearing up for the ultimate 24-hour showdown.</div>
+                                <a
+                                    href="https://drive.google.com/file/d/1hTMH6CHzvjqZ9pWRB2wRnHlwBS_EpDdh/view?usp=sharing"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group w-full bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] hover:border-white/[0.2] text-white/80 hover:text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3 transition-all duration-200 active:scale-[0.97]"
+                                >
+                                    <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform duration-200" />
+                                    <span className="text-sm uppercase tracking-wider font-bold">Download Brochure</span>
+                                </a>
+                            </div>
 
-                            {/* Quick stats under buttons */}
-                            <div className="grid grid-cols-3 gap-2 mt-2">
-                                {[
-                                    { val: 97, suffix: '+', label: 'Teams' },
-                                    { val: 24, suffix: 'hrs', label: 'Duration' },
-                                    { val: 205, suffix: 'K', label: 'Prize Pool' },
-                                ].map((stat, i) => (
-                                    <div key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-3 text-center">
-                                        <div className="text-lg sm:text-xl font-heading font-black text-white tracking-tight">
-                                            <AnimatedCounter value={stat.val} suffix={stat.suffix} />
-                                        </div>
-                                        <div className="text-[9px] sm:text-[10px] text-white/30 uppercase tracking-widest mt-0.5">{stat.label}</div>
+                            {/* Impact Stats */}
+                            <div className="grid grid-cols-2 gap-3 mt-2">
+                                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5 text-center flex flex-col justify-center min-h-[110px]">
+                                    <div className="text-3xl sm:text-4xl font-heading font-black text-white tracking-tight">
+                                        <AnimatedCounter value={309} />
                                     </div>
-                                ))}
+                                    <div className="text-[9px] sm:text-[10px] text-white/40 uppercase tracking-widest mt-2 font-bold leading-tight">Registered<br/>Teams</div>
+                                </div>
+                                <div className="bg-indigo-500/[0.05] border border-indigo-500/20 rounded-xl p-5 text-center shadow-[0_0_20px_rgba(99,102,241,0.05)] flex flex-col justify-center min-h-[110px]">
+                                    <div className="text-3xl sm:text-4xl font-heading font-black text-indigo-400 tracking-tight">
+                                        <AnimatedCounter value={97} />
+                                    </div>
+                                    <div className="text-[9px] sm:text-[10px] text-indigo-400/70 uppercase tracking-widest mt-2 font-bold leading-tight">Selected For<br/>Finals</div>
+                                </div>
                             </div>
                         </motion.div>
                     </div>
@@ -348,46 +352,86 @@ export default function HackathonPage() {
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 relative z-10">
-                                {liveData.shortlistedTeams
-                                    .slice()
-                                    .sort((a: any, b: any) => a.name.localeCompare(b.name))
-                                    .map((team: any, i: number) => (
-                                    <motion.div
-                                        key={team.id}
-                                        initial={{ opacity: 0, y: 16 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: Math.min(i * 0.03, 0.6), duration: 0.4, ease: EASE_OUT }}
-                                        className="group relative p-[1px] rounded-xl overflow-hidden"
-                                    >
-                                        {/* Gradient border on hover */}
-                                        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] to-transparent group-hover:from-indigo-500/30 group-hover:to-violet-500/10 transition-all duration-500 rounded-xl" />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 relative z-10 min-h-[300px]">
+                                <AnimatePresence mode="popLayout" initial={false}>
+                                    {paginatedShortlist.map((team: any, i: number) => (
+                                        <motion.div
+                                            key={team.id}
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            transition={{ delay: i * 0.03, duration: 0.3, ease: EASE_OUT }}
+                                            layout
+                                            className="group relative p-[1px] rounded-xl overflow-hidden"
+                                        >
+                                            {/* Gradient border on hover */}
+                                            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] to-transparent group-hover:from-indigo-500/30 group-hover:to-violet-500/10 transition-all duration-500 rounded-xl" />
 
-                                        <div className="relative bg-[#0c0c1a] hover:bg-[#0e0e1e] p-4 sm:p-5 rounded-xl transition-colors duration-300 h-full flex flex-col">
-                                            <div className="flex items-center justify-between mb-3 sm:mb-4">
-                                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08]">
-                                                    <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-                                                    <span className="text-[9px] sm:text-[10px] font-semibold text-white/60 uppercase tracking-wider">Selected</span>
+                                            <div className="relative bg-[#0c0c1a] hover:bg-[#0e0e1e] p-4 sm:p-5 rounded-xl transition-colors duration-300 h-full flex flex-col">
+                                                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08]">
+                                                        <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                                                        <span className="text-[9px] sm:text-[10px] font-semibold text-white/60 uppercase tracking-wider">Selected</span>
+                                                    </div>
+                                                    {team.table_number && (
+                                                        <span className="text-[9px] sm:text-[10px] font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+                                                            TBL-{team.table_number}
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                {team.table_number && (
-                                                    <span className="text-[9px] sm:text-[10px] font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
-                                                        TBL-{team.table_number}
-                                                    </span>
+                                                <h3 className="font-heading font-bold text-sm sm:text-base text-white/90 group-hover:text-white transition-colors line-clamp-2 mt-auto leading-snug">
+                                                    {team.name}
+                                                </h3>
+                                                {team.idea_title && (
+                                                    <p className="text-[11px] sm:text-xs text-white/30 group-hover:text-white/50 transition-colors mt-2 line-clamp-2 leading-relaxed">
+                                                        {team.idea_title}
+                                                    </p>
                                                 )}
                                             </div>
-                                            <h3 className="font-heading font-bold text-sm sm:text-base text-white/90 group-hover:text-white transition-colors line-clamp-2 mt-auto leading-snug">
-                                                {team.name}
-                                            </h3>
-                                            {team.idea_title && (
-                                                <p className="text-[11px] sm:text-xs text-white/30 group-hover:text-white/50 transition-colors mt-2 line-clamp-2 leading-relaxed">
-                                                    {team.idea_title}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
                             </div>
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="mt-10 flex flex-col items-center justify-center gap-4 relative z-10">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setShortlistPage(p => Math.max(1, p - 1))}
+                                            disabled={shortlistPage === 1}
+                                            className={`pg-btn flex items-center gap-1 ${shortlistPage === 1 ? 'pg-btn--disabled' : 'pg-btn--inactive'}`}
+                                        >
+                                            <ChevronDown className="w-3.5 h-3.5 rotate-90" /> Prev
+                                        </button>
+                                        <div className="flex items-center gap-1.5 px-2">
+                                            {Array.from({ length: totalPages }).map((_, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => setShortlistPage(i + 1)}
+                                                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center ${
+                                                        shortlistPage === i + 1 
+                                                            ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' 
+                                                            : 'bg-white/[0.03] text-white/40 hover:bg-white/[0.08] hover:text-white/80 border border-white/[0.05]'
+                                                    }`}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <button
+                                            onClick={() => setShortlistPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={shortlistPage === totalPages}
+                                            className={`pg-btn flex items-center gap-1 ${shortlistPage === totalPages ? 'pg-btn--disabled' : 'pg-btn--inactive'}`}
+                                        >
+                                            Next <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
+                                        </button>
+                                    </div>
+                                    <div className="text-[10px] uppercase tracking-widest text-white/30 font-semibold">
+                                        Showing {(shortlistPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(shortlistPage * ITEMS_PER_PAGE, sortedShortlist.length)} of {sortedShortlist.length} Squads
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </Section>
                 )}
@@ -559,28 +603,11 @@ export default function HackathonPage() {
 
                         <div>
                             <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-white uppercase mb-8 sm:mb-10">
-                                Registration <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Info</span>
+                                Contact <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Info</span>
                             </h2>
 
-                            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 sm:p-8 mb-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div>
-                                        <span className="text-[10px] sm:text-xs text-indigo-400 uppercase tracking-widest font-semibold">Entry Fee</span>
-                                        <div className="text-3xl sm:text-4xl font-heading font-black text-white mt-1">₹500</div>
-                                    </div>
-                                    <div className="text-right text-white/30 text-[10px] sm:text-xs uppercase tracking-widest leading-relaxed">Per Team<br />Registration</div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center overflow-hidden p-2">
-                                        <img src="/images/payment-qr.png" alt="Payment QR" className="w-full h-full object-contain" />
-                                    </div>
-                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center overflow-hidden p-2">
-                                        <img src="/images/registration-qr.png" alt="Registration QR" className="w-full h-full object-contain" />
-                                    </div>
-                                    <div className="text-center text-[9px] sm:text-[10px] text-white/30 uppercase tracking-widest font-medium">Payment</div>
-                                    <div className="text-center text-[9px] sm:text-[10px] text-white/30 uppercase tracking-widest font-medium">Register</div>
-                                </div>
+                            <div className="text-sm text-white/50 mb-8 leading-relaxed max-w-sm">
+                                Have questions about the upcoming Grand Finale? Feel free to reach out to our organizing team.
                             </div>
 
                             {/* Contact section */}
@@ -669,13 +696,13 @@ export default function HackathonPage() {
                         <h2 className="text-xl sm:text-2xl font-heading font-bold tracking-widest text-white/20 uppercase">Backed By</h2>
                     </div>
                     <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16">
-                        <div className="opacity-50 hover:opacity-90 transition-opacity duration-300 flex flex-col items-center gap-3">
-                            <img src="/images/chings-secret-logo.jpg" alt="Chings" className="h-12 sm:h-16 w-auto grayscale contrast-200 invert rounded-lg" />
-                            <span className="text-[9px] sm:text-[10px] font-medium uppercase tracking-widest text-white/30">Title Partner</span>
+                        <div className="hover:scale-105 transition-transform duration-300 flex flex-col items-center gap-3">
+                            <img src="/images/chings-secret-logo.jpg" alt="Chings" className="h-16 sm:h-20 w-auto rounded-lg shadow-lg border border-white/10 p-1 bg-white" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--sig-amber)] bg-[var(--sig-amber-dim)] px-3 py-1 rounded-full border border-[var(--sig-amber)]">Title Partner</span>
                         </div>
-                        <div className="opacity-50 hover:opacity-90 transition-opacity duration-300 flex flex-col items-center gap-3">
-                            <img src="/images/prismatix-logo.jpg" alt="Prismatix" className="h-12 sm:h-16 w-auto grayscale contrast-200 invert rounded-lg" />
-                            <span className="text-[9px] sm:text-[10px] font-medium uppercase tracking-widest text-white/30">Associate Partner</span>
+                        <div className="hover:scale-105 transition-transform duration-300 flex flex-col items-center gap-3">
+                            <img src="/images/prismatix-logo.jpg" alt="Prismatix" className="h-16 sm:h-20 w-auto rounded-lg shadow-lg border border-white/10 p-1 bg-white" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400 bg-indigo-500/20 px-3 py-1 rounded-full border border-indigo-500/30">Associate Partner</span>
                         </div>
                     </div>
                 </Section>

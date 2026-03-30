@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Bricolage_Grotesque, Manrope } from "next/font/google";
+import { Sora, DM_Sans } from "next/font/google";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -14,15 +14,16 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const bricolage = Bricolage_Grotesque({
+const sora = Sora({
   subsets: ["latin"],
-  variable: "--font-bricolage",
+  variable: "--font-sora",
   display: "swap",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800"],
 });
 
-const manrope = Manrope({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-manrope",
+  variable: "--font-dm-sans",
   display: "swap",
 });
 
@@ -174,7 +175,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${bricolage.variable} ${manrope.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${sora.variable} ${dmSans.variable} antialiased`}
         suppressHydrationWarning
       >
         {children}

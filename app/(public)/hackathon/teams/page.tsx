@@ -28,6 +28,17 @@ export default function TeamsPage() {
     const [themeFilter, setThemeFilter] = useState<string | null>(null)
     const [expandedTeam, setExpandedTeam] = useState<string | null>(null)
 
+    const [shortlistPage, setShortlistPage] = useState(1)
+    const [allTeamsPage, setAllTeamsPage] = useState(1)
+    const ITEMS_PER_PAGE = 12
+
+    // Reset pagination on search or filter change
+    useEffect(() => {
+        setShortlistPage(1)
+        setAllTeamsPage(1)
+        setExpandedTeam(null)
+    }, [search, themeFilter])
+
     useEffect(() => {
         fetch('/api/hackathon-teams')
             .then(r => r.json())
@@ -51,6 +62,9 @@ export default function TeamsPage() {
 
     const shortlisted = filtered.filter(t => t.is_shortlisted)
     const others = filtered.filter(t => !t.is_shortlisted)
+
+    const paginatedShortlisted = shortlisted.slice((shortlistPage - 1) * ITEMS_PER_PAGE, shortlistPage * ITEMS_PER_PAGE)
+    const paginatedOthers = others.slice((allTeamsPage - 1) * ITEMS_PER_PAGE, allTeamsPage * ITEMS_PER_PAGE)
 
     return (
         <div className="min-h-screen bg-[#050510] text-white font-sans">
@@ -160,17 +174,26 @@ export default function TeamsPage() {
                                     <span className="text-xs text-white/20 font-medium">({shortlisted.length})</span>
                                 </div>
                                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {shortlisted.map((team, idx) => (
-                                        <TeamCard
-                                            key={team.id}
-                                            team={team}
-                                            index={idx}
-                                            expanded={expandedTeam === team.id}
-                                            onToggle={() => setExpandedTeam(expandedTeam === team.id ? null : team.id)}
-                                            isShortlisted
-                                        />
-                                    ))}
+                                    <AnimatePresence mode="popLayout" initial={false}>
+                                        {paginatedShortlisted.map((team, idx) => (
+                                            <TeamCard
+                                                key={team.id}
+                                                team={team}
+                                                index={idx}
+                                                expanded={expandedTeam === team.id}
+                                                onToggle={() => setExpandedTeam(expandedTeam === team.id ? null : team.id)}
+                                                isShortlisted
+                                            />
+                                        ))}
+                                    </AnimatePresence>
                                 </div>
+                                <Pagination
+                                    currentPage={shortlistPage}
+                                    totalPages={Math.ceil(shortlisted.length / ITEMS_PER_PAGE)}
+                                    onPageChange={setShortlistPage}
+                                    totalItems={shortlisted.length}
+                                    itemsName="Squads"
+                                />
                             </div>
                         )}
 
@@ -184,17 +207,28 @@ export default function TeamsPage() {
                                 <span className="text-xs text-white/20 font-medium">({others.length})</span>
                             </div>
                             {others.length > 0 ? (
-                                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {others.map((team, idx) => (
-                                        <TeamCard
-                                            key={team.id}
-                                            team={team}
-                                            index={idx}
-                                            expanded={expandedTeam === team.id}
-                                            onToggle={() => setExpandedTeam(expandedTeam === team.id ? null : team.id)}
-                                        />
-                                    ))}
-                                </div>
+                                <>
+                                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        <AnimatePresence mode="popLayout" initial={false}>
+                                            {paginatedOthers.map((team, idx) => (
+                                                <TeamCard
+                                                    key={team.id}
+                                                    team={team}
+                                                    index={idx}
+                                                    expanded={expandedTeam === team.id}
+                                                    onToggle={() => setExpandedTeam(expandedTeam === team.id ? null : team.id)}
+                                                />
+                                            ))}
+                                        </AnimatePresence>
+                                    </div>
+                                    <Pagination
+                                        currentPage={allTeamsPage}
+                                        totalPages={Math.ceil(others.length / ITEMS_PER_PAGE)}
+                                        onPageChange={setAllTeamsPage}
+                                        totalItems={others.length}
+                                        itemsName="Teams"
+                                    />
+                                </>
                             ) : (
                                 <div className="text-center py-12 text-white/20 text-sm">
                                     No teams match your filters
@@ -291,5 +325,35 @@ function TeamCard({ team, index, expanded, onToggle, isShortlisted = false }: {
                 )}
             </AnimatePresence>
         </motion.div>
+    )
+}
+
+function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsName = "Items", itemsPerPage = 12 }: { currentPage: number, totalPages: number, onPageChange: (p: number) => void, totalItems: number, itemsName?: string, itemsPerPage?: number }) {
+    if (totalPages <= 1) return null;
+    return (
+        <div className="mt-8 flex flex-col items-center justify-center gap-4 relative z-10 w-full pb-4">
+            <div className="flex items-center gap-3">
+                <button
+                    onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className={`pg-btn flex items-center gap-1 ${currentPage === 1 ? 'pg-btn--disabled' : 'pg-btn--inactive'}`}
+                >
+                    <ChevronDown className="w-3.5 h-3.5 rotate-90" /> Prev
+                </button>
+                <div className="px-4 py-1.5 bg-white/[0.03] border border-white/[0.08] rounded-lg text-xs font-bold text-white/80">
+                    Page {currentPage} <span className="text-white/30 font-medium">of {totalPages}</span>
+                </div>
+                <button
+                    onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className={`pg-btn flex items-center gap-1 ${currentPage === totalPages ? 'pg-btn--disabled' : 'pg-btn--inactive'}`}
+                >
+                    Next <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
+                </button>
+            </div>
+            <div className="text-[10px] uppercase tracking-widest text-white/30 font-semibold">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} {itemsName}
+            </div>
+        </div>
     )
 }

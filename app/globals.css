@@ -225,6 +225,23 @@
   .sig-card:active {
     transform: translateY(-2px) scale(0.99);
   }
+
+  /* === Pagination Controls === */
+  .pg-btn {
+    @apply px-3 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-all duration-200;
+    transition-timing-function: var(--ease-out);
+  }
+  .pg-btn:active { transform: scale(0.95); }
+  .pg-btn--active {
+    @apply bg-indigo-600 border-indigo-500 text-white shadow-lg;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+  .pg-btn--inactive {
+    @apply bg-white/[0.03] border-white/[0.08] text-white/40 hover:bg-white/[0.06] hover:border-white/[0.12] hover:text-white/70;
+  }
+  .pg-btn--disabled {
+    @apply bg-transparent border-white/[0.04] text-white/15 cursor-not-allowed;
+  }
 }
 
 /* ============================================
