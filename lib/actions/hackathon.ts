@@ -1308,11 +1308,8 @@ export async function emailShortlistedTeams() {
             }
         }
 
-        // Mark team as notified
-        await supabase
-            .from('hackathon_teams')
-            .update({ status: 'shortlisted_notified' })
-            .eq('id', team.id)
+        // Team stays as 'shortlisted' after notification
+        // (no status change needed — DB enum doesn't support 'shortlisted_notified')
     }
 
     revalidatePath('/hackathon-portal/manage')
@@ -1398,11 +1395,11 @@ export async function emailSingleTeam(teamId: string) {
         }
     }
 
-    // Update team status
-    if (sentTo.length > 0 && (team.status === 'shortlisted' || team.status === 'pending' || team.status === 'evaluating')) {
+    // Update team status to shortlisted if not already
+    if (sentTo.length > 0 && (team.status === 'pending' || team.status === 'evaluating')) {
         await supabase
             .from('hackathon_teams')
-            .update({ status: 'shortlisted_notified' })
+            .update({ status: 'shortlisted' })
             .eq('id', teamId)
     }
 
@@ -1446,7 +1443,7 @@ export async function blastCustomEmail(subject: string, htmlBody: string, target
                 status,
                 hackathon_participants ( email )
             `)
-            .in('status', ['shortlisted', 'shortlisted_notified'])
+            .in('status', ['shortlisted'])
             
         if (data) {
             data.forEach(team => {

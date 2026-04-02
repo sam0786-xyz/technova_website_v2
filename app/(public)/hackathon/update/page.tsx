@@ -263,7 +263,7 @@ export default function TeamUpdatePage() {
                                                 TABLE {team.table_number}
                                             </span>
                                         )}
-                                        {(team.status === 'shortlisted' || team.status === 'shortlisted_notified') && (
+                                        {team.status === 'shortlisted' && (
                                             <span className="text-sm text-black bg-[#FFD700] font-bold px-3 py-1">
                                                 ★ SHORTLISTED
                                             </span>
@@ -273,7 +273,7 @@ export default function TeamUpdatePage() {
                                 {/* Status & Access Badge */}
                                 <div className="flex items-center gap-3 flex-wrap">
                                     <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 ${
-                                        team.status === 'shortlisted' || team.status === 'shortlisted_notified' ? 'bg-emerald-500/20 text-emerald-400' :
+                                        team.status === 'shortlisted' ? 'bg-emerald-500/20 text-emerald-400' :
                                         team.status === 'checked_in' ? 'bg-blue-500/20 text-blue-400' :
                                         'bg-white/10 text-white/40'
                                     }`}>

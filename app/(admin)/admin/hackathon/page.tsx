@@ -388,7 +388,7 @@ export default function HackathonAdminPage() {
                                     {teams.length > 0 && (
                                         <button
                                             onClick={async () => {
-                                                if (!confirm(`This will email QR codes to ALL participants across ${teams.length} teams. Continue?`)) return;
+                                                if (!confirm(`This will email QR codes to all shortlisted participants. Continue?`)) return;
                                                 setSendingQr(true);
                                                 setMessage(null);
                                                 try {

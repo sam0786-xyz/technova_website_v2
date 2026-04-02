@@ -518,7 +518,7 @@ export default function HackathonManageClient() {
         }
     }
     const handleToggleShortlist = async (teamId: string, currentStatus: string) => {
-        const newStatus = (currentStatus === 'shortlisted' || currentStatus === 'shortlisted_notified') ? 'evaluating' : 'shortlisted';
+        const newStatus = currentStatus === 'shortlisted' ? 'evaluating' : 'shortlisted';
         const res = await updateTeamStatus(teamId, newStatus);
         if (res.error) {
             setMessage({ type: 'error', text: res.error });
@@ -645,7 +645,7 @@ export default function HackathonManageClient() {
             {/* Summary Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className={cardCls}><p className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider mb-2">Total Teams</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-gray-900">{teams.length}</span>{teams.length > 0 && <span className="text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full font-medium mb-1">+{teams.filter(t => t.status === 'pending').length} pending</span>}</div></div>
-                <div className={cardCls}><p className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider mb-2">Shortlisted</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-emerald-600">{teams.filter(t => t.status === 'shortlisted' || t.status === 'shortlisted_notified').length}</span><span className="text-xs text-gray-400 font-mono mb-1">of {teams.length}</span></div></div>
+                <div className={cardCls}><p className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider mb-2">Shortlisted</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-emerald-600">{teams.filter(t => t.status === 'shortlisted').length}</span><span className="text-xs text-gray-400 font-mono mb-1">of {teams.length}</span></div></div>
                 <div className={cardCls}><p className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider mb-2">Checked-in</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-emerald-600">{teams.filter(t => t.checked_in).length}</span><div className="flex-1 h-1.5 bg-gray-100 rounded-full mb-2 max-w-[80px]"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${teams.length > 0 ? (teams.filter(t => t.checked_in).length / teams.length * 100) : 0}%` }} /></div></div></div>
                 <div className={cardCls}><p className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider mb-2">Average Score</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-orange-600">{avgScore}</span><div className="flex gap-0.5 mb-1">{[1,2,3,4,5].map(i => <Star key={i} className={`w-3 h-3 ${parseFloat(avgScore) >= i * 2 ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />)}</div></div></div>
             </div>
@@ -738,7 +738,10 @@ export default function HackathonManageClient() {
                                 <button onClick={() => { const exportData = filteredTeams.map(t => ({ 'Team': t.name, 'Idea': t.idea_title, 'Track': t.theme, 'Score': t.final_score || 0, 'Status': t.status })); downloadCSV(exportData, 'teams_export.csv'); }} className="flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm transition-colors">
                                     <Download className="w-3.5 h-3.5" /> Export CSV
                                 </button>
-                                <button onClick={async () => { setMessage({ type: 'success', text: 'Sending QR code emails to shortlisted teams...' }); const res = await emailShortlistedTeams(); if (res.error) setMessage({ type: 'error', text: res.error }); else setMessage({ type: 'success', text: res.message || 'QR code emails sent!' }); }} className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 px-3 py-2 rounded-xl text-sm transition-colors">
+                                <button onClick={async () => { if (!confirm(`This will send the 'Congratulations / Shortlisted' notification to all shortlisted teams. Continue?`)) return; setMessage({ type: 'success', text: 'Sending shortlist notifications...' }); const res = await emailShortlistedTeams(); if (res.error) setMessage({ type: 'error', text: res.error }); else setMessage({ type: 'success', text: res.message || 'Notifications sent!' }); loadData(); }} className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-3 py-2 rounded-xl text-sm transition-colors">
+                                    <CheckCircle className="w-3.5 h-3.5" /> Notify Shortlisted
+                                </button>
+                                <button onClick={async () => { if (!confirm(`This will email QR codes to all shortlisted participants. Continue?`)) return; setMessage({ type: 'success', text: 'Sending QR code emails to shortlisted teams...' }); try { const res = await fetch('/api/admin/hackathon-qr-emails', { method: 'POST' }); const data = await res.json(); if (data.error) setMessage({ type: 'error', text: data.error }); else setMessage({ type: 'success', text: `QR codes emailed! ${data.sent} sent, ${data.failed} failed.` }); } catch (err: any) { setMessage({ type: 'error', text: err.message || 'Failed to send QR emails.' }); } }} className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 px-3 py-2 rounded-xl text-sm transition-colors">
                                     <Mail className="w-3.5 h-3.5" /> Send QR Codes
                                 </button>
                                 <button onClick={() => setShowManualAdd(true)} className="flex items-center gap-1.5 bg-emerald-500 hover:bg-white text-black font-black uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] text-gray-900 px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-none">
@@ -791,11 +794,11 @@ export default function HackathonManageClient() {
                                                     <td className="px-4 py-3.5">{team.theme && <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-xl text-xs font-medium border border-purple-100">{team.theme}</span>}</td>
                                                     <td className="px-4 py-3.5">
                                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                            team.status === 'shortlisted' || team.status === 'shortlisted_notified' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                                                            team.status === 'shortlisted' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                                                             team.status === 'evaluating' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
                                                             team.status === 'checked_in' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                                                             'bg-gray-50 text-gray-600 border border-gray-200'
-                                                        }`}>{team.status === 'shortlisted_notified' ? 'Shortlisted' : (team.status || 'pending')?.replace('_', ' ')}</span>
+                                                        }`}>{(team.status || 'pending')?.replace('_', ' ')}</span>
                                                     </td>
                                                     <td className="px-4 py-3.5 text-center font-mono font-bold text-gray-900">{r1Avg > 0 ? r1Avg.toFixed(1) : '—'}</td>
                                                     <td className="px-4 py-3.5 text-center">
@@ -823,12 +826,12 @@ export default function HackathonManageClient() {
                                                                     setSendingMailTeamId(null);
                                                                 }}
                                                                 disabled={sendingMailTeamId === team.id}
-                                                                className={`p-1.5 rounded-xl transition-colors ${team.status === 'shortlisted_notified' ? 'bg-blue-50 text-blue-500' : 'hover:bg-blue-50 text-gray-400 hover:text-blue-600'} disabled:opacity-50`}
-                                                                title={team.status === 'shortlisted_notified' ? 'Resend email' : 'Send shortlist email'}
+                                                                className={`p-1.5 rounded-xl transition-colors hover:bg-blue-50 text-gray-400 hover:text-blue-600 disabled:opacity-50`}
+                                                                title="Send shortlist email"
                                                             >
                                                                 {sendingMailTeamId === team.id ? <div className="w-3.5 h-3.5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
                                                             </button>
-                                                            <button onClick={() => handleToggleShortlist(team.id, team.status)} className={`p-1.5 rounded-xl transition-colors ${team.status === 'shortlisted' || team.status === 'shortlisted_notified' ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-amber-50 text-gray-400 font-mono hover:text-orange-600'}`} title="Toggle shortlist"><Star className="w-3.5 h-3.5" /></button>
+                                                            <button onClick={() => handleToggleShortlist(team.id, team.status)} className={`p-1.5 rounded-xl transition-colors ${team.status === 'shortlisted' ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-amber-50 text-gray-400 font-mono hover:text-orange-600'}`} title="Toggle shortlist"><Star className="w-3.5 h-3.5" /></button>
                                                         </div>
                                                     </td>
                                                 </tr>

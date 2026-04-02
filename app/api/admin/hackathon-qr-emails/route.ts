@@ -123,9 +123,10 @@ export async function POST() {
     const { data: teams, error: teamsError } = await supabase
         .from('hackathon_teams')
         .select(`
-            id, name,
+            id, name, status,
             hackathon_participants (id, name, email, role)
         `)
+        .eq('status', 'shortlisted')
 
     if (teamsError || !teams) {
         return NextResponse.json({ error: teamsError?.message || "Failed to fetch teams" }, { status: 500 })
