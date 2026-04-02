@@ -15,22 +15,22 @@ export async function POST(req: NextRequest) {
 
         const supabase = await getSupabase()
 
-        // Action: LOOKUP — find team by leader email
+        // Action: LOOKUP — find team by member email (any member can view, only leader can update)
         if (action === 'lookup') {
             if (!email || typeof email !== 'string') {
                 return NextResponse.json({ error: "Email is required" }, { status: 400 })
             }
 
-            // Find the leader participant
+            // Find any participant with this email
             const { data: participant, error: pError } = await supabase
                 .from('hackathon_participants')
                 .select('id, name, email, role, team_id, hackathon_teams(*)')
                 .eq('email', email.toLowerCase().trim())
-                .eq('role', 'leader')
+                .limit(1)
                 .single()
 
             if (pError || !participant) {
-                return NextResponse.json({ error: "No team found with this leader email. Make sure you're using the same email you registered with." }, { status: 404 })
+                return NextResponse.json({ error: "No team found with this email. Make sure you're using the same email you registered with." }, { status: 404 })
             }
 
             const team = participant.hackathon_teams as any
@@ -45,6 +45,10 @@ export async function POST(req: NextRequest) {
                 .eq('team_id', team.id)
                 .order('role', { ascending: true })
 
+            // Find the leader ID
+            const leader = (members || []).find((m: any) => m.role?.toLowerCase() === 'leader')
+            const isLeader = participant.role?.toLowerCase() === 'leader'
+
             return NextResponse.json({
                 team: {
                     id: team.id,
@@ -57,7 +61,8 @@ export async function POST(req: NextRequest) {
                     table_number: team.table_number,
                 },
                 members: members || [],
-                leaderId: participant.id,
+                leaderId: leader?.id || participant.id,
+                isLeader,
             })
         }
 
@@ -67,12 +72,12 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
             }
 
-            // Verify leader
+            // Verify leader (case-insensitive role match)
             const { data: leader, error: lError } = await supabase
                 .from('hackathon_participants')
                 .select('id, name, email, team_id')
                 .eq('email', email.toLowerCase().trim())
-                .eq('role', 'leader')
+                .ilike('role', 'leader')
                 .eq('team_id', teamId)
                 .single()
 
@@ -117,6 +122,10 @@ export async function POST(req: NextRequest) {
                     if (member.email !== undefined) memberUpdates.email = member.email
                     if (member.phone !== undefined) memberUpdates.phone = member.phone
                     if (member.college !== undefined) memberUpdates.college = member.college
+                    if (member.course !== undefined) memberUpdates.course = member.course
+                    if (member.section !== undefined) memberUpdates.section = member.section
+                    if (member.system_id !== undefined) memberUpdates.system_id = member.system_id
+                    if (member.year !== undefined) memberUpdates.year = member.year
 
                     if (Object.keys(memberUpdates).length > 0) {
                         await supabase

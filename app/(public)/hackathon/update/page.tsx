@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Search, Save, CheckCircle2, AlertTriangle, Users, Edit3, Mail, ChevronRight, Loader2 } from 'lucide-react'
+import { ArrowLeft, Search, Save, CheckCircle2, AlertTriangle, Users, Edit3, Mail, ChevronRight, Loader2, Shield, Eye } from 'lucide-react'
 import Link from 'next/link'
 
 interface Member {
@@ -39,6 +39,7 @@ export default function TeamUpdatePage() {
     const [team, setTeam] = useState<TeamData | null>(null)
     const [members, setMembers] = useState<Member[]>([])
     const [leaderId, setLeaderId] = useState<string | null>(null)
+    const [isLeader, setIsLeader] = useState(true)
     const [saving, setSaving] = useState(false)
     const [changes, setChanges] = useState<string[]>([])
 
@@ -73,6 +74,7 @@ export default function TeamUpdatePage() {
             setTeam(data.team)
             setMembers(data.members)
             setLeaderId(data.leaderId)
+            setIsLeader(data.isLeader !== false)
             setIdeaTitle(data.team.idea_title || '')
             setProjectObjective(data.team.project_objective || '')
             setTheme(data.team.theme || '')
@@ -86,6 +88,10 @@ export default function TeamUpdatePage() {
 
     const handleSave = async () => {
         if (!team) return
+        if (!isLeader) {
+            setError('Only the team leader can save changes. Please ask your team leader to update.')
+            return
+        }
         setSaving(true)
         setError(null)
 
@@ -106,6 +112,10 @@ export default function TeamUpdatePage() {
                     if (em.email !== orig.email) changes.email = em.email
                     if (em.phone !== orig.phone) changes.phone = em.phone
                     if (em.college !== orig.college) changes.college = em.college
+                    if (em.course !== orig.course) changes.course = em.course
+                    if (em.section !== orig.section) changes.section = em.section
+                    if (em.system_id !== orig.system_id) changes.system_id = em.system_id
+                    if (em.year !== orig.year) changes.year = em.year
                     return Object.keys(changes).length > 1 ? changes : null
                 })
                 .filter(Boolean)
@@ -168,7 +178,7 @@ export default function TeamUpdatePage() {
                             Update Team Data
                         </h1>
                         <p className="text-[10px] text-white/40 tracking-widest uppercase mt-1">
-                            Team leaders can update their information
+                            Any team member can view • Only leaders can edit
                         </p>
                     </div>
                 </div>
@@ -192,7 +202,7 @@ export default function TeamUpdatePage() {
                                     </div>
                                     <h2 className="text-2xl font-heading font-black uppercase mb-2">Find Your Team</h2>
                                     <p className="text-sm text-white/50 font-sans">
-                                        Enter the email address you used while registering as team leader.
+                                        Enter the email address you used while registering. Any team member can look up their team data.
                                     </p>
                                 </div>
 
@@ -241,17 +251,52 @@ export default function TeamUpdatePage() {
                             transition={{ duration: 0.4, ease: EASE_OUT }}
                         >
                             {/* Team header */}
-                            <div className="bg-[#FF6B00]/10 border border-[#FF6B00]/20 p-6 mb-6 flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-2xl font-heading font-black uppercase text-[#FF6B00]">{team.name}</h2>
-                                    <span className="text-xs font-bold text-white/40 tracking-widest">{team.team_code}</span>
+                            <div className="bg-[#FF6B00]/10 border border-[#FF6B00]/20 p-6 mb-6">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h2 className="text-2xl font-heading font-black uppercase text-[#FF6B00]">{team.name}</h2>
+                                        <span className="text-xs font-bold text-white/40 tracking-widest">{team.team_code}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {team.table_number && (
+                                            <span className="text-sm text-black bg-[#00FF41] font-bold px-3 py-1">
+                                                TABLE {team.table_number}
+                                            </span>
+                                        )}
+                                        {(team.status === 'shortlisted' || team.status === 'shortlisted_notified') && (
+                                            <span className="text-sm text-black bg-[#FFD700] font-bold px-3 py-1">
+                                                ★ SHORTLISTED
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                                {team.table_number && (
-                                    <span className="text-sm text-black bg-[#00FF41] font-bold px-3 py-1">
-                                        TABLE {team.table_number}
+                                {/* Status & Access Badge */}
+                                <div className="flex items-center gap-3 flex-wrap">
+                                    <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 ${
+                                        team.status === 'shortlisted' || team.status === 'shortlisted_notified' ? 'bg-emerald-500/20 text-emerald-400' :
+                                        team.status === 'checked_in' ? 'bg-blue-500/20 text-blue-400' :
+                                        'bg-white/10 text-white/40'
+                                    }`}>
+                                        {team.status?.replace('_', ' ')}
                                     </span>
-                                )}
+                                    <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 flex items-center gap-1 ${
+                                        isLeader ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'bg-white/10 text-white/40'
+                                    }`}>
+                                        {isLeader ? <><Shield className="w-3 h-3" /> Leader Access</> : <><Eye className="w-3 h-3" /> View Only</>}
+                                    </span>
+                                </div>
                             </div>
+
+                            {!isLeader && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex items-center gap-2 text-amber-400 text-sm mb-6 bg-amber-500/10 border border-amber-500/20 p-3"
+                                >
+                                    <Eye className="w-4 h-4 shrink-0" />
+                                    You are viewing as a member. Only the team leader can save changes.
+                                </motion.div>
+                            )}
 
                             {error && (
                                 <motion.div 
@@ -275,7 +320,8 @@ export default function TeamUpdatePage() {
                                             type="text"
                                             value={ideaTitle}
                                             onChange={e => setIdeaTitle(e.target.value)}
-                                            className="w-full bg-[#03030F] border border-white/10 text-white px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors"
+                                            disabled={!isLeader}
+                                            className="w-full bg-[#03030F] border border-white/10 text-white px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                         />
                                     </div>
                                     <div>
@@ -284,7 +330,8 @@ export default function TeamUpdatePage() {
                                             type="text"
                                             value={theme}
                                             onChange={e => setTheme(e.target.value)}
-                                            className="w-full bg-[#03030F] border border-white/10 text-white px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors"
+                                            disabled={!isLeader}
+                                            className="w-full bg-[#03030F] border border-white/10 text-white px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                         />
                                     </div>
                                     <div>
@@ -293,7 +340,8 @@ export default function TeamUpdatePage() {
                                             value={projectObjective}
                                             onChange={e => setProjectObjective(e.target.value)}
                                             rows={3}
-                                            className="w-full bg-[#03030F] border border-white/10 text-white px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors resize-none"
+                                            disabled={!isLeader}
+                                            className="w-full bg-[#03030F] border border-white/10 text-white px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors resize-none disabled:opacity-60 disabled:cursor-not-allowed"
                                         />
                                     </div>
                                 </div>
@@ -302,7 +350,7 @@ export default function TeamUpdatePage() {
                             {/* Members */}
                             <div className="bg-white/5 border border-white/10 p-6 mb-6">
                                 <h3 className="text-sm font-bold uppercase tracking-widest text-[#FF6B00] mb-4 flex items-center gap-2">
-                                    <Users className="w-4 h-4" /> Team Members
+                                    <Users className="w-4 h-4" /> Team Members ({editableMembers.length})
                                 </h3>
 
                                 <div className="space-y-6">
@@ -310,7 +358,7 @@ export default function TeamUpdatePage() {
                                         <div key={member.id} className="border border-white/5 p-4 bg-[#03030F]">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 ${
-                                                    member.role === 'leader' ? 'bg-[#FF6B00] text-black' : 'bg-white/10 text-white/40'
+                                                    member.role?.toLowerCase() === 'leader' ? 'bg-[#FF6B00] text-black' : 'bg-white/10 text-white/40'
                                                 }`}>
                                                     {member.role}
                                                 </span>
@@ -322,7 +370,8 @@ export default function TeamUpdatePage() {
                                                         type="text"
                                                         value={member.name}
                                                         onChange={e => updateMember(idx, 'name', e.target.value)}
-                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors"
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                                     />
                                                 </div>
                                                 <div>
@@ -331,7 +380,8 @@ export default function TeamUpdatePage() {
                                                         type="email"
                                                         value={member.email}
                                                         onChange={e => updateMember(idx, 'email', e.target.value)}
-                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors"
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                                     />
                                                 </div>
                                                 <div>
@@ -340,7 +390,8 @@ export default function TeamUpdatePage() {
                                                         type="text"
                                                         value={member.phone || ''}
                                                         onChange={e => updateMember(idx, 'phone', e.target.value)}
-                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors"
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                                     />
                                                 </div>
                                                 <div>
@@ -349,7 +400,48 @@ export default function TeamUpdatePage() {
                                                         type="text"
                                                         value={member.college || ''}
                                                         onChange={e => updateMember(idx, 'college', e.target.value)}
-                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors"
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">Course</label>
+                                                    <input
+                                                        type="text"
+                                                        value={member.course || ''}
+                                                        onChange={e => updateMember(idx, 'course', e.target.value)}
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">Section</label>
+                                                    <input
+                                                        type="text"
+                                                        value={member.section || ''}
+                                                        onChange={e => updateMember(idx, 'section', e.target.value)}
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">System ID</label>
+                                                    <input
+                                                        type="text"
+                                                        value={member.system_id || ''}
+                                                        onChange={e => updateMember(idx, 'system_id', e.target.value)}
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">Year</label>
+                                                    <input
+                                                        type="text"
+                                                        value={member.year || ''}
+                                                        onChange={e => updateMember(idx, 'year', e.target.value)}
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-white/5 border border-white/10 text-white px-3 py-2 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                                     />
                                                 </div>
                                             </div>
@@ -366,15 +458,21 @@ export default function TeamUpdatePage() {
                                 >
                                     Back
                                 </button>
-                                <motion.button
-                                    whileTap={{ scale: 0.97 }}
-                                    onClick={handleSave}
-                                    disabled={saving}
-                                    className="flex-1 py-4 bg-[#00FF41] text-black font-black uppercase tracking-wider text-sm hover:bg-[#33FF66] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                                >
-                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    {saving ? 'Saving...' : 'Save Changes & Notify Admin'}
-                                </motion.button>
+                                {isLeader ? (
+                                    <motion.button
+                                        whileTap={{ scale: 0.97 }}
+                                        onClick={handleSave}
+                                        disabled={saving}
+                                        className="flex-1 py-4 bg-[#00FF41] text-black font-black uppercase tracking-wider text-sm hover:bg-[#33FF66] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                        {saving ? 'Saving...' : 'Save Changes & Notify Admin'}
+                                    </motion.button>
+                                ) : (
+                                    <div className="flex-1 py-4 bg-white/5 border border-white/10 text-white/30 font-bold uppercase text-sm tracking-wider flex items-center justify-center gap-2 cursor-not-allowed">
+                                        <Eye className="w-4 h-4" /> View Only — Ask Leader to Edit
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     )}

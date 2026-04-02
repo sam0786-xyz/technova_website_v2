@@ -9,7 +9,7 @@ import {
     getCheckedInParticipantsData, getFoodLogsData,
     getVolunteers, addVolunteer, removeVolunteer, uploadVolunteersData,
     addHackathonTeamManually, updateHackathonTeamDetails, updateCustomMeals,
-    updateEvaluationRounds, emailShortlistedTeams, blastCustomEmail,
+    updateEvaluationRounds, emailShortlistedTeams, emailSingleTeam, blastCustomEmail,
     getHackathonRoles, addHackathonRole, removeHackathonRole, approveScoreEdit, sendEvaluatorInvite, getEditRequests,
     importEventAttendees, getEventAttendees, deleteEventAttendees, sendAttendeeQrEmails,
     getAttendanceCheckpoints, updateAttendanceCheckpoints, getAttendanceReport,
@@ -69,6 +69,8 @@ export default function HackathonManageClient() {
     const [deletingTeams, setDeletingTeams] = useState(false);
     const [showManualAdd, setShowManualAdd] = useState(false);
     const [addingManualMode, setAddingManualMode] = useState(false);
+    const [sendingMailTeamId, setSendingMailTeamId] = useState<string | null>(null);
+    const [mailResult, setMailResult] = useState<{ teamId: string, sentTo: string[], failedTo: string[], message: string } | null>(null);
     
     // Custom Email Blast states
     const [customEmailSubject, setCustomEmailSubject] = useState("");
@@ -655,6 +657,41 @@ export default function HackathonManageClient() {
                         <p className="text-sm">{message.text}</p>
                     </div>
                 )}
+                {mailResult && mailResult.failedTo.length > 0 && (
+                    <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <p className="text-sm font-medium">⚠️ Some emails failed for this team</p>
+                                <p className="text-xs text-amber-600 mt-1">Failed: {mailResult.failedTo.join(', ')}</p>
+                                {mailResult.sentTo.length > 0 && <p className="text-xs text-emerald-600 mt-0.5">Succeeded: {mailResult.sentTo.join(', ')}</p>}
+                            </div>
+                            <div className="flex gap-2 flex-shrink-0">
+                                <button
+                                    onClick={async () => {
+                                        setSendingMailTeamId(mailResult.teamId);
+                                        const res = await emailSingleTeam(mailResult.teamId);
+                                        if (res.error) setMessage({ type: 'error', text: res.error });
+                                        else {
+                                            setMessage({ type: 'success', text: res.message || 'Retry sent!' });
+                                            if (res.failedTo && res.failedTo.length > 0) {
+                                                setMailResult({ teamId: mailResult.teamId, sentTo: res.sentTo || [], failedTo: res.failedTo, message: res.message || '' });
+                                            } else {
+                                                setMailResult(null);
+                                            }
+                                            loadData();
+                                        }
+                                        setSendingMailTeamId(null);
+                                    }}
+                                    disabled={!!sendingMailTeamId}
+                                    className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1"
+                                >
+                                    <RefreshCw className="w-3 h-3" /> Retry
+                                </button>
+                                <button onClick={() => setMailResult(null)} className="px-2 py-1.5 text-amber-500 hover:text-amber-700 text-xs">Dismiss</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <TabsList className="bg-white border border-gray-200 p-1 rounded-xl shadow-sm mb-6 md:mb-8 flex overflow-x-auto h-auto gap-1 md:gap-2 shadow-none">
                     <TabsTrigger value="teams" className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm text-gray-500 font-mono tracking-wider rounded-xl px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base whitespace-nowrap">
                         <Users className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> Teams & Import
@@ -764,6 +801,33 @@ export default function HackathonManageClient() {
                                                     <td className="px-4 py-3.5 text-center">
                                                         <div className="flex items-center justify-center gap-1">
                                                             <button onClick={() => { setEditingTeam(team); setEditFormData({ teamName: team.name || '', ideaTitle: team.idea_title || '', teamCode: team.team_code || '', theme: team.theme || '', projectObjective: team.project_objective || '', leader: { id: (members.find((p: any) => p.role === 'leader') || members[0] || {}).id || '', name: (members.find((p: any) => p.role === 'leader') || members[0] || {}).name || '', email: (members.find((p: any) => p.role === 'leader') || members[0] || {}).email || '', phone: (members.find((p: any) => p.role === 'leader') || members[0] || {}).phone || '', course: '', section: '', system_id: '', year: '', college: '' }, members: members.filter((p: any) => p.role !== 'leader').map((m: any) => ({ id: m.id || '', name: m.name || '', email: m.email || '', phone: m.phone || '', course: '', section: '', system_id: '', year: '', college: '' })) }); }} className="p-1.5 hover:bg-gray-100 rounded-xl text-gray-400 font-mono hover:text-gray-700 transition-colors" title="Edit"><Edit className="w-3.5 h-3.5" /></button>
+                                                            <button
+                                                                onClick={async () => {
+                                                                    if (!confirm(`Send shortlist email to all members of "${team.name}"?`)) return;
+                                                                    setSendingMailTeamId(team.id);
+                                                                    setMailResult(null);
+                                                                    try {
+                                                                        const res = await emailSingleTeam(team.id);
+                                                                        if (res.error) {
+                                                                            setMessage({ type: 'error', text: res.error });
+                                                                        } else {
+                                                                            setMessage({ type: 'success', text: res.message || 'Email sent!' });
+                                                                            if (res.failedTo && res.failedTo.length > 0) {
+                                                                                setMailResult({ teamId: team.id, sentTo: res.sentTo || [], failedTo: res.failedTo, message: res.message || '' });
+                                                                            }
+                                                                            loadData();
+                                                                        }
+                                                                    } catch (err: any) {
+                                                                        setMessage({ type: 'error', text: err.message || 'Failed to send email.' });
+                                                                    }
+                                                                    setSendingMailTeamId(null);
+                                                                }}
+                                                                disabled={sendingMailTeamId === team.id}
+                                                                className={`p-1.5 rounded-xl transition-colors ${team.status === 'shortlisted_notified' ? 'bg-blue-50 text-blue-500' : 'hover:bg-blue-50 text-gray-400 hover:text-blue-600'} disabled:opacity-50`}
+                                                                title={team.status === 'shortlisted_notified' ? 'Resend email' : 'Send shortlist email'}
+                                                            >
+                                                                {sendingMailTeamId === team.id ? <div className="w-3.5 h-3.5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                                                            </button>
                                                             <button onClick={() => handleToggleShortlist(team.id, team.status)} className={`p-1.5 rounded-xl transition-colors ${team.status === 'shortlisted' || team.status === 'shortlisted_notified' ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-amber-50 text-gray-400 font-mono hover:text-orange-600'}`} title="Toggle shortlist"><Star className="w-3.5 h-3.5" /></button>
                                                         </div>
                                                     </td>
@@ -1525,6 +1589,81 @@ export default function HackathonManageClient() {
                             <div className="flex gap-3 pt-4 border-t border-gray-200">
                                 <button type="submit" className="flex-1 bg-emerald-500 hover:bg-white text-black font-black uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] text-gray-900 font-medium py-2.5 rounded-xl shadow-sm transition-all text-sm">Save Changes</button>
                                 <button type="button" onClick={() => setEditingTeam(null)} className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm transition-all text-sm">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Manual Add Team Modal */}
+            {showManualAdd && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm p-4" onClick={() => setShowManualAdd(false)}>
+                    <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2"><Plus className="w-5 h-5 text-emerald-600" /> Add Team Manually</h2>
+                            <button onClick={() => setShowManualAdd(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X className="w-5 h-5 text-gray-500" /></button>
+                        </div>
+                        <form onSubmit={handleAddManualTeam} className="space-y-5">
+                            {/* Team Info */}
+                            <div>
+                                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Team Information</h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Team Name *</label>
+                                        <input type="text" name="teamName" required className={inputCls} placeholder="e.g. Code Crusaders" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Team Code</label>
+                                        <input type="text" name="teamCode" className={inputCls} placeholder="e.g. TC-042" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Idea Title *</label>
+                                        <input type="text" name="ideaTitle" required className={inputCls} placeholder="Project idea title" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Track / Theme</label>
+                                        <input type="text" name="theme" className={inputCls} placeholder="e.g. HealthTech" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Leader */}
+                            <div className="border-t border-gray-200 pt-4">
+                                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Team Leader</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Name *</label><input type="text" name="leaderName" required className={inputCls} placeholder="Leader name" /></div>
+                                    <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Email *</label><input type="email" name="leaderEmail" required className={inputCls} placeholder="leader@email.com" /></div>
+                                    <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Phone</label><input type="text" name="leaderPhone" className={inputCls} placeholder="Phone" /></div>
+                                    <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">College</label><input type="text" name="leaderCollege" className={inputCls} placeholder="College" /></div>
+                                    <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Course</label><input type="text" name="leaderCourse" className={inputCls} placeholder="Course" /></div>
+                                    <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Section</label><input type="text" name="leaderSection" className={inputCls} placeholder="Section" /></div>
+                                    <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">System ID</label><input type="text" name="leaderSystemId" className={inputCls} placeholder="System ID" /></div>
+                                    <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Year</label><input type="text" name="leaderYear" className={inputCls} placeholder="Year" /></div>
+                                </div>
+                            </div>
+
+                            {/* Members */}
+                            {[1, 2, 3, 4].map(n => (
+                                <div key={n} className="border-t border-gray-100 pt-4">
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Member {n} <span className="text-gray-300 font-normal">(optional)</span></h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Name</label><input type="text" name={`m${n}Name`} className={inputCls} placeholder={`Member ${n} name`} /></div>
+                                        <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Email</label><input type="email" name={`m${n}Email`} className={inputCls} placeholder="Email" /></div>
+                                        <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Phone</label><input type="text" name={`m${n}Phone`} className={inputCls} placeholder="Phone" /></div>
+                                        <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">College</label><input type="text" name={`m${n}College`} className={inputCls} placeholder="College" /></div>
+                                        <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Course</label><input type="text" name={`m${n}Course`} className={inputCls} placeholder="Course" /></div>
+                                        <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Section</label><input type="text" name={`m${n}Section`} className={inputCls} placeholder="Section" /></div>
+                                        <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">System ID</label><input type="text" name={`m${n}SystemId`} className={inputCls} placeholder="System ID" /></div>
+                                        <div><label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Year</label><input type="text" name={`m${n}Year`} className={inputCls} placeholder="Year" /></div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            <div className="flex gap-3 pt-4 border-t border-gray-200">
+                                <button type="submit" disabled={addingManualMode} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                                    {addingManualMode ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Adding...</> : <><Plus className="w-4 h-4" /> Add Team</>}
+                                </button>
+                                <button type="button" onClick={() => setShowManualAdd(false)} className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl text-sm transition-colors">Cancel</button>
                             </div>
                         </form>
                     </div>

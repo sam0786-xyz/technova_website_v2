@@ -1319,6 +1319,109 @@ export async function emailShortlistedTeams() {
     revalidatePath('/hackathon')
     return { success: true, message: `✅ Emails sent to ${sentCount} participant(s) across ${teams.length} team(s).${failCount > 0 ? ` ${failCount} failed.` : ''}` }
 }
+
+export async function emailSingleTeam(teamId: string) {
+    const session = await auth()
+    if (!session || !session.user) return { error: "Unauthorized" }
+    if (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string)) return { error: "Unauthorized" }
+
+    if (!process.env.RESEND_API_KEY) return { error: "Email service not configured" }
+
+    const supabase = await getSupabase()
+
+    const { data: team, error: teamError } = await supabase
+        .from('hackathon_teams')
+        .select('id, name, idea_title, team_code, status, hackathon_participants(name, email, role)')
+        .eq('id', teamId)
+        .single()
+
+    if (teamError || !team) return { error: "Team not found" }
+
+    const participants = (team.hackathon_participants || []) as any[]
+    const emails = participants.filter((p: any) => p.email).map((p: any) => ({ name: p.name, email: p.email }))
+
+    if (emails.length === 0) return { error: "No participant emails found for this team." }
+
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const sentTo: string[] = []
+    const failedTo: string[] = []
+
+    for (const participant of emails) {
+        try {
+            await resend.emails.send({
+                from: "Technova Society <no-reply@technovashardauniversity.in>",
+                to: participant.email,
+                subject: "🎉 Congratulations! Your Team has been Shortlisted - Innovate Bharat Hackathon",
+                html: `
+                    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
+                        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center;">
+                            <h1 style="margin: 0; color: #fff; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">🎉 Congratulations!</h1>
+                            <p style="margin: 5px 0 0; color: rgba(255,255,255,0.9); font-weight: bold;">Innovate Bharat Hackathon</p>
+                        </div>
+                        <div style="padding: 40px 30px; line-height: 1.6;">
+                            <h2 style="color: #10b981; margin-top: 0;">Dear ${participant.name},</h2>
+                            <p style="color: #ccc; font-size: 16px;">
+                                We are thrilled to inform you that your team <strong style="color: #f59e0b;">${team.name}</strong> has been <strong style="color: #10b981;">shortlisted</strong> for the Grand Finale of the Innovate Bharat Hackathon!
+                            </p>
+                            <div style="background-color: #111; border: 1px solid #222; border-radius: 8px; padding: 20px; margin: 25px 0;">
+                                <p style="margin: 0 0 10px; color: #888; font-size: 14px;">Team Details:</p>
+                                <p style="margin: 0; font-size: 16px; color: #fff;"><strong>Team:</strong> ${team.name}</p>
+                                <p style="margin: 5px 0 0; font-size: 14px; color: #f59e0b;"><strong>Team Code:</strong> ${team.team_code || 'N/A'}</p>
+                                <p style="margin: 5px 0 0; font-size: 14px; color: #aaa;"><strong>Project:</strong> ${team.idea_title || 'N/A'}</p>
+                            </div>
+                            <div style="background-color: #0a2e1e; border: 1px solid #10b981; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;">
+                                <p style="margin: 0; color: #10b981; font-size: 18px; font-weight: bold;">🏆 You're in the Grand Finale!</p>
+                                <p style="margin: 10px 0 0; color: #aaa; font-size: 14px;">
+                                    The 24-Hour Offline Hackathon awaits you at Sharda University. More details about the event schedule, venue, and logistics will be shared soon.
+                                </p>
+                            </div>
+                            <p style="color: #ccc; font-size: 14px;">
+                                Please update your team details at <a href="https://www.technovashardauniversity.in/hackathon/update" style="color: #10b981;">this link</a> before the event. For any queries, reach out to the Technova Society team.
+                            </p>
+                            <div style="text-align: center; margin-top: 25px;">
+                                <a href="https://www.technovashardauniversity.in/hackathon" style="display: inline-block; background-color: #10b981; color: #000; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                    View Hackathon Details
+                                </a>
+                            </div>
+                        </div>
+                        <div style="background-color: #0a0a0a; padding: 20px; text-align: center; border-top: 1px solid #1a1a1a;">
+                            <p style="margin: 0; color: #444; font-size: 12px;">&copy; 2026 TechNova | Sharda University</p>
+                        </div>
+                    </div>
+                `
+            })
+            sentTo.push(participant.email)
+            await new Promise(resolve => setTimeout(resolve, 600))
+        } catch (e) {
+            console.error(`Failed to send email to ${participant.email}`, e)
+            failedTo.push(participant.email)
+        }
+    }
+
+    // Update team status
+    if (sentTo.length > 0 && (team.status === 'shortlisted' || team.status === 'pending' || team.status === 'evaluating')) {
+        await supabase
+            .from('hackathon_teams')
+            .update({ status: 'shortlisted_notified' })
+            .eq('id', teamId)
+    }
+
+    revalidatePath('/hackathon-portal/manage')
+    revalidatePath('/hackathon')
+
+    if (failedTo.length > 0 && sentTo.length === 0) {
+        return { success: false, error: `All emails failed for ${team.name}.`, sentTo, failedTo }
+    }
+
+    return {
+        success: true,
+        message: `✉️ Sent to ${sentTo.length} of ${emails.length} participant(s) for team "${team.name}".${failedTo.length > 0 ? ` ${failedTo.length} failed.` : ''}`,
+        sentTo,
+        failedTo,
+        teamName: team.name
+    }
+}
+
 export async function blastCustomEmail(subject: string, htmlBody: string, target: 'all' | 'shortlisted') {
     const session = await auth()
     if (!session || !session.user || (!['admin', 'super_admin', 'student_lead'].includes(session.user.role as string))) {
