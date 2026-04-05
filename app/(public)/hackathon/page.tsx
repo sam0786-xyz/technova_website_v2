@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, Zap, Trophy, ShieldAlert, Cpu, HeartPulse, BookOpen, LineChart, Globe, GraduationCap, Download, Users, Award, Star, ArrowUpRight, CheckCircle, Sparkles, ChevronDown, MapPin, Wifi, Coffee, ArrowRight, Phone, User, Clock, DoorOpen, Flag, PartyPopper } from 'lucide-react'
 import { VenueCarousel } from '@/components/hackathon/venue-carousel'
+import { Footer } from '@/components/layout/footer'
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { DevPreloader } from '@/components/ui/dev-preloader'
 
@@ -644,6 +645,8 @@ export default function HackathonPage() {
                     </div>
                 </Section>
             </div>
+
+            <Footer />
 
             {/* ═══ GLOBAL KEYFRAMES ═══ */}
             <style jsx global>{`
