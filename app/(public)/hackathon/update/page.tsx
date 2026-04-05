@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Search, Save, CheckCircle2, AlertTriangle, Users, Edit3, Mail, ChevronRight, Loader2, Shield, Eye, GraduationCap, Phone, MapPin} from 'lucide-react'
+import { ArrowLeft, Search, Save, CheckCircle2, AlertTriangle, Users, Edit3, Mail, ChevronRight, Loader2, Shield, Eye, GraduationCap, Phone, MapPin, CalendarDays, BedDouble} from 'lucide-react'
 import Link from 'next/link'
 
 interface Member {
@@ -31,6 +31,11 @@ interface TeamData {
     student_coordinator: string | null
     coordinator_phone: string | null
     need_accommodation: boolean
+    accommodation_boys: number
+    accommodation_girls: number
+    sex_ratio: string | null
+    arrival_date: string | null
+    departure_date: string | null
 }
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
@@ -52,6 +57,11 @@ export default function TeamUpdatePage() {
     const [projectObjective, setProjectObjective] = useState('')
     const [theme, setTheme] = useState('')
     const [mentorName, setMentorName] = useState('')
+    const [needAccommodation, setNeedAccommodation] = useState(false)
+    const [accommodationBoys, setAccommodationBoys] = useState(0)
+    const [accommodationGirls, setAccommodationGirls] = useState(0)
+    const [arrivalDate, setArrivalDate] = useState('')
+    const [departureDate, setDepartureDate] = useState('')
     const [editableMembers, setEditableMembers] = useState<Member[]>([])
 
     const handleLookup = async () => {
@@ -84,6 +94,11 @@ export default function TeamUpdatePage() {
             setProjectObjective(data.team.project_objective || '')
             setTheme(data.team.theme || '')
             setMentorName(data.team.mentor_name || '')
+            setNeedAccommodation(data.team.need_accommodation || false)
+            setAccommodationBoys(data.team.accommodation_boys || 0)
+            setAccommodationGirls(data.team.accommodation_girls || 0)
+            setArrivalDate(data.team.arrival_date || '')
+            setDepartureDate(data.team.departure_date || '')
             setEditableMembers(data.members.map((m: Member) => ({ ...m })))
             setStep('view')
         } catch {
@@ -108,6 +123,21 @@ export default function TeamUpdatePage() {
             if (projectObjective !== (team.project_objective || '')) updates.project_objective = projectObjective
             if (theme !== (team.theme || '')) updates.theme = theme
             if (mentorName !== (team.mentor_name || '')) updates.mentor_name = mentorName
+            if (needAccommodation !== (team.need_accommodation || false)) updates.need_accommodation = needAccommodation
+            if (needAccommodation) {
+                if (accommodationBoys !== (team.accommodation_boys || 0)) updates.accommodation_boys = accommodationBoys
+                if (accommodationGirls !== (team.accommodation_girls || 0)) updates.accommodation_girls = accommodationGirls
+                if (arrivalDate !== (team.arrival_date || '')) updates.arrival_date = arrivalDate
+                if (departureDate !== (team.departure_date || '')) updates.departure_date = departureDate
+            } else {
+                // If toggling off, clear the fields
+                if (team.need_accommodation) {
+                    updates.accommodation_boys = 0
+                    updates.accommodation_girls = 0
+                    updates.arrival_date = ''
+                    updates.departure_date = ''
+                }
+            }
 
             // Check member changes
             const memberUpdates = editableMembers
@@ -305,6 +335,39 @@ export default function TeamUpdatePage() {
                                     </div>
                                 )}
 
+                                {/* Accommodation Info */}
+                                <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4 mb-6">
+                                    <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-3 flex items-center gap-1"><BedDouble className="w-3 h-3" /> Accommodation</p>
+                                    {team.need_accommodation ? (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-[#00FF41] animate-pulse" />
+                                                <span className="text-sm text-[#00FF41] font-bold">Accommodation Required</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                                                <div className="bg-white/[0.03] border border-white/5 rounded-lg p-2">
+                                                    <p className="text-[8px] text-white/30 uppercase font-bold">Boys</p>
+                                                    <p className="text-lg font-bold text-blue-400">{team.accommodation_boys || 0}</p>
+                                                </div>
+                                                <div className="bg-white/[0.03] border border-white/5 rounded-lg p-2">
+                                                    <p className="text-[8px] text-white/30 uppercase font-bold">Girls</p>
+                                                    <p className="text-lg font-bold text-pink-400">{team.accommodation_girls || 0}</p>
+                                                </div>
+                                                <div className="bg-white/[0.03] border border-white/5 rounded-lg p-2">
+                                                    <p className="text-[8px] text-white/30 uppercase font-bold">Arrival</p>
+                                                    <p className="text-xs text-white/60 font-mono">{team.arrival_date || 'Not set'}</p>
+                                                </div>
+                                                <div className="bg-white/[0.03] border border-white/5 rounded-lg p-2">
+                                                    <p className="text-[8px] text-white/30 uppercase font-bold">Departure</p>
+                                                    <p className="text-xs text-white/60 font-mono">{team.departure_date || 'Not set'}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-white/40">Not required</p>
+                                    )}
+                                </div>
+
                                 {/* Members List */}
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-[#FF6B00] mb-3 flex items-center gap-2">
                                     <Users className="w-4 h-4" /> Team Members ({members.length})
@@ -443,6 +506,90 @@ export default function TeamUpdatePage() {
                                             className="w-full bg-[#03030F] border border-white/10 text-white px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors placeholder:text-white/20 disabled:opacity-60 disabled:cursor-not-allowed"
                                         />
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Accommodation */}
+                            <div className="bg-white/5 border border-white/10 p-6 mb-6">
+                                <h3 className="text-sm font-bold uppercase tracking-widest text-[#FF6B00] mb-4 flex items-center gap-2">
+                                    <BedDouble className="w-4 h-4" /> Accommodation
+                                </h3>
+
+                                <div className="space-y-4">
+                                    {/* Toggle */}
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                checked={needAccommodation}
+                                                onChange={e => setNeedAccommodation(e.target.checked)}
+                                                disabled={!isLeader}
+                                                className="sr-only"
+                                            />
+                                            <div className={`w-11 h-6 rounded-full transition-colors ${needAccommodation ? 'bg-[#00FF41]' : 'bg-white/10'}`}>
+                                                <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform mt-0.5 ${needAccommodation ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                                            </div>
+                                        </div>
+                                        <span className="text-sm text-white/70 group-hover:text-white transition-colors">
+                                            {needAccommodation ? 'Accommodation is needed' : 'No accommodation needed'}
+                                        </span>
+                                    </label>
+
+                                    {needAccommodation && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            className="space-y-4 pt-2"
+                                        >
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1 block">No. of Boys</label>
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        value={accommodationBoys}
+                                                        onChange={e => setAccommodationBoys(parseInt(e.target.value) || 0)}
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-[#03030F] border border-white/10 text-blue-400 px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1 block">No. of Girls</label>
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        value={accommodationGirls}
+                                                        onChange={e => setAccommodationGirls(parseInt(e.target.value) || 0)}
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-[#03030F] border border-white/10 text-pink-400 px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1 block flex items-center gap-1"><CalendarDays className="w-3 h-3" /> Arrival Date & Time</label>
+                                                    <input
+                                                        type="datetime-local"
+                                                        value={arrivalDate}
+                                                        onChange={e => setArrivalDate(e.target.value)}
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-[#03030F] border border-white/10 text-white px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed [color-scheme:dark]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1 block flex items-center gap-1"><CalendarDays className="w-3 h-3" /> Departure Date & Time</label>
+                                                    <input
+                                                        type="datetime-local"
+                                                        value={departureDate}
+                                                        onChange={e => setDepartureDate(e.target.value)}
+                                                        disabled={!isLeader}
+                                                        className="w-full bg-[#03030F] border border-white/10 text-white px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed [color-scheme:dark]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
                                 </div>
                             </div>
 

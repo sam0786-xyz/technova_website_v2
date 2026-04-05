@@ -63,6 +63,11 @@ export async function POST(req: NextRequest) {
                     student_coordinator: team.student_coordinator || null,
                     coordinator_phone: team.coordinator_phone || null,
                     need_accommodation: team.need_accommodation || false,
+                    accommodation_boys: team.accommodation_boys || 0,
+                    accommodation_girls: team.accommodation_girls || 0,
+                    sex_ratio: team.sex_ratio || null,
+                    arrival_date: team.arrival_date || null,
+                    departure_date: team.departure_date || null,
                 },
                 members: members || [],
                 leaderId: leader?.id || participant.id,
@@ -108,6 +113,26 @@ export async function POST(req: NextRequest) {
             if (updates.mentor_name !== undefined) {
                 teamUpdates.mentor_name = updates.mentor_name
                 changeLog.push(`Mentor → "${updates.mentor_name}"`)
+            }
+            if (updates.need_accommodation !== undefined) {
+                teamUpdates.need_accommodation = updates.need_accommodation
+                changeLog.push(`Need Accommodation → ${updates.need_accommodation ? 'Yes' : 'No'}`)
+            }
+            if (updates.accommodation_boys !== undefined) {
+                teamUpdates.accommodation_boys = updates.accommodation_boys
+                changeLog.push(`Boys requiring accommodation → ${updates.accommodation_boys}`)
+            }
+            if (updates.accommodation_girls !== undefined) {
+                teamUpdates.accommodation_girls = updates.accommodation_girls
+                changeLog.push(`Girls requiring accommodation → ${updates.accommodation_girls}`)
+            }
+            if (updates.arrival_date !== undefined) {
+                teamUpdates.arrival_date = updates.arrival_date
+                changeLog.push(`Arrival → "${updates.arrival_date}"`)
+            }
+            if (updates.departure_date !== undefined) {
+                teamUpdates.departure_date = updates.departure_date
+                changeLog.push(`Departure → "${updates.departure_date}"`)
             }
 
             if (Object.keys(teamUpdates).length > 0) {

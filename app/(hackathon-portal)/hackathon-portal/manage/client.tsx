@@ -562,6 +562,36 @@ export default function HackathonManageClient() {
         }
     };
 
+    const handleDownloadAccommodation = () => {
+        const accommodationTeams = teams.filter((t: any) => t.need_accommodation);
+        if (accommodationTeams.length === 0) {
+            setMessage({ type: 'error', text: 'No teams require accommodation.' });
+            return;
+        }
+        const exportData = accommodationTeams.map((t: any) => {
+            const members = t.hackathon_participants || [];
+            const leader = members.find((m: any) => m.role?.toLowerCase() === 'leader') || members[0];
+            return {
+                'Team Name': t.name,
+                'Team ID': t.team_code || '-',
+                'Team Lead': leader?.name || '-',
+                'Contact': leader?.phone || '-',
+                'Email': leader?.email || '-',
+                'College': leader?.college || '-',
+                'Total Members': members.length,
+                'Boys': t.accommodation_boys || 0,
+                'Girls': t.accommodation_girls || 0,
+                'Sex Ratio': t.sex_ratio || '-',
+                'Arrival Date': t.arrival_date || '-',
+                'Departure Date': t.departure_date || '-',
+                'Mentor': t.mentor_name || '-',
+                'Remarks': t.remarks || '-',
+            };
+        });
+        downloadCSV(exportData, `accommodation_data_${new Date().toISOString().split('T')[0]}.csv`);
+        setMessage({ type: 'success', text: `Downloaded accommodation data for ${accommodationTeams.length} team(s).` });
+    };
+
     const handleDownloadVolunteers = () => {
         if (!volunteers || volunteers.length === 0) {
             setMessage({ type: 'error', text: 'No volunteers to download.' });
@@ -643,6 +673,9 @@ export default function HackathonManageClient() {
                     </button>
                     <button onClick={handleDownloadFoodLogs} className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl shadow-sm text-sm transition-colors">
                         <Download className="w-3.5 h-3.5" /> Food Logs
+                    </button>
+                    <button onClick={handleDownloadAccommodation} className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl shadow-sm text-sm transition-colors">
+                        <Download className="w-3.5 h-3.5" /> Accommodation
                     </button>
                 </div>
             </div>

@@ -93,6 +93,9 @@ export async function uploadHackathonData(formData: FormData) {
             const remarksKey = findKey('remark');
             const mentorKey = keys.find(k => cleanStr(k).includes('mentor'));
             const totalMembersKey = findKey('totalmembers', 'membercount');
+            const sexRatioKey = findKey('sexratio', 'boysandgirls', 'genderratio');
+            const arrivalDateKey = findKey('arrivaldate', 'arrival');
+            const departureDateKey = findKey('departuredate', 'departure');
 
             // ---- EXTRACT VALUES ----
             const teamCode = teamCodeKey && row[teamCodeKey] ? String(row[teamCodeKey]).trim() : null;
@@ -113,6 +116,19 @@ export async function uploadHackathonData(formData: FormData) {
             const needAccommodationStr = accommodationKey && row[accommodationKey] ? String(row[accommodationKey]).toLowerCase().trim() : '';
             const needAccommodation = needAccommodationStr === 'yes' || needAccommodationStr === 'true';
             const remarks = remarksKey && row[remarksKey] ? String(row[remarksKey]).trim() : null;
+            const sexRatio = sexRatioKey && row[sexRatioKey] ? String(row[sexRatioKey]).trim() : null;
+            const arrivalDate = arrivalDateKey && row[arrivalDateKey] ? String(row[arrivalDateKey]).trim() : null;
+            const departureDate = departureDateKey && row[departureDateKey] ? String(row[departureDateKey]).trim() : null;
+
+            // Parse boys/girls from sex_ratio (e.g. "5G" or "3B 2G" or "5 boys, 2 girls")
+            let accommodationBoys = 0;
+            let accommodationGirls = 0;
+            if (sexRatio) {
+                const boysMatch = sexRatio.match(/(\d+)\s*(?:b|boys|male|m)/i);
+                const girlsMatch = sexRatio.match(/(\d+)\s*(?:g|girls|female|f)/i);
+                if (boysMatch) accommodationBoys = parseInt(boysMatch[1]);
+                if (girlsMatch) accommodationGirls = parseInt(girlsMatch[1]);
+            }
 
             // Mentor: could be "Yes", a name, or empty
             let mentorName: string | null = null;
@@ -139,6 +155,11 @@ export async function uploadHackathonData(formData: FormData) {
                     need_accommodation: needAccommodation,
                     remarks: remarks,
                     mentor_name: mentorName,
+                    sex_ratio: sexRatio,
+                    arrival_date: arrivalDate,
+                    departure_date: departureDate,
+                    accommodation_boys: accommodationBoys,
+                    accommodation_girls: accommodationGirls,
                     status: 'shortlisted'
                 })
                 .select()
