@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { createClient as createServerClient } from "@supabase/supabase-js"
 import { Resend } from "resend"
@@ -15,7 +15,6 @@ function getSupabase() {
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 function buildTeamQrEmailHtml(teamName: string, leaderName: string, members: { name: string, id: string }[]) {
-    // Generate stacked QR codes for everyone
     const qrBlocks = members.map(m => {
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(m.id)}`
         return `
@@ -64,13 +63,13 @@ function buildTeamQrEmailHtml(teamName: string, leaderName: string, members: { n
                                     Hi <strong style="color:#fff;">${leaderName}</strong>,
                                 </p>
                                 <p style="color:#9ca3af; font-size:14px; margin:0 0 32px; line-height:1.6;">
-                                    Welcome to the Technova Hackathon! Below are the personal QR codes for everyone in <strong style="color:#fff;">Team ${teamName}</strong>. 
+                                    Welcome to the Innovate Bharat Hackathon! Below are the personal QR codes for everyone in <strong style="color:#fff;">Team ${teamName}</strong>. 
                                     As the team lead, please ensure your members have their respective QR codes ready during:
                                 </p>
                                 
                                 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
                                     <tr>
-                                        <td style="padding:12px 16px; background:#059669; background:rgba(5,150,105,0.15); border-radius:12px 12px 0 0; border:1px solid rgba(5,150,105,0.2); border-bottom:none;">
+                                        <td style="padding:12px 16px; background:rgba(5,150,105,0.15); border-radius:12px 12px 0 0; border:1px solid rgba(5,150,105,0.2); border-bottom:none;">
                                             <p style="margin:0; color:#34d399; font-size:14px; font-weight:600;">✅ Registration Check-in</p>
                                         </td>
                                     </tr>
@@ -111,52 +110,76 @@ function buildTeamQrEmailHtml(teamName: string, leaderName: string, members: { n
     </html>`
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
     const session = await auth()
-    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin')) {
+    if (!session || !session.user || !['admin', 'super_admin', 'student_lead'].includes(session.user.role as string)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const supabase = getSupabase()
+    
+    // Check if this is a resend (force re-send even to already emailed teams)
+    const { searchParams } = new URL(request.url)
+    const isResend = searchParams.get('resend') === 'true'
 
-    // Get all participants with their team info (including roles to find the leader)
+    // Get ALL teams with their participants — no status filter
     const { data: teams, error: teamsError } = await supabase
         .from('hackathon_teams')
         .select(`
-            id, name, status,
+            id, name, status, qr_emailed,
             hackathon_participants (id, name, email, role)
         `)
-        .eq('status', 'shortlisted')
 
     if (teamsError || !teams) {
+        console.error('[QR Email] Failed to fetch teams:', teamsError?.message)
         return NextResponse.json({ error: teamsError?.message || "Failed to fetch teams" }, { status: 500 })
     }
 
+    console.log(`[QR Email] Found ${teams.length} total teams. Resend mode: ${isResend}`)
+
     let sent = 0
     let failed = 0
+    let skipped = 0
     const errors: string[] = []
 
     for (const team of teams) {
         const participants = (team as any).hackathon_participants || []
-        if (participants.length === 0) continue
-
-        // 1. Find the primary registered email (prefer leader)
-        const leader = participants.find((p: any) => p.role?.toLowerCase() === 'leader' && p.email && p.email.trim() !== '')
-            || participants.find((p: any) => p.email && p.email.trim() !== '')
-
-        if (!leader || !leader.email) {
-            failed++
-            errors.push(`Team ${team.name}: No valid email found for any member.`)
+        
+        // Skip teams with no participants
+        if (participants.length === 0) {
+            skipped++
+            console.log(`[QR Email] Skipped ${team.name}: No participants`)
             continue
         }
 
-        // 2. Prepare the member list for QR generation
+        // Skip already emailed teams unless resend is requested
+        if ((team as any).qr_emailed && !isResend) {
+            skipped++
+            console.log(`[QR Email] Skipped ${team.name}: Already emailed (use resend to force)`)
+            continue
+        }
+
+        // Find the email to send to (prefer leader, then any member with email)
+        const leader = participants.find((p: any) => p.role?.toLowerCase() === 'leader' && p.email && p.email.trim() !== '')
+            || participants.find((p: any) => p.email && p.email.trim() !== '')
+
+        if (!leader || !leader.email || !leader.email.trim()) {
+            failed++
+            errors.push(`Team "${team.name}": No valid email found for any member.`)
+            console.log(`[QR Email] Failed ${team.name}: No email found. Participants: ${JSON.stringify(participants.map((p: any) => ({ name: p.name, email: p.email })))}`)
+            continue
+        }
+
+        const recipientEmail = leader.email.trim()
+        const recipientName = leader.name || 'Team Lead'
+
+        // Build the member list for QR generation
         const qrMembers = participants.map((p: any) => ({
-            name: p.name,
+            name: p.name || 'Participant',
             id: p.id
         }))
 
-        // Rate limit: ~1.5 req/sec
+        // Rate limit: ~1.5 req/sec for Resend
         if (sent > 0) {
             await delay(700)
         }
@@ -164,38 +187,47 @@ export async function POST() {
         let retries = 2
         while (retries > 0) {
             try {
-                const html = buildTeamQrEmailHtml(team.name, leader.name, qrMembers)
+                const html = buildTeamQrEmailHtml(team.name, recipientName, qrMembers)
 
-                await resend.emails.send({
+                const result = await resend.emails.send({
                     from: 'Technova <noreply@technovashardauniversity.in>',
-                    to: leader.email,
+                    to: recipientEmail,
                     subject: `🎫 Your Team's Hackathon QR Codes — Team ${team.name}`,
                     html
                 })
 
+                console.log(`[QR Email] ✅ Sent to ${recipientEmail} for Team "${team.name}" (${qrMembers.length} QR codes). Resend ID: ${(result as any)?.data?.id || 'N/A'}`)
+
+                // Mark team as emailed
+                await supabase.from('hackathon_teams').update({ qr_emailed: true }).eq('id', team.id)
+
                 sent++
-                console.log(`[QR Email] Sent 1 bundled email for Team ${team.name} to ${leader.email} (${qrMembers.length} codes)`)
                 break
             } catch (err: any) {
                 retries--
                 if (err?.statusCode === 429 && retries > 0) {
-                    console.log(`[QR Email] Rate limited, waiting 2s...`)
+                    console.log(`[QR Email] Rate limited for ${team.name}, waiting 2s...`)
                     await delay(2000)
                 } else {
-                    console.error(`[QR Email] Failed: ${leader.email} for Team ${team.name}`, err?.message || err)
+                    const errMsg = err?.message || err?.statusCode || 'unknown error'
+                    console.error(`[QR Email] ❌ Failed: ${recipientEmail} for Team "${team.name}":`, errMsg)
                     failed++
-                    errors.push(`Team ${team.name}: ${err?.message || 'unknown error'}`)
+                    errors.push(`Team "${team.name}" (${recipientEmail}): ${errMsg}`)
                     break
                 }
             }
         }
     }
 
+    const summary = `✅ Sent ${sent} QR email(s).${failed > 0 ? ` ❌ ${failed} failed.` : ''}${skipped > 0 ? ` ⏭️ ${skipped} skipped.` : ''}`
+    console.log(`[QR Email] SUMMARY: ${summary}`)
+
     return NextResponse.json({
         success: true,
-        sent, // This is now 'Teams Emailed'
+        sent,
         failed,
-        errors: errors.slice(0, 10)
+        skipped,
+        errors: errors.slice(0, 10),
+        message: summary
     })
 }
-
