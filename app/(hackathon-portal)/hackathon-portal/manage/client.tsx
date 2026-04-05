@@ -63,6 +63,8 @@ export default function HackathonManageClient() {
     const [roleType, setRoleType] = useState("admin");
     const [announcement, setAnnouncement] = useState("");
     const [sendingQr, setSendingQr] = useState(false);
+    const [volSendingEmails, setVolSendingEmails] = useState(false);
+    const [volEmailResult, setVolEmailResult] = useState<any>(null);
     const [selectedCollege, setSelectedCollege] = useState("ALL");
     const [newEvaluatorEmail, setNewEvaluatorEmail] = useState("");
     const [evaluatorList, setEvaluatorList] = useState<any[]>([]);
@@ -1289,6 +1291,60 @@ export default function HackathonManageClient() {
                                         {uploading ? 'Uploading...' : 'Upload'}
                                     </button>
                                 </form>
+                            </div>
+
+                            <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-xl shadow-sm">
+                                <p className="text-sm text-orange-600 font-bold mb-2 flex items-center gap-2"><Mail className="w-4 h-4" /> Send QR Codes</p>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex gap-2 text-xs">
+                                        <span className="text-gray-600">Total: <strong>{volunteers.length}</strong></span>
+                                        <span className="text-emerald-600">Emailed: <strong>{volunteers.filter((v: any) => v.qr_emailed).length}</strong></span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 mt-1">
+                                        <button
+                                            disabled={volSendingEmails}
+                                            onClick={async () => {
+                                                setVolSendingEmails(true); setVolEmailResult(null);
+                                                try {
+                                                    const res = await fetch(`/api/admin/hackathon-qr-emails-volunteers?resend=false`, { method: 'POST' });
+                                                    setVolEmailResult(await res.json());
+                                                    loadData();
+                                                } catch(e: any) {
+                                                    setVolEmailResult({ error: e.message || 'Error' });
+                                                } finally {
+                                                    setVolSendingEmails(false);
+                                                }
+                                            }}
+                                            className="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5"
+                                        >
+                                            {volSendingEmails ? 'Sending...' : <><Send className="w-3.5 h-3.5" /> Send Pending QRs</>}
+                                        </button>
+                                        <button
+                                            disabled={volSendingEmails}
+                                            onClick={async () => {
+                                                if(!confirm('Are you sure you want to resend QR emails to ALL volunteers?')) return;
+                                                setVolSendingEmails(true); setVolEmailResult(null);
+                                                try {
+                                                    const res = await fetch(`/api/admin/hackathon-qr-emails-volunteers?resend=true`, { method: 'POST' });
+                                                    setVolEmailResult(await res.json());
+                                                    loadData();
+                                                } catch(e: any) {
+                                                    setVolEmailResult({ error: e.message || 'Error' });
+                                                } finally {
+                                                    setVolSendingEmails(false);
+                                                }
+                                            }}
+                                            className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+                                        >
+                                            Resend All
+                                        </button>
+                                    </div>
+                                    {volEmailResult && (
+                                        <div className={`mt-2 p-2 rounded-lg text-xs ${volEmailResult.error && !volEmailResult.sent ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                            <p className="font-bold">{volEmailResult.message || volEmailResult.error}</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm">

@@ -142,6 +142,11 @@ export default function HackathonScannerPage() {
         }
     };
 
+    const modeRef = useRef(mode);
+    const selectedMealRef = useRef(selectedMeal);
+    useEffect(() => { modeRef.current = mode; }, [mode]);
+    useEffect(() => { selectedMealRef.current = selectedMeal; }, [selectedMeal]);
+
     const stopCamera = async () => {
         if (scannerRef.current) {
             try {
@@ -157,17 +162,22 @@ export default function HackathonScannerPage() {
     const playSuccessSound = () => {
         try {
             const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-            const oscillator = ctx.createOscillator();
-            const gainNode = ctx.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(ctx.destination);
-            oscillator.type = 'sine';
-            oscillator.frequency.value = 800; // Hz
-            gainNode.gain.setValueAtTime(0, ctx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.05);
-            gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
-            oscillator.start();
-            oscillator.stop(ctx.currentTime + 0.4);
+            const playTone = (freq: number, type: OscillatorType, startTime: number, duration: number) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, startTime);
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.5, startTime + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            };
+            const now = ctx.currentTime;
+            playTone(900, 'square', now, 0.1);
+            playTone(1200, 'square', now + 0.1, 0.2);
         } catch(e) { console.warn("Audio playback failed", e) }
     };
 
@@ -180,7 +190,9 @@ export default function HackathonScannerPage() {
 
         try {
             const participantId = decodedText.trim();
-            const result = await processHackathonQrScan(participantId, mode, mode === 'food' ? selectedMeal : undefined);
+            const currentMode = modeRef.current;
+            const currentMeal = selectedMealRef.current;
+            const result = await processHackathonQrScan(participantId, currentMode, currentMode === 'food' ? currentMeal : undefined);
 
             if (result.success) {
                 setScanResult('success');

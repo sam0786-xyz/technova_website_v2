@@ -238,17 +238,22 @@ export default function ScannerPage() {
     const playSuccessSound = () => {
         try {
             const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-            const oscillator = ctx.createOscillator();
-            const gainNode = ctx.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(ctx.destination);
-            oscillator.type = 'sine';
-            oscillator.frequency.value = 800; // Hz
-            gainNode.gain.setValueAtTime(0, ctx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.05);
-            gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
-            oscillator.start();
-            oscillator.stop(ctx.currentTime + 0.4);
+            const playTone = (freq: number, type: OscillatorType, startTime: number, duration: number) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, startTime);
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.5, startTime + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            };
+            const now = ctx.currentTime;
+            playTone(900, 'square', now, 0.1);
+            playTone(1200, 'square', now + 0.1, 0.2);
         } catch(e) { console.warn("Audio playback failed", e) }
     };
 
