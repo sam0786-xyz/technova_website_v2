@@ -1653,12 +1653,13 @@ export async function processHackathonQrScan(participantId: string, actionUrl: '
         const mealType = mealRound || 'default'
 
         // Check if this person already scanned for this meal round
-        const { data: existingLog } = await supabase
-            .from('hackathon_food_logs')
-            .select('id')
-            .eq('participant_id', participantId)
-            .eq('meal_type', mealType)
-            .maybeSingle()
+        let query = supabase.from('hackathon_food_logs').select('id').eq('meal_type', targetType === 'participant' ? mealType : mealType + `_vol_${participantId}`)
+        if (targetType === 'participant') {
+            query = query.eq('participant_id', participantId)
+        } else {
+            query = query.eq('volunteer_id', participantId)
+        }
+        const { data: existingLog } = await query.maybeSingle()
 
         if (existingLog) {
             return { error: `${qrTarget.name} has already scanned for "${mealType}". Each person can only scan once per meal round.` }
