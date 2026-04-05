@@ -37,88 +37,75 @@ export async function uploadHackathonData(formData: FormData) {
 
         const supabase = await getSupabase()
 
-        // Expected columns (flexible mapping needed depending on Google Form output)
-        // We assume headers like: "Team Name", "Idea/Project Title", "Leader Name", "Leader Email", "Member 1 Name", "Member 1 Email", etc.
-        // Let's normalize it by looking at keys or we strictly require certain headers.
+        // Flexible column mapping for various spreadsheet formats
+        // Supports: Team Id, Team Name, Project Title, Team Lead Name, Project Objective(Short Synopsis),
+        // Total Members, Team members name(separated by ;), Is a mentor accompanying you?,
+        // College Name, Track, Student Coordinator, Coordinator Phone, Team Contact Number, Team Email,
+        // Team Status, Need Accommodation, Remarks
 
         let teamsAdded = 0
         let participantsAdded = 0
 
         for (const row of data as any[]) {
-            // Find team name and idea using strict matching (strip non-alphanumeric whitespace)
             const cleanStr = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const keys = Object.keys(row);
 
-            const teamNameKey = Object.keys(row).find(k => {
+            // Helper: find key by multiple possible cleanStr matches
+            const findKey = (...patterns: string[]) => keys.find(k => {
                 const clean = cleanStr(k);
-                return clean.includes('teamname') || clean.includes('nameofteam') || clean === 'team';
-            })
-            const ideaKey = Object.keys(row).find(k => {
-                const clean = cleanStr(k);
-                return clean.includes('idea') || clean.includes('projecttitle') || (clean.includes('project') && clean.includes('title')) || clean.includes('solution');
-            })
-            const teamCodeKey = Object.keys(row).find(k => {
-                const clean = cleanStr(k);
-                return clean.includes('teamid') || clean.includes('teamcode');
-            })
-            const objectiveKey = Object.keys(row).find(k => {
-                const clean = cleanStr(k);
-                return clean.includes('synopsis') || clean.includes('objective') || clean.includes('description') || clean.includes('projectobjective');
-            })
-            const themeKey = Object.keys(row).find(k => {
-                const clean = cleanStr(k);
-                return clean === 'theme' || clean.includes('projecttheme') || clean.includes('teamtheme') || clean.includes('trackselection') || clean.includes('track') || clean === 'category';
-            })
-            const categoryKey = !themeKey ? Object.keys(row).find(k => {
-                const clean = cleanStr(k);
-                return clean === 'category' || clean.includes('categoryselection');
-            }) : null;
-
-            const coordinatorNameKey = Object.keys(row).find(k => {
-                const clean = cleanStr(k);
-                return clean.includes('studentcoordinator') || clean.includes('coordinatorname');
-            });
-            const coordinatorPhoneKey = Object.keys(row).find(k => {
-                const clean = cleanStr(k);
-                return clean.includes('coordinatorphone') || clean.includes('coordinatornumber');
-            });
-            const accommodationKey = Object.keys(row).find(k => {
-                const clean = cleanStr(k);
-                return clean.includes('accommodation') || clean.includes('accomodation');
-            });
-            const remarksKey = Object.keys(row).find(k => {
-                const clean = cleanStr(k);
-                return clean.includes('remark');
+                return patterns.some(p => clean.includes(p));
             });
 
-            const teamCode = teamCodeKey ? String(row[teamCodeKey]) : null
+            // ---- TEAM-LEVEL FIELDS ----
+            const teamNameKey = findKey('teamname', 'nameofteam') || keys.find(k => cleanStr(k) === 'team');
+            const teamCodeKey = findKey('teamid', 'teamcode');
+            const ideaKey = findKey('projecttitle', 'ideatitle', 'solution') || keys.find(k => {
+                const c = cleanStr(k); return c.includes('project') && c.includes('title');
+            });
+            const objectiveKey = findKey('synopsis', 'projectobjective', 'objective') || keys.find(k => {
+                const c = cleanStr(k); return c.includes('project') && (c.includes('objective') || c.includes('synopsis') || c.includes('description'));
+            });
+            const themeKey = keys.find(k => {
+                const c = cleanStr(k);
+                return c === 'track' || c === 'theme' || c.includes('trackselection') || c.includes('projecttheme');
+            });
+            const categoryKey = !themeKey ? findKey('category', 'categoryselection') : null;
+
+            const coordinatorNameKey = findKey('studentcoordinator', 'coordinatorname');
+            const coordinatorPhoneKey = findKey('coordinatorphone', 'coordinatornumber');
+            const accommodationKey = findKey('accommodation', 'accomodation', 'needaccomodation', 'needaccommodation');
+            const remarksKey = findKey('remark');
+            const mentorKey = keys.find(k => cleanStr(k).includes('mentor'));
+            const totalMembersKey = findKey('totalmembers', 'membercount');
+
+            // ---- EXTRACT VALUES ----
+            const teamCode = teamCodeKey && row[teamCodeKey] ? String(row[teamCodeKey]).trim() : null;
             let teamName = (teamNameKey && row[teamNameKey]) ? String(row[teamNameKey]).trim() : '';
-            if (!teamName) {
-                teamName = `Team ${teamCode || Math.floor(Math.random() * 10000)}`
-            }
-            const ideaTitle = (ideaKey && row[ideaKey]) ? String(row[ideaKey]).trim() : 'TBD'
-            const projectObjective = (objectiveKey && row[objectiveKey]) ? String(row[objectiveKey]).trim() : null
-            const themeValue = themeKey ? row[themeKey] : (categoryKey ? row[categoryKey] : null)
-            const theme = themeValue ? String(themeValue).trim() : null
+            if (!teamName) teamName = `Team ${teamCode || Math.floor(Math.random() * 10000)}`;
 
-            const studentCoordinator = coordinatorNameKey ? String(row[coordinatorNameKey]).trim() : null;
-            const coordinatorPhone = coordinatorPhoneKey ? String(row[coordinatorPhoneKey]).trim() : null;
-            const needAccommodationStr = accommodationKey ? String(row[accommodationKey]).toLowerCase().trim() : '';
+            const ideaTitle = (ideaKey && row[ideaKey]) ? String(row[ideaKey]).trim() : 'TBD';
+            const projectObjective = (objectiveKey && row[objectiveKey]) ? String(row[objectiveKey]).trim() : null;
+            const themeValue = themeKey ? row[themeKey] : (categoryKey ? row[categoryKey] : null);
+            const theme = themeValue ? String(themeValue).trim() : null;
+
+            const studentCoordinator = coordinatorNameKey && row[coordinatorNameKey] ? String(row[coordinatorNameKey]).trim() : null;
+            const coordinatorPhone = coordinatorPhoneKey && row[coordinatorPhoneKey] ? String(row[coordinatorPhoneKey]).trim() : null;
+            const needAccommodationStr = accommodationKey && row[accommodationKey] ? String(row[accommodationKey]).toLowerCase().trim() : '';
             const needAccommodation = needAccommodationStr === 'yes' || needAccommodationStr === 'true';
-            const remarks = remarksKey ? String(row[remarksKey]).trim() : null;
+            const remarks = remarksKey && row[remarksKey] ? String(row[remarksKey]).trim() : null;
 
-            // Check for explicitly marked status in sheet: "Coming" etc., otherwise default to shortlisted
-            const statusKey = Object.keys(row).find(k => cleanStr(k).includes('status'));
-            let finalStatus = 'shortlisted';
-            if (statusKey && row[statusKey]) {
-                const val = String(row[statusKey]).toLowerCase().trim();
-                // If it's something like "rejected" we could map it, but for now
-                // we assume "Coming" or empty gets shortlisted.
-                if (val.includes('reject') || val.includes('not coming')) {
-                    finalStatus = 'rejected';
+            // Mentor: could be "Yes", a name, or empty
+            let mentorName: string | null = null;
+            if (mentorKey && row[mentorKey]) {
+                const mentorVal = String(row[mentorKey]).trim();
+                const lower = mentorVal.toLowerCase();
+                if (lower && lower !== 'no' && lower !== 'n/a' && lower !== 'na' && lower !== 'none' && lower !== '-') {
+                    // If it's just "Yes", we store "Yes (name TBD)", otherwise store the actual name
+                    mentorName = lower === 'yes' ? 'Yes' : mentorVal;
                 }
             }
 
-            // Insert Team
+            // ---- INSERT TEAM ----
             const { data: team, error: teamError } = await supabase
                 .from('hackathon_teams')
                 .insert({
@@ -131,7 +118,8 @@ export async function uploadHackathonData(formData: FormData) {
                     coordinator_phone: coordinatorPhone,
                     need_accommodation: needAccommodation,
                     remarks: remarks,
-                    status: finalStatus
+                    mentor_name: mentorName,
+                    status: 'shortlisted'
                 })
                 .select()
                 .single()
@@ -142,95 +130,104 @@ export async function uploadHackathonData(formData: FormData) {
             }
             teamsAdded++
 
-            // Find members (leader + members)
-            // Look for patterns like "Leader Name", "Leader Email", "Member 1 Name", "Member 1 Email"
+            // ---- PARTICIPANTS ----
             const participantPairs: { name: string, email: string, phone: string | null, role: string, course: string | null, section: string | null, system_id: string | null, year: string | null, college: string | null }[] = []
 
-            // Extract leader - match actual column headers like "Team Lead Name", "Leader Name", "Name", etc.
-            const leaderNameKey = Object.keys(row).find(k => {
+            // College Name (shared across team from spreadsheet column "College Name")
+            const collegeKey = keys.find(k => {
+                const c = cleanStr(k);
+                return c.includes('collegename') || c === 'college' || c.includes('universityname') || c.includes('institute');
+            });
+            const sharedCollege = collegeKey && row[collegeKey] ? String(row[collegeKey]).trim() : null;
+
+            // Team Email (the single registered email)
+            const teamEmailKey = keys.find(k => {
+                const c = cleanStr(k);
+                return c.includes('teamemail') || c === 'email';
+            }) || keys.find(k => {
+                const c = cleanStr(k);
+                return c.includes('email') && !c.includes('member');
+            });
+            const teamEmail = teamEmailKey && row[teamEmailKey] ? String(row[teamEmailKey]).trim() : '';
+
+            // Team Contact Number
+            const teamPhoneKey = keys.find(k => {
+                const c = cleanStr(k);
+                return c.includes('teamcontactnumber') || c.includes('contactnumber') || c.includes('teamnumber');
+            }) || keys.find(k => {
+                const c = cleanStr(k);
+                return (c.includes('mobile') || c.includes('phone') || c.includes('contact')) && !c.includes('coordinator') && !c.includes('member');
+            });
+            const teamPhone = teamPhoneKey && row[teamPhoneKey] ? String(row[teamPhoneKey]).trim() : null;
+
+            // Leader Name (e.g. "Team Lead Name")
+            const leaderNameKey = keys.find(k => {
                 const lower = k.toLowerCase();
                 return lower.includes('lead') && lower.includes('name');
-            }) || Object.keys(row).find(k => {
+            }) || keys.find(k => {
                 const lower = k.toLowerCase();
                 return (lower === 'name') || (lower.includes('name') && !lower.includes('team name') && !lower.includes('idea') && !lower.includes('project') && !lower.includes('member'));
-            })
+            });
 
-            const leaderEmailKey = Object.keys(row).find(k => k.toLowerCase().includes('lead') && k.toLowerCase().includes('email'))
-                || Object.keys(row).find(k => k.toLowerCase() === 'email')
-                || Object.keys(row).find(k => k.toLowerCase().includes('email') && !k.toLowerCase().includes('member'))
-
-            const leaderPhoneKey = Object.keys(row).find(k => {
-                const lower = k.toLowerCase();
-                return (lower.includes('mobile') || lower.includes('phone') || lower.includes('contact')) && !lower.includes('member');
-            })
-
-            const getField = (row: any, keyword1: string, keyword2?: string) => {
-                const key = Object.keys(row).find(k => {
-                    const clean = cleanStr(k);
-                    if (keyword2) return clean.includes(keyword1) && clean.includes(keyword2);
-                    return clean.includes(keyword1) && !clean.includes('member');
-                });
-                return key ? String(row[key]).trim() : null;
-            }
+            // Leader-specific email/phone - fallback to team-level ones
+            const leaderEmailKey = keys.find(k => {
+                const c = k.toLowerCase();
+                return c.includes('lead') && c.includes('email');
+            });
+            const leaderPhoneKey = keys.find(k => {
+                const c = k.toLowerCase();
+                return c.includes('lead') && (c.includes('phone') || c.includes('mobile'));
+            });
 
             participantPairs.push({
                 name: (leaderNameKey && row[leaderNameKey]) ? String(row[leaderNameKey]).trim() : 'Unknown Leader',
-                email: (leaderEmailKey && row[leaderEmailKey]) ? String(row[leaderEmailKey]).trim() : '',
-                phone: (leaderPhoneKey && row[leaderPhoneKey]) ? String(row[leaderPhoneKey]).trim() : null,
-                course: getField(row, 'course', 'lead') || getField(row, 'course'),
-                section: getField(row, 'section', 'lead') || getField(row, 'section'),
-                system_id: getField(row, 'systemid', 'lead') || getField(row, 'systemid'),
-                year: getField(row, 'year', 'lead') || getField(row, 'year'),
-                college: getField(row, 'college', 'lead') || getField(row, 'college'),
+                email: (leaderEmailKey && row[leaderEmailKey]) ? String(row[leaderEmailKey]).trim() : teamEmail,
+                phone: (leaderPhoneKey && row[leaderPhoneKey]) ? String(row[leaderPhoneKey]).trim() : teamPhone,
+                course: null,
+                section: null,
+                system_id: null,
+                year: null,
+                college: sharedCollege,
                 role: 'Leader'
             })
 
-            // Extract members (up to 4 members typically)
+            // Extract individually-named members (Member 1, Member 2, etc.)
             for (let i = 1; i <= 4; i++) {
-                const memberNameKey = Object.keys(row).find(k => k.toLowerCase().includes(`member ${i}`) && k.toLowerCase().includes('name'))
-                    || Object.keys(row).find(k => k.toLowerCase().includes(`member${i}`) && k.toLowerCase().includes('name'))
-                const memberEmailKey = Object.keys(row).find(k => k.toLowerCase().includes(`member ${i}`) && k.toLowerCase().includes('email'))
-                    || Object.keys(row).find(k => k.toLowerCase().includes(`member${i}`) && k.toLowerCase().includes('email'))
-                const memberPhoneKey = Object.keys(row).find(k => k.toLowerCase().includes(`member ${i}`) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')))
-                    || Object.keys(row).find(k => k.toLowerCase().includes(`member${i}`) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')))
-
-                const getMemberField = (keyword: string) => {
-                    const key = Object.keys(row).find(k => {
-                        const clean = cleanStr(k);
-                        return clean.includes(keyword) && (clean.includes(`member${i}`) || k.toLowerCase().includes(`member ${i}`));
-                    });
-                    return key ? String(row[key]).trim() : null;
-                };
+                const memberNameKey = keys.find(k => k.toLowerCase().includes(`member ${i}`) && k.toLowerCase().includes('name'))
+                    || keys.find(k => k.toLowerCase().includes(`member${i}`) && k.toLowerCase().includes('name'));
+                const memberEmailKey = keys.find(k => k.toLowerCase().includes(`member ${i}`) && k.toLowerCase().includes('email'))
+                    || keys.find(k => k.toLowerCase().includes(`member${i}`) && k.toLowerCase().includes('email'));
+                const memberPhoneKey = keys.find(k => k.toLowerCase().includes(`member ${i}`) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')))
+                    || keys.find(k => k.toLowerCase().includes(`member${i}`) && (k.toLowerCase().includes('phone') || k.toLowerCase().includes('mobile') || k.toLowerCase().includes('contact')));
 
                 if (memberNameKey && row[memberNameKey]) {
                     participantPairs.push({
                         name: String(row[memberNameKey]).trim(),
                         email: (memberEmailKey && row[memberEmailKey]) ? String(row[memberEmailKey]).trim() : '',
                         phone: (memberPhoneKey && row[memberPhoneKey]) ? String(row[memberPhoneKey]).trim() : null,
-                        course: getMemberField('course'),
-                        section: getMemberField('section'),
-                        system_id: getMemberField('systemid'),
-                        year: getMemberField('year'),
-                        college: getMemberField('college'),
+                        course: null,
+                        section: null,
+                        system_id: null,
+                        year: null,
+                        college: sharedCollege,
                         role: 'Member'
                     })
                 }
             }
 
-            // Also check for a semicolon-separated members column like "Team Member's Names and Affiliation ( ; Separated)"
+            // Semicolon-separated members column: "Team members name(separated by ;)"
             if (participantPairs.length <= 1) {
-                const memberNamesKey = Object.keys(row).find(k => {
+                const memberNamesKey = keys.find(k => {
                     const clean = cleanStr(k);
-                    return (clean.includes('member') && clean.includes('name') && (clean.includes('affiliation') || clean.includes('separated'))) ||
+                    return (clean.includes('member') && clean.includes('name') && (clean.includes('separated') || clean.includes('affiliation'))) ||
                            (clean.includes('teammember') && clean.includes('name'));
                 });
                 if (memberNamesKey && row[memberNamesKey]) {
                     const rawMembers = String(row[memberNamesKey]).split(';').map(s => s.trim()).filter(Boolean);
                     for (const memberEntry of rawMembers) {
-                        // Entry might be "Name - College" or just "Name"
                         const parts = memberEntry.split('-').map(s => s.trim());
                         const memberName = parts[0] || memberEntry;
-                        const memberCollege = parts.length > 1 ? parts.slice(1).join('-').trim() : null;
+                        const memberCollege = parts.length > 1 ? parts.slice(1).join('-').trim() : sharedCollege;
                         if (memberName && !participantPairs.some(p => p.name.toLowerCase() === memberName.toLowerCase())) {
                             participantPairs.push({
                                 name: memberName,
@@ -240,7 +237,7 @@ export async function uploadHackathonData(formData: FormData) {
                                 section: null,
                                 system_id: null,
                                 year: null,
-                                college: memberCollege,
+                                college: memberCollege || sharedCollege,
                                 role: 'Member'
                             });
                         }

@@ -59,6 +59,10 @@ export async function POST(req: NextRequest) {
                     project_objective: team.project_objective,
                     status: team.status,
                     table_number: team.table_number,
+                    mentor_name: team.mentor_name || null,
+                    student_coordinator: team.student_coordinator || null,
+                    coordinator_phone: team.coordinator_phone || null,
+                    need_accommodation: team.need_accommodation || false,
                 },
                 members: members || [],
                 leaderId: leader?.id || participant.id,
@@ -100,6 +104,10 @@ export async function POST(req: NextRequest) {
             if (updates.theme !== undefined) {
                 teamUpdates.theme = updates.theme
                 changeLog.push(`Theme → "${updates.theme}"`)
+            }
+            if (updates.mentor_name !== undefined) {
+                teamUpdates.mentor_name = updates.mentor_name
+                changeLog.push(`Mentor → "${updates.mentor_name}"`)
             }
 
             if (Object.keys(teamUpdates).length > 0) {

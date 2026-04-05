@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Search, Save, CheckCircle2, AlertTriangle, Users, Edit3, Mail, ChevronRight, Loader2, Shield, Eye } from 'lucide-react'
+import { ArrowLeft, Search, Save, CheckCircle2, AlertTriangle, Users, Edit3, Mail, ChevronRight, Loader2, Shield, Eye, GraduationCap, Phone, MapPin} from 'lucide-react'
 import Link from 'next/link'
 
 interface Member {
@@ -27,6 +27,10 @@ interface TeamData {
     project_objective: string | null
     status: string
     table_number: number | null
+    mentor_name: string | null
+    student_coordinator: string | null
+    coordinator_phone: string | null
+    need_accommodation: boolean
 }
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
@@ -47,6 +51,7 @@ export default function TeamUpdatePage() {
     const [ideaTitle, setIdeaTitle] = useState('')
     const [projectObjective, setProjectObjective] = useState('')
     const [theme, setTheme] = useState('')
+    const [mentorName, setMentorName] = useState('')
     const [editableMembers, setEditableMembers] = useState<Member[]>([])
 
     const handleLookup = async () => {
@@ -78,6 +83,7 @@ export default function TeamUpdatePage() {
             setIdeaTitle(data.team.idea_title || '')
             setProjectObjective(data.team.project_objective || '')
             setTheme(data.team.theme || '')
+            setMentorName(data.team.mentor_name || '')
             setEditableMembers(data.members.map((m: Member) => ({ ...m })))
             setStep('view')
         } catch {
@@ -101,6 +107,7 @@ export default function TeamUpdatePage() {
             if (ideaTitle !== (team.idea_title || '')) updates.idea_title = ideaTitle
             if (projectObjective !== (team.project_objective || '')) updates.project_objective = projectObjective
             if (theme !== (team.theme || '')) updates.theme = theme
+            if (mentorName !== (team.mentor_name || '')) updates.mentor_name = mentorName
 
             // Check member changes
             const memberUpdates = editableMembers
@@ -164,6 +171,9 @@ export default function TeamUpdatePage() {
         })
     }
 
+    // Find leader for display
+    const leader = members.find(m => m.role?.toLowerCase() === 'leader') || members[0]
+
     return (
         <div className="min-h-screen bg-[#03030F] text-white font-mono">
             {/* Header */}
@@ -175,10 +185,10 @@ export default function TeamUpdatePage() {
                     <div>
                         <h1 className="text-xl font-heading font-black uppercase tracking-tight flex items-center gap-2">
                             <Edit3 className="w-5 h-5 text-[#FF6B00]" />
-                            Update Team Data
+                            Team Details
                         </h1>
                         <p className="text-[10px] text-white/40 tracking-widest uppercase mt-1">
-                            Any team member can view • Only leaders can edit
+                            Innovate Bharat Hackathon 2026 • By Technova Society
                         </p>
                     </div>
                 </div>
@@ -202,7 +212,7 @@ export default function TeamUpdatePage() {
                                     </div>
                                     <h2 className="text-2xl font-heading font-black uppercase mb-2">Find Your Team</h2>
                                     <p className="text-sm text-white/50 font-sans">
-                                        Enter the email address you used while registering. Any team member can look up their team data.
+                                        Enter the registered email address to view your team details. Any team member can look up their team.
                                     </p>
                                 </div>
 
@@ -241,43 +251,90 @@ export default function TeamUpdatePage() {
                         </motion.div>
                     )}
 
-                    {/* VIEW STATE */}
+                    {/* VIEW STATE — Show full team details */}
                     {step === 'view' && team && (
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 md:p-10 space-y-8">
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                            {/* Team Header Card */}
                             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                                     <div>
-                                        <h2 className="text-2xl font-black text-white uppercase">{team.name}</h2>
-                                        <p className="text-white/50 text-sm mt-1">Idea: {team.idea_title || 'N/A'}</p>
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <h2 className="text-2xl font-black text-white uppercase">{team.name}</h2>
+                                            <span className="text-xs font-mono text-white/40 bg-white/5 border border-white/10 px-2 py-0.5 rounded">{team.team_code}</span>
+                                        </div>
+                                        <p className="text-white/50 text-sm">{team.idea_title || 'No project title set'}</p>
                                     </div>
-                                    <div className="text-right">
-                                        <span className="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{team.status}</span>
+                                    {team.theme && (
+                                        <span className="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider self-start">{team.theme}</span>
+                                    )}
+                                </div>
+
+                                {/* Team Info Grid */}
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">Team Lead</p>
+                                        <p className="text-sm text-white font-semibold">{leader?.name || 'N/A'}</p>
+                                    </div>
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">Contact</p>
+                                        <p className="text-sm text-white font-mono">{leader?.phone || 'N/A'}</p>
+                                    </div>
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">Email</p>
+                                        <p className="text-sm text-white font-mono truncate">{leader?.email || 'N/A'}</p>
+                                    </div>
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">College</p>
+                                        <p className="text-sm text-white">{leader?.college || 'N/A'}</p>
+                                    </div>
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">Coordinator</p>
+                                        <p className="text-sm text-white">{team.student_coordinator || 'N/A'}</p>
+                                    </div>
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl p-3">
+                                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">Mentor</p>
+                                        <p className="text-sm text-white">{team.mentor_name || 'None'}</p>
                                     </div>
                                 </div>
-                                <div className="space-y-4 text-sm max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+
+                                {/* Project Objective */}
+                                {team.project_objective && (
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4 mb-6">
+                                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2">Project Objective</p>
+                                        <p className="text-sm text-white/70 leading-relaxed font-sans">{team.project_objective}</p>
+                                    </div>
+                                )}
+
+                                {/* Members List */}
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-[#FF6B00] mb-3 flex items-center gap-2">
+                                    <Users className="w-4 h-4" /> Team Members ({members.length})
+                                </h3>
+                                <div className="space-y-3">
                                     {members.map((m, i) => (
                                         <div key={i} className="flex flex-col md:flex-row md:items-center justify-between bg-white/[0.03] p-4 rounded-xl border border-white/5">
                                             <div>
                                                 <div className="font-bold text-white flex items-center gap-2">
-                                                    {m.role === 'leader' ? <span className="text-amber-500">★</span> : null}
+                                                    {m.role?.toLowerCase() === 'leader' ? <span className="text-amber-500">★</span> : null}
                                                     {m.name || 'Unnamed Participant'}
+                                                    <span className={`text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${m.role?.toLowerCase() === 'leader' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'bg-white/10 text-white/40'}`}>{m.role}</span>
                                                 </div>
-                                                <div className="text-white/40 mt-0.5">{m.email}</div>
+                                                {m.email && <div className="text-white/40 mt-0.5 text-xs font-mono">{m.email}</div>}
                                             </div>
-                                            <div className="text-white/40 text-left md:text-right mt-2 md:mt-0 text-xs">
-                                                {m.college && <div>{m.college}</div>}
-                                                {m.course && m.year && <div>{m.course} · Year {m.year}</div>}
-                                                {m.phone && <div>{m.phone}</div>}
+                                            <div className="text-white/40 text-left md:text-right mt-2 md:mt-0 text-xs space-y-0.5">
+                                                {m.college && <div className="flex items-center gap-1 md:justify-end"><GraduationCap className="w-3 h-3" />{m.college}</div>}
+                                                {m.phone && <div className="flex items-center gap-1 md:justify-end"><Phone className="w-3 h-3" />{m.phone}</div>}
                                             </div>
                                         </div>
                                     ))}
                                 </div>
+
+                                {/* Edit Button */}
                                 <div className="mt-8 pt-6 border-t border-white/10 flex justify-end">
                                     <button
                                         onClick={() => setStep('edit')}
                                         className="px-6 py-3 bg-white text-black font-bold uppercase tracking-widest text-sm rounded-xl hover:bg-white/90 transition-all flex items-center gap-2"
                                     >
-                                        <Edit3 className="w-4 h-4" /> Edit Details
+                                        <Edit3 className="w-4 h-4" /> Update Team Details
                                     </button>
                                 </div>
                             </div>
@@ -306,22 +363,10 @@ export default function TeamUpdatePage() {
                                                 TABLE {team.table_number}
                                             </span>
                                         )}
-                                        {team.status === 'shortlisted' && (
-                                            <span className="text-sm text-black bg-[#FFD700] font-bold px-3 py-1">
-                                                ★ SHORTLISTED
-                                            </span>
-                                        )}
                                     </div>
                                 </div>
-                                {/* Status & Access Badge */}
+                                {/* Access Badge */}
                                 <div className="flex items-center gap-3 flex-wrap">
-                                    <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 ${
-                                        team.status === 'shortlisted' ? 'bg-emerald-500/20 text-emerald-400' :
-                                        team.status === 'checked_in' ? 'bg-blue-500/20 text-blue-400' :
-                                        'bg-white/10 text-white/40'
-                                    }`}>
-                                        {team.status?.replace('_', ' ')}
-                                    </span>
                                     <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 flex items-center gap-1 ${
                                         isLeader ? 'bg-[#FF6B00]/20 text-[#FF6B00]' : 'bg-white/10 text-white/40'
                                     }`}>
@@ -385,6 +430,17 @@ export default function TeamUpdatePage() {
                                             rows={3}
                                             disabled={!isLeader}
                                             className="w-full bg-[#03030F] border border-white/10 text-white px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors resize-none disabled:opacity-60 disabled:cursor-not-allowed"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Mentor Name <span className="text-white/20">(if a mentor is accompanying your team)</span></label>
+                                        <input
+                                            type="text"
+                                            value={mentorName}
+                                            onChange={e => setMentorName(e.target.value)}
+                                            disabled={!isLeader}
+                                            placeholder="Leave empty if no mentor"
+                                            className="w-full bg-[#03030F] border border-white/10 text-white px-4 py-3 text-sm font-mono focus:border-[#FF6B00] focus:outline-none transition-colors placeholder:text-white/20 disabled:opacity-60 disabled:cursor-not-allowed"
                                         />
                                     </div>
                                 </div>
@@ -496,7 +552,7 @@ export default function TeamUpdatePage() {
                             {/* Save Button */}
                             <div className="flex gap-4">
                                 <button
-                                    onClick={() => { setStep('lookup'); setError(null) }}
+                                    onClick={() => { setStep('view'); setError(null) }}
                                     className="px-6 py-4 border border-white/10 text-white/50 font-bold uppercase text-sm tracking-wider hover:border-white/30 transition-colors"
                                 >
                                     Back
