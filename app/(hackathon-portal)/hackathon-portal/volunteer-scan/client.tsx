@@ -102,8 +102,26 @@ export default function VolunteerScannerClient() {
         }
     };
 
+    const playSuccessSound = () => {
+        try {
+            const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 800; // Hz
+            gainNode.gain.setValueAtTime(0, ctx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.05);
+            gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+            oscillator.start();
+            oscillator.stop(ctx.currentTime + 0.4);
+        } catch(e) { console.warn("Audio playback failed", e) }
+    };
+
     const handleScanSuccess = async (decodedText: string) => {
         setIsScanning(true);
+        playSuccessSound();
         if (scannerRef.current && scannerRef.current.isScanning) {
             scannerRef.current.pause(true);
         }
@@ -351,8 +369,8 @@ export default function VolunteerScannerClient() {
                             </p>
                         </div>
 
-                        <div className="relative w-full aspect-square bg-white rounded-xl shadow-sm overflow-hidden border border-[#00FF41]/20 flex flex-col items-center justify-center">
-                            <div id="vol-reader" className="w-full h-full absolute inset-0 opacity-80 mix-blend-screen"></div>
+                        <div className="relative w-full aspect-square bg-black rounded-xl shadow-sm overflow-hidden border border-[#00FF41]/20 flex flex-col items-center justify-center">
+                            <div id="vol-reader" className="w-full h-full absolute inset-0"></div>
 
                             {/* Sniper HUD Overlay */}
                             <div className="absolute inset-8 pointer-events-none z-10 opacity-70">

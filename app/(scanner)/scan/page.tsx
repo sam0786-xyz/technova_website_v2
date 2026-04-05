@@ -235,8 +235,26 @@ export default function ScannerPage() {
         }
     }
 
+    const playSuccessSound = () => {
+        try {
+            const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 800; // Hz
+            gainNode.gain.setValueAtTime(0, ctx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.05);
+            gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+            oscillator.start();
+            oscillator.stop(ctx.currentTime + 0.4);
+        } catch(e) { console.warn("Audio playback failed", e) }
+    };
+
     const handleScanSuccess = async (decodedText: string) => {
-        setIsScanning(true)
+        setIsScanning(true);
+        playSuccessSound();
         if (scannerRef.current && scannerRef.current.isScanning) {
             scannerRef.current.pause(true)
         }
