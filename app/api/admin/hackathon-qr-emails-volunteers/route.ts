@@ -50,8 +50,13 @@ function buildVolunteerQrEmailHtml(name: string, id: string, shift: string | nul
                                 <p style="color:#9ca3af; font-size:14px; margin:0 0 24px; line-height:1.6;">
                                     We are absolutely thrilled to welcome you as a volunteer for the <strong>Innovate Bharat Hackathon</strong>. Events like this are truly powered by the dedication, energy, and hard work of people like you.
                                 </p>
-                                <p style="color:#9ca3af; font-size:14px; margin:0 0 32px; line-height:1.6;">
+                                <p style="color:#9ca3af; font-size:14px; margin:0 0 24px; line-height:1.6;">
                                     We wish you the very best as we work together to create an unforgettable experience for all the participants. Below is your personal <strong>Volunteer QR pass</strong>. Please keep this code ready during:
+                                </p>
+                                <p style="color:#e5e7eb; font-size:15px; margin:0 0 32px; line-height:1.4;">
+                                    Best,<br/>
+                                    <strong>Mohammad Sameer</strong><br/>
+                                    <span style="color:#9ca3af; font-size:13px;">Technova President</span>
                                 </p>
                                 
                                 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">

@@ -4,7 +4,6 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, Zap, Trophy, ShieldAlert, Cpu, HeartPulse, BookOpen, LineChart, Globe, GraduationCap, Download, Users, Award, Star, ArrowUpRight, CheckCircle, Sparkles, ChevronDown, MapPin, Wifi, Coffee, ArrowRight, Phone, User, Clock, DoorOpen, Flag, PartyPopper } from 'lucide-react'
 import { VenueCarousel } from '@/components/hackathon/venue-carousel'
-import { ArenaTransport } from '@/components/hackathon/arena-transport'
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { DevPreloader } from '@/components/ui/dev-preloader'
 
@@ -471,11 +470,8 @@ export default function HackathonPage() {
                         ))}
                     </div>
 
-                    {/* Interactive Transport Selector */}
-                    <ArenaTransport />
-
                     {/* Venue Carousel */}
-                    <div className="mt-4"><VenueCarousel /></div>
+                    <div className="mt-8"><VenueCarousel /></div>
                 </Section>
 
                 {/* ═══ EVENT LOGISTICS BANNER ═══ */}
