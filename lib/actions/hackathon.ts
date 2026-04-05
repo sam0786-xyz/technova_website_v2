@@ -81,6 +81,10 @@ export async function uploadHackathonData(formData: FormData) {
             // ---- EXTRACT VALUES ----
             const teamCode = teamCodeKey && row[teamCodeKey] ? String(row[teamCodeKey]).trim() : null;
             let teamName = (teamNameKey && row[teamNameKey]) ? String(row[teamNameKey]).trim() : '';
+            if (!teamName && !teamCode) {
+                // Skip rows with no team name AND no team code (likely header/title rows)
+                continue;
+            }
             if (!teamName) teamName = `Team ${teamCode || Math.floor(Math.random() * 10000)}`;
 
             const ideaTitle = (ideaKey && row[ideaKey]) ? String(row[ideaKey]).trim() : 'TBD';
@@ -1944,15 +1948,34 @@ export async function uploadVolunteersData(formData: FormData) {
         let insertedCount = 0
         let skippedCount = 0
 
+        const cleanStr = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+
         for (const row of rows) {
-            const name = String(row['Name'] || row['name'] || '').trim()
-            const email = String(row['Email'] || row['email'] || '').trim().toLowerCase()
-            const role = String(row['Role'] || row['role'] || '').trim()
-            const systemId = String(row['System ID'] || row['system_id'] || '').trim()
-            const section = String(row['Section'] || row['section'] || '').trim()
-            const year = String(row['Year'] || row['year'] || '').trim()
-            const mobile = String(row['Mobile Number'] || row['Mobile'] || row['mobile'] || '').trim()
-            const department = String(row['Department'] || row['department'] || '').trim()
+            const keys = Object.keys(row);
+            const findKey = (...patterns: string[]) => keys.find(k => {
+                const c = cleanStr(k);
+                return patterns.some(p => c.includes(p));
+            });
+
+            const nameKey = findKey('name');
+            const emailKey = findKey('email');
+            const teamKey = findKey('team', 'role');
+            const systemIdKey = findKey('systemid', 'system');
+            const sectionKey = findKey('section');
+            const yearKey = findKey('year');
+            const mobileKey = findKey('mobilenumber', 'mobile', 'phone');
+            const departmentKey = findKey('department', 'dept');
+            const shiftKey = findKey('desiredslot', 'shift', 'slot');
+
+            const name = nameKey ? String(row[nameKey]).trim() : '';
+            const email = emailKey ? String(row[emailKey]).trim().toLowerCase() : '';
+            const teamName = teamKey ? String(row[teamKey]).trim() : 'Volunteer';
+            const systemId = systemIdKey ? String(row[systemIdKey]).trim() : '';
+            const section = sectionKey ? String(row[sectionKey]).trim() : '';
+            const year = yearKey ? String(row[yearKey]).trim() : '';
+            const mobile = mobileKey ? String(row[mobileKey]).trim() : '';
+            const department = departmentKey ? String(row[departmentKey]).trim() : '';
+            const shift = shiftKey ? String(row[shiftKey]).trim() : '';
 
             if (!email || !name) { skippedCount++; continue }
 
@@ -1961,20 +1984,20 @@ export async function uploadVolunteersData(formData: FormData) {
                 .upsert({
                     email,
                     name,
-                    team_name: role || 'Volunteer',
+                    team_name: teamName || 'Volunteer',
                     system_id: systemId || null,
                     section: section || null,
                     year: year || null,
                     mobile: mobile || null,
                     department: department || null,
-                    shift: null,
+                    shift: shift || null,
                     assigned_team_id: null
                 }, { onConflict: 'email' })
 
             if (error) { skippedCount++; continue }
 
             // Auto-assign role
-            const isStudentLead = role.toLowerCase().includes('student lead') || role.toLowerCase().includes('lead')
+            const isStudentLead = teamName.toLowerCase().includes('student lead') || teamName.toLowerCase().includes('lead') || teamName.toLowerCase().includes('overall head') || teamName.toLowerCase().includes('head')
             const roleToAssign = isStudentLead ? 'student_lead' : 'volunteer'
             await supabase
                 .from('hackathon_roles')
@@ -1988,6 +2011,20 @@ export async function uploadVolunteersData(formData: FormData) {
     } catch (err: any) {
         return { error: err.message || "Failed to process file" }
     }
+}
+
+export async function updateVolunteerShift(volunteerId: string, shift: string) {
+    const session = await auth()
+    if (!session || !['admin', 'super_admin', 'student_lead'].includes(session.user.role as string)) {
+        return { error: "Unauthorized" }
+    }
+    const supabase = await getSupabase()
+    const { error } = await supabase
+        .from('hackathon_volunteers')
+        .update({ shift: shift || null })
+        .eq('id', volunteerId)
+    if (error) return { error: error.message }
+    return { success: true }
 }
 
 // ==========================================

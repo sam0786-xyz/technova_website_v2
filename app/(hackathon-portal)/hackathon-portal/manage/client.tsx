@@ -7,7 +7,7 @@ import {
     getHackathonSettings, startTimer, stopTimer, pushAnnouncement, clearAnnouncement,
     getSchedule, addScheduleItem, deleteScheduleItem, updateTeamStatus, toggleEvaluationPeriod,
     getCheckedInParticipantsData, getFoodLogsData,
-    getVolunteers, addVolunteer, removeVolunteer, uploadVolunteersData,
+    getVolunteers, addVolunteer, removeVolunteer, uploadVolunteersData, updateVolunteerShift,
     addHackathonTeamManually, updateHackathonTeamDetails, updateCustomMeals,
     updateEvaluationRounds, emailShortlistedTeams, emailSingleTeam, blastCustomEmail,
     getHackathonRoles, addHackathonRole, removeHackathonRole, approveScoreEdit, sendEvaluatorInvite, getEditRequests,
@@ -647,6 +647,17 @@ export default function HackathonManageClient() {
                 </div>
             </div>
 
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-32 gap-4">
+                    <div className="relative w-16 h-16">
+                        <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
+                        <div className="absolute inset-0 rounded-full border-4 border-t-emerald-500 border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+                    </div>
+                    <p className="text-sm text-gray-400 font-mono tracking-wider animate-pulse">Loading hackathon data...</p>
+                </div>
+            ) : (
+            <>
+
             {/* Summary Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
                 <div className={cardCls}><p className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider mb-2">Total Teams</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-gray-900">{teams.length}</span>{teams.length > 0 && <span className="text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full font-medium mb-1">+{teams.filter(t => t.status === 'pending').length} pending</span>}</div></div>
@@ -786,7 +797,7 @@ export default function HackathonManageClient() {
                                                     <td className="px-4 py-3.5 text-gray-600 max-w-[200px] truncate" title={team.idea_title}>{team.idea_title || 'TBD'}</td>
                                                     <td className="px-4 py-3.5">{team.theme && <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-xl text-xs font-medium border border-purple-100">{team.theme}</span>}</td>
                                                     <td className="px-4 py-3.5">
-                                                        <span className="text-xs text-gray-600 block text-center max-w-[150px] truncate" title={members[0]?.college || 'Unknown'}>{members[0]?.college || 'Unknown'}</span>
+                                                        <span className="text-xs text-gray-600 block text-center max-w-[150px] truncate" title={members[0]?.college || '-'}>{members[0]?.college || '-'}</span>
                                                     </td>
                                                     <td className="px-4 py-3.5 text-center">
                                                         <div className="flex items-center justify-center gap-1">
@@ -907,6 +918,8 @@ export default function HackathonManageClient() {
                                             <option value="Activity">Activity</option>
                                             <option value="Meal">Meal</option>
                                             <option value="Evaluation">Evaluation</option>
+                                            <option value="Break">Break</option>
+                                            <option value="Ceremony">Ceremony</option>
                                         </select>
                                     </div>
                                 </div>
@@ -925,11 +938,12 @@ export default function HackathonManageClient() {
                             </form>
                             <div className="space-y-2 max-h-52 overflow-y-auto">
                                 {schedule.map((item: any) => (
-                                    <div key={item.id} className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+                                    <div key={item.id} className={`flex items-center justify-between rounded-xl px-3 py-2 ${item.event_type === 'Meal' ? 'bg-orange-50 border border-orange-200' : item.event_type === 'Evaluation' ? 'bg-blue-50 border border-blue-200' : item.event_type === 'Break' ? 'bg-yellow-50 border border-yellow-200' : item.event_type === 'Ceremony' ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50 border border-gray-200'}`}>
                                         <div className="flex items-center gap-2 min-w-0">
-                                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${item.event_type === 'Meal' ? 'bg-orange-400' : item.event_type === 'Evaluation' ? 'bg-blue-500' : 'bg-purple-500'}`} />
+                                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${item.event_type === 'Meal' ? 'bg-orange-400' : item.event_type === 'Evaluation' ? 'bg-blue-500' : item.event_type === 'Break' ? 'bg-yellow-500' : item.event_type === 'Ceremony' ? 'bg-purple-500' : 'bg-emerald-500'}`} />
                                             <span className="text-sm font-medium text-gray-900 truncate">{item.title}</span>
-                                            <span className="text-[10px] text-gray-400 font-mono font-mono flex-shrink-0">{new Date(item.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${item.event_type === 'Meal' ? 'bg-orange-100 text-orange-600' : item.event_type === 'Evaluation' ? 'bg-blue-100 text-blue-600' : item.event_type === 'Break' ? 'bg-yellow-100 text-yellow-700' : item.event_type === 'Ceremony' ? 'bg-purple-100 text-purple-600' : 'bg-emerald-100 text-emerald-600'}`}>{item.event_type}</span>
+                                            <span className="text-[10px] text-gray-400 font-mono flex-shrink-0">{new Date(item.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                         </div>
                                         <button onClick={() => handleDeleteScheduleItem(item.id)} className="p-1 text-red-400/60 hover:text-red-500 hover:bg-red-50 rounded transition-colors flex-shrink-0" title="Delete">
                                             <Trash2 className="w-3.5 h-3.5" />
@@ -1279,17 +1293,12 @@ export default function HackathonManageClient() {
                                 <div className="space-y-3">
                                     {volunteers.map((v: any) => (
                                         <div key={v.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-200">
-                                            <div>
+                                            <div className="flex-1 min-w-0">
                                                 <p className="font-medium text-gray-900 flex flex-wrap items-center gap-2">
                                                     {v.name}
                                                     {v.team_name && (
                                                         <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[10px] uppercase tracking-wider font-bold">
                                                             {v.team_name}
-                                                        </span>
-                                                    )}
-                                                    {v.shift && (
-                                                        <span className="px-2 py-0.5 rounded bg-blue-500/10 text-emerald-600 border border-blue-500/20 text-[10px] uppercase tracking-wider font-bold">
-                                                            {v.shift} Shift
                                                         </span>
                                                     )}
                                                 </p>
@@ -1300,13 +1309,28 @@ export default function HackathonManageClient() {
                                                     {v.department && <span>• {v.department} {v.section ? `(${v.section})` : ''} {v.year && `- Yr ${v.year}`}</span>}
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={async () => { await removeVolunteer(v.id); loadData(); }}
-                                                className="p-2 text-red-400 hover:bg-red-400/10 rounded-xl transition-colors"
-                                                title="Remove Volunteer"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                                                <select
+                                                    value={v.shift || ''}
+                                                    onChange={async (e) => {
+                                                        const res = await updateVolunteerShift(v.id, e.target.value);
+                                                        if (!res.error) loadData();
+                                                    }}
+                                                    className="bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-700 font-mono focus:outline-none focus:border-blue-400 min-w-[120px]"
+                                                >
+                                                    <option value="">No Shift</option>
+                                                    <option value="Both Shifts">Both Shifts</option>
+                                                    <option value="Slot 1 (9 AM to 5 PM)">Slot 1 (9 AM to 5 PM)</option>
+                                                    <option value="Slot 2 (5 PM to 1 AM)">Slot 2 (5 PM to 1 AM)</option>
+                                                </select>
+                                                <button
+                                                    onClick={async () => { await removeVolunteer(v.id); loadData(); }}
+                                                    className="p-2 text-red-400 hover:bg-red-400/10 rounded-xl transition-colors"
+                                                    title="Remove Volunteer"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -1887,6 +1911,9 @@ export default function HackathonManageClient() {
                 </TabsContent>
 
             </Tabs>
+
+            </>
+            )}
         </div>
     );
 }
