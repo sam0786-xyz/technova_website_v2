@@ -29,10 +29,26 @@ export async function uploadHackathonData(formData: FormData) {
         const workbook = xlsx.read(buffer, { type: 'buffer' })
         const sheetName = workbook.SheetNames[0]
         const worksheet = workbook.Sheets[sheetName]
-        const data = xlsx.utils.sheet_to_json(worksheet)
+        let data: any[] = xlsx.utils.sheet_to_json(worksheet)
 
         if (!data || data.length === 0) {
             return { error: "File is empty or invalid" }
+        }
+
+        // Handle merged title rows (detect if first row values look like actual column headers)
+        const firstVals = Object.values(data[0]).map((v: any) => String(v).trim().toLowerCase());
+        const teamHeaderIndicators = ['team name', 'team id', 'project title', 'track', 'email', 'college', 'team lead', 's.no'];
+        const teamLooksLikeHeaders = teamHeaderIndicators.filter(h => firstVals.some(v => v.includes(h))).length >= 3;
+        if (teamLooksLikeHeaders) {
+            const realHeaders = Object.values(data[0]).map((v: any) => String(v).trim());
+            const oldKeys = Object.keys(data[0]);
+            data = data.slice(1).map(row => {
+                const remapped: any = {};
+                oldKeys.forEach((oldKey, idx) => {
+                    if (idx < realHeaders.length) remapped[realHeaders[idx]] = row[oldKey] ?? '';
+                });
+                return remapped;
+            });
         }
 
         const supabase = await getSupabase()
@@ -1940,9 +1956,34 @@ export async function uploadVolunteersData(formData: FormData) {
         const workbook = xlsx.read(buffer, { type: 'buffer' })
         const sheetName = workbook.SheetNames[0]
         const sheet = workbook.Sheets[sheetName]
-        const rows: any[] = xlsx.utils.sheet_to_json(sheet, { defval: '' })
+        let rows: any[] = xlsx.utils.sheet_to_json(sheet, { defval: '' })
 
         if (rows.length === 0) return { error: "No data found in file" }
+
+        // Handle merged title rows (e.g. "Volunteers" spanning the whole first row).
+        // When xlsx parses this, Row 1 becomes keys like __EMPTY, __EMPTY_1, etc.
+        // and Row 2 (the real headers: S.No, Name, Team...) becomes data row 0.
+        // Detect this by checking if the first row's VALUES look like column headers.
+        const firstRowValues = Object.values(rows[0]).map((v: any) => String(v).trim().toLowerCase());
+        const headerIndicators = ['name', 'email', 'team', 'system id', 'section', 'year', 'mobile', 'department', 's.no'];
+        const looksLikeHeaders = headerIndicators.filter(h => firstRowValues.some(v => v.includes(h))).length >= 3;
+
+        if (looksLikeHeaders) {
+            // First row is the real header row — remap all subsequent rows
+            const realHeaders = Object.values(rows[0]).map((v: any) => String(v).trim());
+            const oldKeys = Object.keys(rows[0]);
+            rows = rows.slice(1).map(row => {
+                const remapped: any = {};
+                oldKeys.forEach((oldKey, idx) => {
+                    if (idx < realHeaders.length) {
+                        remapped[realHeaders[idx]] = row[oldKey] ?? '';
+                    }
+                });
+                return remapped;
+            });
+        }
+
+        if (rows.length === 0) return { error: "No data rows found after header detection" }
 
         const supabase = await getSupabase()
         let insertedCount = 0
