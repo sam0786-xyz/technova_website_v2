@@ -48,11 +48,11 @@ function buildTeamQrEmailHtml(teamName: string, leaderName: string, members: { n
                         <!-- Header -->
                         <tr>
                             <td style="background: linear-gradient(135deg, #059669, #0d9488); padding:32px 40px; text-align:center;">
-                                <h1 style="margin:0; color:#fff; font-size:28px; font-weight:800; letter-spacing:-0.5px;">
-                                    🚀 Technova Hackathon
+                                <h1 style="margin:0; color:#fff; font-size:24px; font-weight:800; letter-spacing:-0.5px;">
+                                    🚀 Innovate Bharat Hackathon
                                 </h1>
                                 <p style="margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px;">
-                                    Team QR Codes for Check-in & Meals
+                                    By Technova Society • Team QR Codes
                                 </p>
                             </td>
                         </tr>
@@ -140,9 +140,9 @@ export async function POST() {
         const participants = (team as any).hackathon_participants || []
         if (participants.length === 0) continue
 
-        // 1. Find the best email to send to. Prefer the Leader's email.
-        const leader = participants.find((p: any) => p.role?.toLowerCase() === 'leader' && p.email)
-            || participants.find((p: any) => p.email) // Fallback to anyone with an email
+        // 1. Find the primary registered email (prefer leader)
+        const leader = participants.find((p: any) => p.role?.toLowerCase() === 'leader' && p.email && p.email.trim() !== '')
+            || participants.find((p: any) => p.email && p.email.trim() !== '')
 
         if (!leader || !leader.email) {
             failed++
@@ -156,7 +156,7 @@ export async function POST() {
             id: p.id
         }))
 
-        // Rate limit: ~1.5 req/sec to stay safe with Resend
+        // Rate limit: ~1.5 req/sec
         if (sent > 0) {
             await delay(700)
         }

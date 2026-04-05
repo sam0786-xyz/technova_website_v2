@@ -32,7 +32,7 @@ interface TeamData {
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
 
 export default function TeamUpdatePage() {
-    const [step, setStep] = useState<'lookup' | 'edit' | 'success'>('lookup')
+    const [step, setStep] = useState<'lookup' | 'view' | 'edit' | 'success'>('lookup')
     const [email, setEmail] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -79,7 +79,7 @@ export default function TeamUpdatePage() {
             setProjectObjective(data.team.project_objective || '')
             setTheme(data.team.theme || '')
             setEditableMembers(data.members.map((m: Member) => ({ ...m })))
-            setStep('edit')
+            setStep('view')
         } catch {
             setError('Network error. Please try again.')
         }
@@ -236,6 +236,49 @@ export default function TeamUpdatePage() {
                                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                                         {loading ? 'Looking up...' : 'Find My Team'}
                                     </motion.button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* VIEW STATE */}
+                    {step === 'view' && team && (
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 md:p-10 space-y-8">
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                                    <div>
+                                        <h2 className="text-2xl font-black text-white uppercase">{team.name}</h2>
+                                        <p className="text-white/50 text-sm mt-1">Idea: {team.idea_title || 'N/A'}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{team.status}</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-4 text-sm max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {members.map((m, i) => (
+                                        <div key={i} className="flex flex-col md:flex-row md:items-center justify-between bg-white/[0.03] p-4 rounded-xl border border-white/5">
+                                            <div>
+                                                <div className="font-bold text-white flex items-center gap-2">
+                                                    {m.role === 'leader' ? <span className="text-amber-500">★</span> : null}
+                                                    {m.name || 'Unnamed Participant'}
+                                                </div>
+                                                <div className="text-white/40 mt-0.5">{m.email}</div>
+                                            </div>
+                                            <div className="text-white/40 text-left md:text-right mt-2 md:mt-0 text-xs">
+                                                {m.college && <div>{m.college}</div>}
+                                                {m.course && m.year && <div>{m.course} · Year {m.year}</div>}
+                                                {m.phone && <div>{m.phone}</div>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-8 pt-6 border-t border-white/10 flex justify-end">
+                                    <button
+                                        onClick={() => setStep('edit')}
+                                        className="px-6 py-3 bg-white text-black font-bold uppercase tracking-widest text-sm rounded-xl hover:bg-white/90 transition-all flex items-center gap-2"
+                                    >
+                                        <Edit3 className="w-4 h-4" /> Edit Details
+                                    </button>
                                 </div>
                             </div>
                         </motion.div>

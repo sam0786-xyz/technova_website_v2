@@ -184,6 +184,18 @@ export async function POST(req: NextRequest) {
                 }
             }
 
+            // Log explicitly to the database table for the Manage Dashboard
+            if (changeLog.length > 0) {
+                await supabase.from('hackathon_team_updates').insert({
+                    team_id: teamId,
+                    update_data: {
+                        changes: changeLog,
+                        updated_by: leader.name,
+                        email: leader.email
+                    }
+                })
+            }
+
             return NextResponse.json({ 
                 success: true, 
                 message: `Team updated successfully. ${changeLog.length} change(s) applied.`,

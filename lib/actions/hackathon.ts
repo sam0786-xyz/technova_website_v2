@@ -435,7 +435,7 @@ export async function addHackathonTeamManually(data: {
                 system_id: data.leader.system_id || null,
                 year: data.leader.year || null,
                 college: data.leader.college || null,
-                role: 'Leader',
+                role: 'leader',
                 is_checked_in: false,
                 food_count: 0
             })
@@ -455,7 +455,7 @@ export async function addHackathonTeamManually(data: {
                         system_id: member.system_id || null,
                         year: member.year || null,
                         college: member.college || null,
-                        role: 'Member',
+                        role: 'member',
                         is_checked_in: false,
                         food_count: 0
                     })
@@ -1478,11 +1478,53 @@ export async function blastCustomEmail(subject: string, htmlBody: string, target
                 to: email,
                 subject: subject,
                 html: `
-                    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
-                        <div style="padding: 30px; line-height: 1.6; color: rgba(255,255,255,0.9);">
-                            ${htmlBody.replace(/\n/g, '<br />')}
-                        </div>
-                    </div>`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                </head>
+                <body style="margin:0; padding:0; background-color:#0a0a0a; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0a; padding:40px 10px;">
+                        <tr>
+                            <td align="center">
+                                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#111; border-radius:16px; border:1px solid #222; overflow:hidden; margin:0 auto;">
+                                    <!-- Header -->
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #f97316, #10b981); padding:32px 40px; text-align:center;">
+                                            <h1 style="margin:0; color:#fff; font-size:26px; font-weight:800; letter-spacing:-0.5px; text-transform: uppercase;">
+                                                🚀 Innovate Bharat Hackathon
+                                            </h1>
+                                            <p style="margin:8px 0 0; color:rgba(255,255,255,0.9); font-size:14px; font-weight:600; font-family: monospace; letter-spacing: 2px;">
+                                                BY TECHNOVA SOCIETY
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Body -->
+                                    <tr>
+                                        <td style="padding:40px; color:#e5e7eb; font-size:16px; line-height:1.6;">
+                                            ${htmlBody.replace(/\n/g, '<br />')}
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Footer -->
+                                    <tr>
+                                        <td style="padding:24px 40px; background:#0d0d0d; border-top:1px solid #222; text-align:center;">
+                                            <p style="margin:0 0 8px; color:#4b5563; font-size:12px;">
+                                                © ${new Date().getFullYear()} Technova — Technical Society, Sharda University
+                                            </p>
+                                            <p style="margin:0; color:#3a3f47; font-size:10px; font-family: monospace;">
+                                                This is an official transmission from the Hackathon Administration.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>`
             })
             sentCount++
             // Throttle: Resend allows max 2 requests/sec (600ms is safe)
@@ -2526,4 +2568,21 @@ export async function registerNewAttendee(details: { name: string, email: string
 
     if (error) return { error: error.message }
     return { success: true, message: "Registration successful!", attendee: data }
+}
+
+export async function getHackathonTeamUpdates() {
+    const session = await auth();
+    if (!session || !session.user || (!['admin', 'super_admin'].includes(session.user.role as string))) return [];
+
+    const supabase = await getSupabase();
+    const { data } = await supabase
+        .from('hackathon_team_updates')
+        .select(`
+            id, created_at, update_data,
+            hackathon_teams (name, team_code, theme)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(50);
+        
+    return data || [];
 }

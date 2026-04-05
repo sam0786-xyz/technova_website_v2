@@ -13,7 +13,8 @@ import {
     getHackathonRoles, addHackathonRole, removeHackathonRole, approveScoreEdit, sendEvaluatorInvite, getEditRequests,
     importEventAttendees, getEventAttendees, deleteEventAttendees, sendAttendeeQrEmails,
     getAttendanceCheckpoints, updateAttendanceCheckpoints, getAttendanceReport,
-    saveAttendanceEventSettings, getAttendanceEventSettings, updateSingleAttendee
+    saveAttendanceEventSettings, getAttendanceEventSettings, updateSingleAttendee,
+    getHackathonTeamUpdates
 } from "@/lib/actions/hackathon";
 import * as XLSX from "xlsx";
 import { Download, Upload, Users, AlertCircle, CheckCircle, Search, Trash2, Mail, ExternalLink, RefreshCw, Save, Edit2, X, FileDown, Cpu, Clock, Calendar, QrCode, StopCircle, Star, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Shield, Utensils, Settings, Send, Minus, MapPin } from "lucide-react";
@@ -62,7 +63,7 @@ export default function HackathonManageClient() {
     const [roleType, setRoleType] = useState("admin");
     const [announcement, setAnnouncement] = useState("");
     const [sendingQr, setSendingQr] = useState(false);
-    const [selectedStatus, setSelectedStatus] = useState("ALL");
+    const [selectedCollege, setSelectedCollege] = useState("ALL");
     const [newEvaluatorEmail, setNewEvaluatorEmail] = useState("");
     const [evaluatorList, setEvaluatorList] = useState<any[]>([]);
     const [scheduleItems, setScheduleItems] = useState<any[]>([]);
@@ -71,6 +72,7 @@ export default function HackathonManageClient() {
     const [addingManualMode, setAddingManualMode] = useState(false);
     const [sendingMailTeamId, setSendingMailTeamId] = useState<string | null>(null);
     const [mailResult, setMailResult] = useState<{ teamId: string, sentTo: string[], failedTo: string[], message: string } | null>(null);
+    const [teamUpdates, setTeamUpdates] = useState<any[]>([]);
     
     // Custom Email Blast states
     const [customEmailSubject, setCustomEmailSubject] = useState("");
@@ -103,6 +105,7 @@ export default function HackathonManageClient() {
     const [attSendingEmails, setAttSendingEmails] = useState(false);
     const [attEmailResult, setAttEmailResult] = useState<any>(null);
     const [attSearchQuery, setAttSearchQuery] = useState('');
+    const [attShardaOnly, setAttShardaOnly] = useState(false);
     const [attCurrentPage, setAttCurrentPage] = useState(1);
     const [newCheckpoint, setNewCheckpoint] = useState('');
     const [attLoading, setAttLoading] = useState(false);
@@ -149,7 +152,7 @@ export default function HackathonManageClient() {
 
     async function loadData() {
         setLoading(true);
-        const [teamsData, evaluatorsData, volunteersData, settingsData, scheduleData, rolesData, editReqData, checkpointsData] = await Promise.all([
+        const [teamsData, evaluatorsData, volunteersData, settingsData, scheduleData, rolesData, editReqData, checkpointsData, teamUpdatesData] = await Promise.all([
             getHackathonTeams(),
             getEvaluators(),
             getVolunteers(),
@@ -157,7 +160,8 @@ export default function HackathonManageClient() {
             getSchedule(),
             getHackathonRoles(),
             getEditRequests(),
-            getAttendanceCheckpoints()
+            getAttendanceCheckpoints(),
+            getHackathonTeamUpdates()
         ]);
         setTeams(teamsData);
         setEvaluators(evaluatorsData);
@@ -166,6 +170,7 @@ export default function HackathonManageClient() {
         setSchedule(scheduleData);
         setRoles(rolesData);
         setEditRequests(editReqData);
+        setTeamUpdates(teamUpdatesData);
         if (checkpointsData) setAttCheckpoints(checkpointsData);
         if (settingsData?.custom_meals && Array.isArray(settingsData.custom_meals)) {
             setCustomMeals(settingsData.custom_meals);
@@ -250,6 +255,10 @@ export default function HackathonManageClient() {
     };
 
     const filteredAttendees = attendees.filter((a: any) => {
+        if (attShardaOnly) {
+            const isSharda = (a.university || a.college || a.department || '').toLowerCase().includes('sharda');
+            if (!isSharda) return false;
+        }
         if (!attSearchQuery) return true;
         const q = attSearchQuery.toLowerCase();
         return (a.name || '').toLowerCase().includes(q) ||
@@ -517,15 +526,6 @@ export default function HackathonManageClient() {
             loadData();
         }
     }
-    const handleToggleShortlist = async (teamId: string, currentStatus: string) => {
-        const newStatus = currentStatus === 'shortlisted' ? 'evaluating' : 'shortlisted';
-        const res = await updateTeamStatus(teamId, newStatus);
-        if (res.error) {
-            setMessage({ type: 'error', text: res.error });
-        } else {
-            loadData();
-        }
-    };
 
     const downloadCSV = (data: any[], filename: string) => {
         if (!data || data.length === 0) {
@@ -582,11 +582,16 @@ export default function HackathonManageClient() {
     };
 
     const uniqueThemes = [...new Set(teams.map(t => t.theme).filter(Boolean))];
+    const uniqueColleges = Array.from(new Set(
+        teams.flatMap(t => (t.hackathon_participants || []).map((p:any) => p.college || "Unknown"))
+    )).filter(Boolean);
+
     const filteredTeams = teams.filter(t => {
         const matchesSearch = !searchQuery || t.name?.toLowerCase().includes(searchQuery.toLowerCase()) || t.idea_title?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesTheme = selectedTheme === 'ALL' || t.theme === selectedTheme;
-        const matchesStatus = selectedStatus === 'ALL' || t.status === selectedStatus;
-        return matchesSearch && matchesTheme && matchesStatus;
+        const teamColleges = (t.hackathon_participants || []).map((p:any) => p.college || "Unknown");
+        const matchesCollege = selectedCollege === 'ALL' || teamColleges.includes(selectedCollege);
+        return matchesSearch && matchesTheme && matchesCollege;
     });
     const totalPages = Math.ceil(filteredTeams.length / ITEMS_PER_PAGE);
     const paginatedTeams = filteredTeams.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -643,11 +648,9 @@ export default function HackathonManageClient() {
             </div>
 
             {/* Summary Stat Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
                 <div className={cardCls}><p className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider mb-2">Total Teams</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-gray-900">{teams.length}</span>{teams.length > 0 && <span className="text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full font-medium mb-1">+{teams.filter(t => t.status === 'pending').length} pending</span>}</div></div>
-                <div className={cardCls}><p className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider mb-2">Shortlisted</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-emerald-600">{teams.filter(t => t.status === 'shortlisted').length}</span><span className="text-xs text-gray-400 font-mono mb-1">of {teams.length}</span></div></div>
                 <div className={cardCls}><p className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider mb-2">Checked-in</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-emerald-600">{teams.filter(t => t.checked_in).length}</span><div className="flex-1 h-1.5 bg-gray-100 rounded-full mb-2 max-w-[80px]"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${teams.length > 0 ? (teams.filter(t => t.checked_in).length / teams.length * 100) : 0}%` }} /></div></div></div>
-                <div className={cardCls}><p className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider mb-2">Average Score</p><div className="flex items-end gap-2"><span className="text-3xl font-bold text-orange-600">{avgScore}</span><div className="flex gap-0.5 mb-1">{[1,2,3,4,5].map(i => <Star key={i} className={`w-3 h-3 ${parseFloat(avgScore) >= i * 2 ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />)}</div></div></div>
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -726,22 +729,16 @@ export default function HackathonManageClient() {
                                     <option value="ALL">All Tracks</option>
                                     {uniqueThemes.map(t => <option key={t} value={t}>{t}</option>)}
                                 </select>
-                                <select value={selectedStatus} onChange={e => { setSelectedStatus(e.target.value); setCurrentPage(1); }} className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none appearance-none cursor-pointer">
-                                    <option value="ALL">All Status</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="shortlisted">Shortlisted</option>
-                                    <option value="checked_in">Checked-in</option>
-                                    <option value="evaluating">Evaluating</option>
+                                <select value={selectedCollege} onChange={e => { setSelectedCollege(e.target.value); setCurrentPage(1); }} className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none appearance-none cursor-pointer truncate max-w-[200px]">
+                                    <option value="ALL">All Colleges</option>
+                                    {uniqueColleges.map((c: any) => <option key={c} value={c}>{c}</option>)}
                                 </select>
                             </div>
                             <div className="flex gap-2 flex-wrap">
-                                <button onClick={() => { const exportData = filteredTeams.map(t => ({ 'Team': t.name, 'Idea': t.idea_title, 'Track': t.theme, 'Score': t.final_score || 0, 'Status': t.status })); downloadCSV(exportData, 'teams_export.csv'); }} className="flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm transition-colors">
+                                <button onClick={() => { const exportData = filteredTeams.map(t => ({ 'Team': t.name, 'Idea': t.idea_title, 'Track': t.theme })); downloadCSV(exportData, 'teams_export.csv'); }} className="flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm transition-colors">
                                     <Download className="w-3.5 h-3.5" /> Export CSV
                                 </button>
-                                <button onClick={async () => { if (!confirm(`This will send the 'Congratulations / Shortlisted' notification to all shortlisted teams. Continue?`)) return; setMessage({ type: 'success', text: 'Sending shortlist notifications...' }); const res = await emailShortlistedTeams(); if (res.error) setMessage({ type: 'error', text: res.error }); else setMessage({ type: 'success', text: res.message || 'Notifications sent!' }); loadData(); }} className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-3 py-2 rounded-xl text-sm transition-colors">
-                                    <CheckCircle className="w-3.5 h-3.5" /> Notify Shortlisted
-                                </button>
-                                <button onClick={async () => { if (!confirm(`This will email QR codes to all shortlisted participants. Continue?`)) return; setMessage({ type: 'success', text: 'Sending QR code emails to shortlisted teams...' }); try { const res = await fetch('/api/admin/hackathon-qr-emails', { method: 'POST' }); const data = await res.json(); if (data.error) setMessage({ type: 'error', text: data.error }); else setMessage({ type: 'success', text: `QR codes emailed! ${data.sent} sent, ${data.failed} failed.` }); } catch (err: any) { setMessage({ type: 'error', text: err.message || 'Failed to send QR emails.' }); } }} className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 px-3 py-2 rounded-xl text-sm transition-colors">
+                                <button onClick={async () => { if (!confirm(`This will email QR codes to all participants. Continue?`)) return; setMessage({ type: 'success', text: 'Sending QR code emails...' }); try { const res = await fetch('/api/admin/hackathon-qr-emails', { method: 'POST' }); const data = await res.json(); if (data.error) setMessage({ type: 'error', text: data.error }); else setMessage({ type: 'success', text: `QR codes emailed! ${data.sent} sent, ${data.failed} failed.` }); } catch (err: any) { setMessage({ type: 'error', text: err.message || 'Failed to send QR emails.' }); } }} className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 px-3 py-2 rounded-xl text-sm transition-colors">
                                     <Mail className="w-3.5 h-3.5" /> Send QR Codes
                                 </button>
                                 <button onClick={() => setShowManualAdd(true)} className="flex items-center gap-1.5 bg-emerald-500 hover:bg-white text-black font-black uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] text-gray-900 px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-none">
@@ -774,64 +771,26 @@ export default function HackathonManageClient() {
                                                 <th className="px-4 py-3 font-semibold">Team Name</th>
                                                 <th className="px-4 py-3 font-semibold">Idea Title</th>
                                                 <th className="px-4 py-3 font-semibold">Track</th>
-                                                <th className="px-4 py-3 font-semibold">Status</th>
-                                                <th className="px-4 py-3 font-semibold text-center">Score</th>
+                                                <th className="px-4 py-3 font-semibold text-center">College</th>
                                                 <th className="px-4 py-3 font-semibold text-center">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-50">
                                             {paginatedTeams.map((team: any, index: number) => {
-                                                const evals = team.hackathon_evaluations || [];
-                                                const r1 = evals.filter((e: any) => e.round === 1);
-                                                const r1Avg = r1.length > 0 ? r1.reduce((sum: number, e: any) => sum + Number(e.total_score), 0) / r1.length : 0;
                                                 const members = team.hackathon_participants || [];
                                                 return (
                                                 <tr key={team.id} className="hover:bg-gray-50 transition-colors">
                                                     <td className="px-4 py-3.5 text-gray-400 font-mono font-mono text-xs">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
                                                     <td className="px-4 py-3.5 text-gray-500 font-mono tracking-wider font-mono text-xs">{team.team_code || '—'}</td>
                                                     <td className="px-4 py-3.5 font-semibold text-gray-900">{team.name}</td>
-                                                    <td className="px-4 py-3.5 text-gray-600 max-w-[200px] truncate">{team.idea_title || 'TBD'}</td>
+                                                    <td className="px-4 py-3.5 text-gray-600 max-w-[200px] truncate" title={team.idea_title}>{team.idea_title || 'TBD'}</td>
                                                     <td className="px-4 py-3.5">{team.theme && <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-xl text-xs font-medium border border-purple-100">{team.theme}</span>}</td>
                                                     <td className="px-4 py-3.5">
-                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                            team.status === 'shortlisted' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                                                            team.status === 'evaluating' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
-                                                            team.status === 'checked_in' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                                                            'bg-gray-50 text-gray-600 border border-gray-200'
-                                                        }`}>{(team.status || 'pending')?.replace('_', ' ')}</span>
+                                                        <span className="text-xs text-gray-600 block text-center max-w-[150px] truncate" title={members[0]?.college || 'Unknown'}>{members[0]?.college || 'Unknown'}</span>
                                                     </td>
-                                                    <td className="px-4 py-3.5 text-center font-mono font-bold text-gray-900">{r1Avg > 0 ? r1Avg.toFixed(1) : '—'}</td>
                                                     <td className="px-4 py-3.5 text-center">
                                                         <div className="flex items-center justify-center gap-1">
                                                             <button onClick={() => { setEditingTeam(team); setEditFormData({ teamName: team.name || '', ideaTitle: team.idea_title || '', teamCode: team.team_code || '', theme: team.theme || '', projectObjective: team.project_objective || '', leader: { id: (members.find((p: any) => p.role === 'leader') || members[0] || {}).id || '', name: (members.find((p: any) => p.role === 'leader') || members[0] || {}).name || '', email: (members.find((p: any) => p.role === 'leader') || members[0] || {}).email || '', phone: (members.find((p: any) => p.role === 'leader') || members[0] || {}).phone || '', course: '', section: '', system_id: '', year: '', college: '' }, members: members.filter((p: any) => p.role !== 'leader').map((m: any) => ({ id: m.id || '', name: m.name || '', email: m.email || '', phone: m.phone || '', course: '', section: '', system_id: '', year: '', college: '' })) }); }} className="p-1.5 hover:bg-gray-100 rounded-xl text-gray-400 font-mono hover:text-gray-700 transition-colors" title="Edit"><Edit className="w-3.5 h-3.5" /></button>
-                                                            <button
-                                                                onClick={async () => {
-                                                                    if (!confirm(`Send shortlist email to all members of "${team.name}"?`)) return;
-                                                                    setSendingMailTeamId(team.id);
-                                                                    setMailResult(null);
-                                                                    try {
-                                                                        const res = await emailSingleTeam(team.id);
-                                                                        if (res.error) {
-                                                                            setMessage({ type: 'error', text: res.error });
-                                                                        } else {
-                                                                            setMessage({ type: 'success', text: res.message || 'Email sent!' });
-                                                                            if (res.failedTo && res.failedTo.length > 0) {
-                                                                                setMailResult({ teamId: team.id, sentTo: res.sentTo || [], failedTo: res.failedTo, message: res.message || '' });
-                                                                            }
-                                                                            loadData();
-                                                                        }
-                                                                    } catch (err: any) {
-                                                                        setMessage({ type: 'error', text: err.message || 'Failed to send email.' });
-                                                                    }
-                                                                    setSendingMailTeamId(null);
-                                                                }}
-                                                                disabled={sendingMailTeamId === team.id}
-                                                                className={`p-1.5 rounded-xl transition-colors hover:bg-blue-50 text-gray-400 hover:text-blue-600 disabled:opacity-50`}
-                                                                title="Send shortlist email"
-                                                            >
-                                                                {sendingMailTeamId === team.id ? <div className="w-3.5 h-3.5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
-                                                            </button>
-                                                            <button onClick={() => handleToggleShortlist(team.id, team.status)} className={`p-1.5 rounded-xl transition-colors ${team.status === 'shortlisted' ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-amber-50 text-gray-400 font-mono hover:text-orange-600'}`} title="Toggle shortlist"><Star className="w-3.5 h-3.5" /></button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -855,6 +814,38 @@ export default function HackathonManageClient() {
                             </>
                         )}
                     </div>
+
+                    {/* Team Update Logs Section */}
+                    {teamUpdates.length > 0 && (
+                        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden p-6 mt-8 shadow-none">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Clock className="w-5 h-5 text-indigo-500" /> Recent Team Updates
+                            </h3>
+                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+                                {teamUpdates.map((update) => (
+                                    <div key={update.id} className="p-4 rounded-xl bg-gray-50 border border-gray-200 text-sm">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <span className="font-bold text-gray-900">{update.hackathon_teams?.name || 'Unknown Team'}</span>
+                                                <span className="text-gray-500 font-mono text-xs ml-2">({update.hackathon_teams?.team_code})</span>
+                                            </div>
+                                            <span className="text-xs text-gray-400 font-mono">
+                                                {new Date(update.created_at).toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <div className="text-gray-700 space-y-1">
+                                            <p className="text-xs text-gray-500 font-mono mb-2">Updated by: {update.update_data?.updated_by} ({update.update_data?.email})</p>
+                                            <ul className="list-disc pl-5">
+                                                {(update.update_data?.changes || []).map((c: string, idx: number) => (
+                                                    <li key={idx} className="text-sm">{c}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Timer + Schedule (full width, no evaluators management) */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -971,8 +962,7 @@ export default function HackathonManageClient() {
                                 <textarea value={customEmailBody} onChange={e => setCustomEmailBody(e.target.value)} placeholder="Message body..." rows={3} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-900 focus:outline-none placeholder-gray-400 resize-none" />
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex gap-1">
-                                        <button onClick={() => setCustomEmailTarget('all')} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${customEmailTarget === 'all' ? 'bg-blue-600 text-gray-900' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>All</button>
-                                        <button onClick={() => setCustomEmailTarget('shortlisted')} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${customEmailTarget === 'shortlisted' ? 'bg-emerald-600 text-gray-900' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Shortlisted</button>
+                                        <span className="px-3 py-1.5 rounded-xl text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">Emails All Participants</span>
                                     </div>
                                     <button onClick={async () => { if (!customEmailSubject || !customEmailBody) { setMessage({ type: 'error', text: 'Subject and Body required!' }); return; } if (!confirm(`Send to ${customEmailTarget === 'all' ? 'ALL participants' : 'SHORTLISTED teams'}?`)) return; setBlastingEmail(true); try { const res = await blastCustomEmail(customEmailSubject, customEmailBody, customEmailTarget); if (res.error) setMessage({ type: 'error', text: res.error }); else { setMessage({ type: 'success', text: res.message || 'Sent!' }); setCustomEmailSubject(''); setCustomEmailBody(''); } } catch { setMessage({ type: 'error', text: 'Failed.' }); } setBlastingEmail(false); }} disabled={blastingEmail} className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center gap-1.5"><Send className="w-3.5 h-3.5" /> {blastingEmail ? '...' : 'Send'}</button>
                                 </div>
@@ -1696,6 +1686,9 @@ export default function HackathonManageClient() {
                                 }} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl shadow-sm text-sm font-bold transition-all ${attSettingsSaved ? 'bg-emerald-100 text-emerald-700' : 'bg-violet-600 hover:bg-violet-500 text-gray-900'}`}>
                                     {attSettingsSaved ? <><CheckCircle className="w-4 h-4" /> Saved!</> : 'Save & Load'}
                                 </button>
+                                <button onClick={() => { setAttEventTag(''); setAttEventName(''); setAttSettingsSaved(false); setAttendees([]); }} className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-bold transition-all shadow-sm whitespace-nowrap" title="Clear fields to start a new event">
+                                    <Plus className="w-4 h-4 inline-block mr-1" /> New Event
+                                </button>
                             </div>
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-violet-50 border border-violet-200 rounded-xl shadow-sm">
@@ -1794,6 +1787,10 @@ export default function HackathonManageClient() {
                                     <input type="text" placeholder="Search attendees..." value={attSearchQuery} onChange={e => { setAttSearchQuery(e.target.value); setAttCurrentPage(1); }} className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20" />
                                     <Search className="w-4 h-4 text-gray-400 font-mono absolute left-3 top-1/2 -translate-y-1/2" />
                                 </div>
+                                <label className="flex items-center gap-2 cursor-pointer bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-2 rounded-xl text-sm whitespace-nowrap select-none transition-colors">
+                                    <input type="checkbox" checked={attShardaOnly} onChange={(e) => { setAttShardaOnly(e.target.checked); setAttCurrentPage(1); }} className="rounded text-violet-600 focus:ring-violet-500 w-4 h-4 cursor-pointer" />
+                                    <span className="font-medium text-gray-700">Sharda Only</span>
+                                </label>
                                 <button onClick={async () => { if (confirm('Delete ALL attendees for this event tag? This cannot be undone.')) { await deleteEventAttendees(attEventTag); setAttendees([]); setMessage({ type: 'success', text: 'All attendees deleted.' }); }}} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete all attendees">
                                     <Trash2 className="w-4 h-4" />
                                 </button>
