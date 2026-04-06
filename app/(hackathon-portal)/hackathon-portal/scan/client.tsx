@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
-import { processHackathonQrScan, getAllParticipantsForScan } from "@/lib/actions/hackathon";
+import { processHackathonQrScan, getAllParticipantsForScan, getScannerStats } from "@/lib/actions/hackathon";
 import { ArrowLeft, Camera, QrCode, CheckCircle, AlertCircle, Coffee, ChevronDown, Search, UserCheck, LogOut, ChevronLeft, ChevronRight, X, Undo2 } from "lucide-react";
 import { createClient } from "@/supabase/client";
 
@@ -36,6 +36,16 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
     const [loadingParticipants, setLoadingParticipants] = useState(false);
     const [processingId, setProcessingId] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [stats, setStats] = useState<{ pTotal: number, pScanned: number, vTotal: number, vScanned: number } | null>(null);
+
+    const loadStats = async () => {
+        const s = await getScannerStats(mode, mode === 'food' ? selectedMeal : undefined);
+        setStats(s);
+    };
+
+    useEffect(() => {
+        loadStats();
+    }, [mode, selectedMeal]);
 
     const scannerRef = useRef<Html5Qrcode | null>(null);
 
@@ -226,12 +236,14 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                 scannerRef.current.resume();
             }
         }, 3000);
+        
+        loadStats();
     };
 
-    const handleManualAction = async (participantId: string, actionStr: 'checkin' | 'checkout' | 'food' | 'food_unlog') => {
+    const handleManualAction = async (participantId: string, actionStr: 'checkin' | 'checkout' | 'food') => {
         setProcessingId(participantId);
         try {
-            const result = await processHackathonQrScan(participantId, actionStr, (actionStr === 'food' || actionStr === 'food_unlog') ? selectedMeal : undefined);
+            const result = await processHackathonQrScan(participantId, actionStr, actionStr === 'food' ? selectedMeal : undefined);
             if (result.success) {
                 setMessage(result.message || "Success!");
                 setScanResult('success');
@@ -241,7 +253,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                     return {
                         ...p,
                         is_checked_in: actionStr === 'checkout' ? false : (actionStr === 'checkin' ? true : p.is_checked_in),
-                        food_count: actionStr === 'food' ? (p.food_count || 0) + 1 : (actionStr === 'food_unlog' ? Math.max(0, (p.food_count || 1) - 1) : p.food_count)
+                        food_count: actionStr === 'food' ? (p.food_count || 0) + 1 : p.food_count
                     };
                 }));
             } else if (result.message === "Already checked in" || result.message === "Not checked in") {
@@ -257,6 +269,7 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
         }
         setProcessingId(null);
         setTimeout(() => { setScanResult(null); setMessage(""); }, 3000);
+        loadStats();
     };
 
     return (
@@ -361,10 +374,31 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                         </div>
 
                         {/* Count info */}
-                        <div className="flex items-center justify-between text-[11px] text-gray-500 font-mono tracking-wider px-1">
+                        <div className="flex items-center justify-between text-[11px] text-gray-500 font-mono tracking-wider px-1 mb-2">
                             <span>{filteredParticipants.length} participant{filteredParticipants.length !== 1 ? 's' : ''} {searchQuery ? 'found' : 'total'}</span>
                             {totalPages > 1 && <span>Page {currentPage} of {totalPages}</span>}
                         </div>
+                        
+                        {/* Overall stats widget */}
+                        {stats && !searchQuery && (
+                            <div className="flex gap-2 p-3 bg-gray-50 rounded-xl shadow-sm border border-gray-100 mb-4 items-center overflow-hidden">
+                                <div className="flex-1">
+                                    <p className="text-[10px] uppercase text-gray-500 font-bold mb-1">Participants</p>
+                                    <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1 dark:bg-gray-700 overflow-hidden">
+                                        <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${stats.pTotal ? (stats.pScanned / stats.pTotal) * 100 : 0}%` }}></div>
+                                    </div>
+                                    <p className="text-xs font-mono font-bold">{stats.pScanned} / {stats.pTotal}</p>
+                                </div>
+                                <div className="w-px h-10 bg-gray-200"></div>
+                                <div className="flex-1 pl-2">
+                                    <p className="text-[10px] uppercase text-gray-500 font-bold mb-1">Volunteers</p>
+                                    <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1 dark:bg-gray-700 overflow-hidden">
+                                        <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${stats.vTotal ? (stats.vScanned / stats.vTotal) * 100 : 0}%` }}></div>
+                                    </div>
+                                    <p className="text-xs font-mono font-bold">{stats.vScanned} / {stats.vTotal}</p>
+                                </div>
+                            </div>
+                        )}
 
                         {loadingParticipants ? (
                             <div className="text-center py-6">
@@ -382,8 +416,14 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                         <div className="flex-1 min-w-0 mr-3">
                                             <p className="text-sm font-bold text-gray-900 truncate">{p.name}</p>
                                             <p className="text-[11px] text-gray-500 font-mono tracking-wider truncate">
-                                                {p.hackathon_teams?.team_code && <span className="text-amber-400 font-mono mr-1.5">{p.hackathon_teams.team_code}</span>}
-                                                {p.hackathon_teams?.name || ''} · {p.role}
+                                                {p.is_volunteer ? (
+                                                    <span className="text-blue-500 font-mono mr-1.5">{p.role} {p.shift ? `· ${p.shift}` : '· Both Slots'}</span>
+                                                ) : (
+                                                    <>
+                                                        {p.hackathon_teams?.team_code && <span className="text-amber-400 font-mono mr-1.5">{p.hackathon_teams.team_code}</span>}
+                                                        {p.hackathon_teams?.name || ''} · {p.role}
+                                                    </>
+                                                )}
                                             </p>
                                             <p className="text-[11px] text-gray-600 truncate">{p.email}</p>
                                         </div>
@@ -422,13 +462,6 @@ export default function HackathonScannerClient({ portalMode = false }: { portalM
                                                         className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 bg-[#FF6B00] hover:bg-white text-black font-black uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] text-gray-900"
                                                     >
                                                         {processingId === p.id ? '...' : 'Log'}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleManualAction(p.id, 'food_unlog')}
-                                                        disabled={processingId === p.id}
-                                                        className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 bg-rose-600 hover:bg-rose-500 text-gray-900"
-                                                    >
-                                                        {processingId === p.id ? '...' : 'Unlog'}
                                                     </button>
                                                 </div>
                                             )}

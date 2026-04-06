@@ -1616,6 +1616,10 @@ export async function processHackathonQrScan(participantId: string, actionUrl: '
 
     if (!qrTarget) return { error: "Invalid QR Code: Person not found." }
 
+    if (targetType === 'volunteer' && session.user.role !== 'super_admin') {
+        return { error: "Unauthorized: Only super_admin can scan volunteers." }
+    }
+
     const tableStr = targetType === 'participant' ? 'hackathon_participants' : 'hackathon_volunteers'
 
     if (actionUrl === 'checkin') {
@@ -1700,37 +1704,8 @@ export async function processHackathonQrScan(participantId: string, actionUrl: '
     }
 
     if (actionUrl === 'food_unlog') {
-        const mealType = mealRound || 'default'
-
-        // Check if this person has a log for this meal round
-        let query = supabase.from('hackathon_food_logs').select('id').eq('meal_type', targetType === 'participant' ? mealType : mealType + `_vol_${participantId}`)
-        
-        if (targetType === 'participant') {
-            query = query.eq('participant_id', participantId)
-        } else {
-            query = query.eq('volunteer_id', participantId)
-        }
-
-        const { data: existingLog } = await query.maybeSingle()
-
-        if (!existingLog) {
-            return { error: `${qrTarget.name} has no meal log for "${mealType}" to remove.` }
-        }
-
-        const { error: deleteError } = await supabase
-            .from('hackathon_food_logs')
-            .delete()
-            .eq('id', existingLog.id)
-
-        if (deleteError) return { error: deleteError.message }
-
-        const newCount = Math.max(0, (qrTarget.food_count || 1) - 1)
-        await supabase
-            .from(tableStr)
-            .update({ food_count: newCount })
-            .eq('id', participantId)
-
-        return { success: true, participant: qrTarget, message: `🗑️ ${qrTarget.name} — "${mealType}" unlogged! (Total meals: ${newCount})` }
+        // Food unlog removed as per requirements
+        return { error: "Food unlog is disabled." }
     }
 
     return { error: "Invalid action" }
@@ -1872,24 +1847,31 @@ export async function getAllParticipantsForScan(page: number = 1, pageSize: numb
     // Also fetch all volunteers and merge them in, but only on page 1 so we don't duplicate them across pages
     let finalParticipants: any[] = participants || []
     
-    if (page === 1) {
-        const { data: vols } = await supabase
-            .from('hackathon_volunteers')
-            .select('*')
-        
-        if (vols && vols.length > 0) {
-            const mappedVols = vols.map(v => ({
-                id: v.id,
-                name: v.name,
-                email: v.email,
-                phone: null,
-                role: 'Staff Volunteer',
-                is_checked_in: v.is_checked_in || false,
-                food_count: v.food_count || 0,
-                hackathon_teams: v.team_name ? { name: v.team_name, team_code: 'VOLUNTEER' } : null,
-                is_volunteer: true
-            }))
-            finalParticipants = [...mappedVols, ...finalParticipants]
+    if (page === 1 && isAdmin) {
+        let qs = supabase.from('hackathon_volunteers').select('*')
+        // Only return volunteers for super_admin
+        if (session.user.role === 'super_admin') {
+            const { data: vols } = await qs
+            
+            if (vols && vols.length > 0) {
+                const mappedVols = vols.map(v => ({
+                    id: v.id,
+                    name: v.name,
+                    email: v.email,
+                    phone: v.mobile || null,
+                    role: 'Staff Volunteer',
+                    shift: v.shift || null,
+                    department: v.department || null,
+                    section: v.section || null,
+                    system_id: v.system_id || null,
+                    year: v.year || null,
+                    is_checked_in: v.is_checked_in || false,
+                    food_count: v.food_count || 0,
+                    hackathon_teams: { name: v.team_name || 'Volunteer', team_code: 'VOLUNTEER' },
+                    is_volunteer: true
+                }))
+                finalParticipants = [...mappedVols, ...finalParticipants]
+            }
         }
     }
 
@@ -1899,6 +1881,48 @@ export async function getAllParticipantsForScan(page: number = 1, pageSize: numb
 // ==========================================
 // VOLUNTEER MANAGEMENT
 // ==========================================
+
+export async function getScannerStats(mode: 'checkin' | 'food', mealRound?: string) {
+    const session = await auth()
+    if (!session || !session.user) return null
+
+    const supabase = await getSupabase()
+
+    let pTotal = 0, pScanned = 0
+    let vTotal = 0, vScanned = 0
+
+    // Participants count
+    const { count: partTotal } = await supabase.from('hackathon_participants').select('id', { count: 'exact', head: true })
+    pTotal = partTotal || 0
+
+    // Volunteers count
+    const { count: volTotalRes } = await supabase.from('hackathon_volunteers').select('id', { count: 'exact', head: true })
+    vTotal = volTotalRes || 0
+
+    if (mode === 'checkin') {
+        const { count: partIn } = await supabase.from('hackathon_participants').select('id', { count: 'exact', head: true }).eq('is_checked_in', true)
+        const { count: volIn } = await supabase.from('hackathon_volunteers').select('id', { count: 'exact', head: true }).eq('is_checked_in', true)
+        pScanned = partIn || 0
+        vScanned = volIn || 0
+    } else if (mode === 'food' && mealRound) {
+        const mealType = mealRound || 'default'
+        
+        // Participants who took meal
+        const { count: pMealCount } = await supabase.from('hackathon_food_logs').select('id', { count: 'exact', head: true })
+            .eq('meal_type', mealType)
+            .not('participant_id', 'is', null)
+        pScanned = pMealCount || 0
+
+        // Volunteers who took meal (meal_type starts with mealType + '_vol_')
+        // actually easier: volunteer_id is not null? We don't have volunteer_id populated accurately in all iterations. But we can just use `not volunteer_id is null` if we added it, wait.
+        // We do: `volunteer_id: targetType === 'volunteer' ? participantId : null` in insert. 
+        const { count: vMealCount } = await supabase.from('hackathon_food_logs').select('id', { count: 'exact', head: true })
+            .like('meal_type', `${mealType}_vol_%`)
+        vScanned = vMealCount || 0
+    }
+
+    return { pTotal, pScanned, vTotal, vScanned }
+}
 
 export async function checkVolunteerAccess() {
     const session = await auth()

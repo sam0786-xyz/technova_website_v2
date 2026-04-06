@@ -1452,9 +1452,9 @@ export default function HackathonManageClient() {
                                                     className="bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-700 font-mono focus:outline-none focus:border-blue-400 min-w-[120px]"
                                                 >
                                                     <option value="">No Shift</option>
-                                                    <option value="Both Shifts">Both Shifts</option>
+                                                    <option value="Both Slots">Both Slots</option>
                                                     <option value="Slot 1 (9 AM to 5 PM)">Slot 1 (9 AM to 5 PM)</option>
-                                                    <option value="Slot 2 (5 PM to 1 AM)">Slot 2 (5 PM to 1 AM)</option>
+                                                    <option value="Slot 2 (5 PM to 9 AM)">Slot 2 (5 PM to 9 AM)</option>
                                                 </select>
                                                 <button
                                                     onClick={async () => { await removeVolunteer(v.id); loadData(); }}
