@@ -781,7 +781,48 @@ export default function HackathonManageClient() {
                                 </select>
                             </div>
                             <div className="flex gap-2 flex-wrap">
-                                <button onClick={() => { const exportData = filteredTeams.map(t => ({ 'Team': t.name, 'Idea': t.idea_title, 'Track': t.theme })); downloadCSV(exportData, 'teams_export.csv'); }} className="flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm transition-colors">
+                                <button onClick={() => {
+                                    const exportData = filteredTeams.map((t: any) => {
+                                        const members = t.hackathon_participants || [];
+                                        const leader = members.find((p: any) => p.role === 'leader' || p.role === 'Leader') || members[0] || {};
+                                        const otherMembers = members.filter((p: any) => p.id !== leader.id);
+                                        const row: any = {
+                                            'Team ID': t.team_code || '',
+                                            'Team Name': t.name || '',
+                                            'Idea/Project Title': t.idea_title || '',
+                                            'Track': t.theme || '',
+                                            'Project Objective': t.project_objective || '',
+                                            'Status': t.status || '',
+                                            'Table Number': t.table_number || '',
+                                            'College Name': leader.college || members[0]?.college || '',
+                                            'Leader Name': leader.name || '',
+                                            'Leader Email': leader.email || '',
+                                            'Leader Phone': leader.phone || '',
+                                        };
+                                        for (let i = 0; i < 4; i++) {
+                                            const m = otherMembers[i] || {};
+                                            row[`Member ${i + 1} Name`] = m.name || '';
+                                            row[`Member ${i + 1} Email`] = m.email || '';
+                                            row[`Member ${i + 1} Phone`] = m.phone || '';
+                                            row[`Member ${i + 1} College`] = m.college || '';
+                                        }
+                                        row['Total Members'] = members.length;
+                                        row['Student Coordinator'] = t.student_coordinator || '';
+                                        row['Coordinator Phone'] = t.coordinator_phone || '';
+                                        row['Need Accommodation'] = t.need_accommodation ? 'Yes' : 'No';
+                                        row['Accommodation Boys'] = t.accommodation_boys || 0;
+                                        row['Accommodation Girls'] = t.accommodation_girls || 0;
+                                        row['Sex Ratio'] = t.sex_ratio || '';
+                                        row['Arrival Date'] = t.arrival_date || '';
+                                        row['Departure Date'] = t.departure_date || '';
+                                        row['Mentor'] = t.mentor_name || '';
+                                        row['Remarks'] = t.remarks || '';
+                                        row['QR Emailed'] = t.qr_emailed ? 'Yes' : 'No';
+                                        row['Checked In'] = members.some((p: any) => p.is_checked_in) ? 'Yes' : 'No';
+                                        return row;
+                                    });
+                                    downloadCSV(exportData, `hackathon_teams_complete_${new Date().toISOString().split('T')[0]}.csv`);
+                                }} className="flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm transition-colors">
                                     <Download className="w-3.5 h-3.5" /> Export CSV
                                 </button>
                                 <button onClick={async () => { if (!confirm(`This will email QR codes to all teams that haven't been emailed yet. Continue?`)) return; setMessage({ type: 'success', text: '📧 Sending QR code emails...' }); try { const res = await fetch('/api/admin/hackathon-qr-emails', { method: 'POST' }); const data = await res.json(); if (data.error) setMessage({ type: 'error', text: data.error }); else setMessage({ type: data.failed > 0 ? 'error' : 'success', text: data.message || `QR codes emailed! ${data.sent} sent, ${data.failed} failed, ${data.skipped} skipped.` }); loadData(); } catch (err: any) { setMessage({ type: 'error', text: err.message || 'Failed to send QR emails.' }); } }} className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 px-3 py-2 rounded-xl text-sm transition-colors">
