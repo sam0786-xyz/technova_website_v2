@@ -485,10 +485,10 @@ export default function HackathonPage() {
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
                                 {[
-                                    { icon: DoorOpen, time: "9:30 AM", label: "Latest Arrival", note: "All teams must report", color: "#FF6B00" },
+                                    { icon: DoorOpen, time: "10:00 AM", label: "Inauguration", note: "All teams must report", color: "#FF6B00" },
                                     { icon: Flag, time: "10:30 AM", label: "Hackathon Starts", note: "10th April, sharp", color: "#00FF41" },
                                     { icon: Clock, time: "10:30 AM", label: "Hackathon Ends", note: "11th April", color: "#FF4136" },
-                                    { icon: PartyPopper, time: "By 4:00 PM", label: "Closing Ceremony", note: "Evaluation + Felicitation", color: "#FFD700" }
+                                    { icon: PartyPopper, time: "2:00 PM", label: "Closing Ceremony", note: "Evaluation + Felicitation", color: "#FFD700" }
                                 ].map((item, i) => (
                                     <motion.div key={i} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.3, ease: EASE_OUT }} className="text-center sm:text-left">
                                         <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 mx-auto sm:mx-0" style={{ background: `${item.color}15`, border: `1px solid ${item.color}30` }}>
