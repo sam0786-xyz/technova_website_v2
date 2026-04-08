@@ -651,7 +651,7 @@ export default function TeamUpdatePage() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">Course</label>
+                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">Course <span className="text-[8px] normal-case font-normal text-white/20">(Optional - Sharda Only)</span></label>
                                                     <input
                                                         type="text"
                                                         value={member.course || ''}
@@ -661,7 +661,7 @@ export default function TeamUpdatePage() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">Section</label>
+                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">Section <span className="text-[8px] normal-case font-normal text-white/20">(Optional - Sharda Only)</span></label>
                                                     <input
                                                         type="text"
                                                         value={member.section || ''}
@@ -671,7 +671,7 @@ export default function TeamUpdatePage() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">System ID</label>
+                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">System ID <span className="text-[8px] normal-case font-normal text-white/20">(Optional - Sharda Only)</span></label>
                                                     <input
                                                         type="text"
                                                         value={member.system_id || ''}
@@ -681,7 +681,7 @@ export default function TeamUpdatePage() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">Year</label>
+                                                    <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5 block">Year <span className="text-[8px] normal-case font-normal text-white/20">(Optional - Sharda Only)</span></label>
                                                     <input
                                                         type="text"
                                                         value={member.year || ''}
