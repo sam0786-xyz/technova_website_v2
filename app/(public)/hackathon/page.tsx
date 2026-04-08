@@ -293,7 +293,7 @@ export default function HackathonPage() {
                                     <div className="text-[9px] sm:text-[10px] text-white/40 uppercase tracking-widest mt-2 font-bold leading-tight">Registered<br />Teams</div>
                                 </div>
                                 <div className="bg-indigo-500/[0.05] border border-indigo-500/20 rounded-xl p-5 text-center shadow-[0_0_20px_rgba(99,102,241,0.05)] flex flex-col justify-center min-h-[110px]">
-                                    <div className="text-3xl sm:text-4xl font-heading font-black text-indigo-400 tracking-tight"><AnimatedCounter value={97} /></div>
+                                    <div className="text-3xl sm:text-4xl font-heading font-black text-indigo-400 tracking-tight"><AnimatedCounter value={98} /></div>
                                     <div className="text-[9px] sm:text-[10px] text-indigo-400/70 uppercase tracking-widest mt-2 font-bold leading-tight">Selected For<br />Finals</div>
                                 </div>
                             </div>
