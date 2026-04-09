@@ -781,9 +781,21 @@ export default function HackathonManageClient() {
                                 </select>
                             </div>
                             <div className="flex gap-2 flex-wrap">
-                                <button onClick={() => {
-                                    const exportData = filteredTeams.map((t: any) => {
-                                        const members = t.hackathon_participants || [];
+                                <button onClick={async () => {
+                                    setMessage({ type: 'success', text: 'Fetching latest data for export...' });
+                                    try {
+                                        const freshTeams = await getHackathonTeams();
+                                        // Keep same filter logic as UI if search/filters are active, or just export all fresh data?
+                                        // The original logic used filteredTeams. To keep it consistent, apply filters to freshTeams
+                                        const exportTeams = freshTeams.filter((t: any) => {
+                                            const matchesSearch = t.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                                                  t.team_code?.toLowerCase().includes(searchQuery.toLowerCase());
+                                            const matchesTheme = selectedTheme === 'ALL' || t.theme === selectedTheme;
+                                            return matchesSearch && matchesTheme;
+                                        });
+
+                                        const exportData = exportTeams.map((t: any) => {
+                                            const members = t.hackathon_participants || [];
                                         const leader = members.find((p: any) => p.role === 'leader' || p.role === 'Leader') || members[0] || {};
                                         const otherMembers = members.filter((p: any) => p.id !== leader.id);
                                         const row: any = {
@@ -798,6 +810,10 @@ export default function HackathonManageClient() {
                                             'Leader Name': leader.name || '',
                                             'Leader Email': leader.email || '',
                                             'Leader Phone': leader.phone || '',
+                                            'Leader System ID': leader.system_id || '',
+                                            'Leader Course': leader.course || '',
+                                            'Leader Section': leader.section || '',
+                                            'Leader Year': leader.year || '',
                                         };
                                         for (let i = 0; i < 4; i++) {
                                             const m = otherMembers[i] || {};
@@ -805,6 +821,10 @@ export default function HackathonManageClient() {
                                             row[`Member ${i + 1} Email`] = m.email || '';
                                             row[`Member ${i + 1} Phone`] = m.phone || '';
                                             row[`Member ${i + 1} College`] = m.college || '';
+                                            row[`Member ${i + 1} System ID`] = m.system_id || '';
+                                            row[`Member ${i + 1} Course`] = m.course || '';
+                                            row[`Member ${i + 1} Section`] = m.section || '';
+                                            row[`Member ${i + 1} Year`] = m.year || '';
                                         }
                                         row['Total Members'] = members.length;
                                         row['Student Coordinator'] = t.student_coordinator || '';
@@ -820,8 +840,13 @@ export default function HackathonManageClient() {
                                         row['QR Emailed'] = t.qr_emailed ? 'Yes' : 'No';
                                         row['Checked In'] = members.some((p: any) => p.is_checked_in) ? 'Yes' : 'No';
                                         return row;
-                                    });
-                                    downloadCSV(exportData, `hackathon_teams_complete_${new Date().toISOString().split('T')[0]}.csv`);
+                                        });
+                                        downloadCSV(exportData, `hackathon_teams_complete_${new Date().toISOString().split('T')[0]}.csv`);
+                                        setMessage(null);
+                                    } catch (error) {
+                                        console.error(error);
+                                        setMessage({ type: 'error', text: 'Failed to fetch latest data.' });
+                                    }
                                 }} className="flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm transition-colors">
                                     <Download className="w-3.5 h-3.5" /> Export CSV
                                 </button>
