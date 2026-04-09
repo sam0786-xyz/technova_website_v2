@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
         theme: t.theme,
         status: t.status,
         table_number: t.table_number,
-        is_shortlisted: t.status === 'shortlisted',
+        is_shortlisted: t.status?.trim().toLowerCase() === 'shortlisted',
         project_objective: t.project_objective,
         member_count: (t.hackathon_participants as any[])?.length || 0,
         members: ((t.hackathon_participants as any[]) || []).map((p: any) => ({

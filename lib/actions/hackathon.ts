@@ -1251,7 +1251,7 @@ export async function getPublicShortlistedTeams() {
         .select(`
             id, name, idea_title, table_number, total_score
         `)
-        .eq('status', 'shortlisted')
+        .ilike('status', '%shortlisted%')
         .order('total_score', { ascending: false })
 
     if (error) {

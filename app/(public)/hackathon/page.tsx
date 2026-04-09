@@ -485,7 +485,7 @@ export default function HackathonPage() {
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
                                 {[
-                                    { icon: DoorOpen, time: "10:00 AM", label: "Inauguration", note: "All teams must report", color: "#FF6B00" },
+                                    { icon: DoorOpen, time: "8:30 AM", label: "Reporting Time", note: "All teams must report", color: "#FF6B00" },
                                     { icon: Flag, time: "10:30 AM", label: "Hackathon Starts", note: "10th April, sharp", color: "#00FF41" },
                                     { icon: Clock, time: "10:30 AM", label: "Hackathon Ends", note: "11th April", color: "#FF4136" },
                                     { icon: PartyPopper, time: "2:00 PM", label: "Closing Ceremony", note: "Evaluation + Felicitation", color: "#FFD700" }
