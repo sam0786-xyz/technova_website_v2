@@ -1,7 +1,7 @@
 import { checkHackathonRole, getHackathonSettings, getHackathonTeams, getEvaluators, getVolunteers } from "@/lib/actions/hackathon"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { ClipboardList, QrCode, Settings, Radio, UserCheck, Users, Timer, ChevronRight, BarChart3, Activity, MapPin, ShieldAlert } from "lucide-react"
+import { ClipboardList, QrCode, Settings, Radio, UserCheck, Users, Timer, ChevronRight, BarChart3, Activity, MapPin, ShieldAlert, DoorOpen } from "lucide-react"
 import LiveTimer from "./components/LiveTimer"
 
 export default async function HackathonPortalHub() {
@@ -84,6 +84,14 @@ export default async function HackathonPortalHub() {
                 bgColor: "bg-white",
                 accentColor: "text-violet-600 bg-violet-50",
             },
+            {
+                title: "Gate Scanner",
+                desc: "Track entry/exit movements at the venue gate with timestamped logs.",
+                href: "/hackathon-portal/gate-scan",
+                icon: DoorOpen,
+                bgColor: "bg-white",
+                accentColor: "text-teal-600 bg-teal-50",
+            },
         )
     }
 
@@ -114,6 +122,14 @@ export default async function HackathonPortalHub() {
             icon: MapPin,
             bgColor: "bg-white",
             accentColor: "text-violet-600 bg-violet-50", 
+        })
+        cards.push({
+            title: "Gate Scanner",
+            desc: "Track entry/exit movements at the venue gate with timestamped logs.",
+            href: "/hackathon-portal/gate-scan",
+            icon: DoorOpen,
+            bgColor: "bg-white",
+            accentColor: "text-teal-600 bg-teal-50",
         })
     }
 

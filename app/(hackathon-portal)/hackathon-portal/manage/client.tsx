@@ -14,10 +14,11 @@ import {
     importEventAttendees, getEventAttendees, deleteEventAttendees, sendAttendeeQrEmails,
     getAttendanceCheckpoints, updateAttendanceCheckpoints, getAttendanceReport,
     saveAttendanceEventSettings, getAttendanceEventSettings, updateSingleAttendee,
-    getHackathonTeamUpdates
+    getHackathonTeamUpdates,
+    getGateLogs
 } from "@/lib/actions/hackathon";
 import * as XLSX from "xlsx";
-import { Download, Upload, Users, AlertCircle, CheckCircle, Search, Trash2, Mail, ExternalLink, RefreshCw, Save, Edit2, X, FileDown, Cpu, Clock, Calendar, QrCode, StopCircle, Star, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Shield, Utensils, Settings, Send, Minus, MapPin } from "lucide-react";
+import { Download, Upload, Users, AlertCircle, CheckCircle, Search, Trash2, Mail, ExternalLink, RefreshCw, Save, Edit2, X, FileDown, Cpu, Clock, Calendar, QrCode, StopCircle, Star, UserCheck, Plus, ChevronLeft, ChevronRight, Edit, Shield, Utensils, Settings, Send, Minus, MapPin, DoorOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import LiveTimer from "../components/LiveTimer";
@@ -613,6 +614,21 @@ export default function HackathonManageClient() {
         downloadCSV(exportData, `volunteers_${new Date().toISOString().split('T')[0]}.csv`);
     };
 
+    const handleDownloadGateLogs = async () => {
+        setMessage({ type: 'success', text: 'Fetching gate logs...' });
+        try {
+            const result = await getGateLogs();
+            if (result.error && result.data.length === 0) {
+                setMessage({ type: 'error', text: result.error });
+            } else {
+                downloadCSV(result.data, `gate_logs_${new Date().toISOString().split('T')[0]}.csv`);
+                setMessage(null);
+            }
+        } catch (err: any) {
+            setMessage({ type: 'error', text: err.message || 'Failed to fetch gate logs.' });
+        }
+    };
+
     const uniqueThemes = [...new Set(teams.map(t => t.theme).filter(Boolean))];
     const uniqueColleges = Array.from(new Set(
         teams.flatMap(t => (t.hackathon_participants || []).map((p:any) => p.college || "Unknown"))
@@ -678,6 +694,9 @@ export default function HackathonManageClient() {
                     </button>
                     <button onClick={handleDownloadAccommodation} className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl shadow-sm text-sm transition-colors">
                         <Download className="w-3.5 h-3.5" /> Accommodation
+                    </button>
+                    <button onClick={handleDownloadGateLogs} className="flex items-center gap-2 bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-700 px-3 py-2 rounded-xl shadow-sm text-sm transition-colors">
+                        <DoorOpen className="w-3.5 h-3.5" /> Gate Logs
                     </button>
                 </div>
             </div>

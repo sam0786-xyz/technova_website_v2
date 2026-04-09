@@ -2707,3 +2707,149 @@ export async function getHackathonTeamUpdates() {
         
     return data || [];
 }
+
+// ==========================================
+// GATE ENTRY/EXIT SCANNER
+// ==========================================
+
+export async function processGateScan(participantId: string) {
+    const { role } = await checkHackathonRole()
+    if (role !== 'organizer' && role !== 'volunteer') return { error: "Unauthorized" }
+
+    const session = await auth()
+    if (!session || !session.user) return { error: "Unauthorized" }
+
+    const supabase = await getSupabase()
+
+    // Look up the participant
+    const { data: participant } = await supabase
+        .from('hackathon_participants')
+        .select('id, name, email, role, hackathon_teams(name, team_code)')
+        .eq('id', participantId)
+        .maybeSingle()
+
+    if (!participant) return { error: "Invalid QR Code: Person not found." }
+
+    // Get the last gate log for this participant to auto-toggle direction
+    const { data: lastLog } = await supabase
+        .from('hackathon_gate_logs')
+        .select('direction')
+        .eq('participant_id', participantId)
+        .order('scanned_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+    // Auto-toggle: first scan = entry, then alternate
+    const direction = lastLog?.direction === 'entry' ? 'exit' : 'entry'
+
+    // Insert the gate log
+    const { error: insertError } = await supabase
+        .from('hackathon_gate_logs')
+        .insert({
+            participant_id: participantId,
+            direction,
+            scanned_by: session.user.email || session.user.name || 'unknown'
+        })
+
+    if (insertError) return { error: insertError.message }
+
+    const teamInfo = (participant as any).hackathon_teams
+    const dirLabel = direction === 'entry' ? '🟢 ENTRY' : '🟠 EXIT'
+
+    return {
+        success: true,
+        direction,
+        participant: {
+            name: participant.name,
+            role: participant.role,
+            teamName: teamInfo?.name || '',
+            teamCode: teamInfo?.team_code || '',
+        },
+        message: `${dirLabel} — ${participant.name} (${teamInfo?.team_code || 'N/A'})`
+    }
+}
+
+export async function getGateStats() {
+    const { role } = await checkHackathonRole()
+    if (role !== 'organizer' && role !== 'volunteer') return null
+
+    const supabase = await getSupabase()
+
+    // Total participants
+    const { count: totalParticipants } = await supabase
+        .from('hackathon_participants')
+        .select('id', { count: 'exact', head: true })
+
+    // Total gate scans
+    const { count: totalScans } = await supabase
+        .from('hackathon_gate_logs')
+        .select('id', { count: 'exact', head: true })
+
+    // Get the latest gate log per participant to determine who is inside/outside
+    // We need to fetch the latest direction for each participant
+    const { data: allLogs } = await supabase
+        .from('hackathon_gate_logs')
+        .select('participant_id, direction, scanned_at')
+        .order('scanned_at', { ascending: false })
+
+    // Build a map: participantId -> latest direction
+    const latestDirection = new Map<string, string>()
+    for (const log of (allLogs || [])) {
+        if (!latestDirection.has(log.participant_id)) {
+            latestDirection.set(log.participant_id, log.direction)
+        }
+    }
+
+    let insideCount = 0
+    let outsideCount = 0
+    latestDirection.forEach((dir) => {
+        if (dir === 'entry') insideCount++
+        else outsideCount++
+    })
+
+    return {
+        totalParticipants: totalParticipants || 0,
+        totalScans: totalScans || 0,
+        insideCount,
+        outsideCount,
+        trackedCount: latestDirection.size, // participants who have been scanned at least once
+    }
+}
+
+export async function getGateLogs() {
+    const session = await auth()
+    if (!session || !session.user || !['admin', 'super_admin', 'student_lead'].includes(session.user.role as string)) {
+        return { error: "Unauthorized", data: [] }
+    }
+
+    const supabase = await getSupabase()
+
+    const { data: logs, error } = await supabase
+        .from('hackathon_gate_logs')
+        .select(`
+            id, direction, scanned_by, scanned_at,
+            hackathon_participants (
+                name, email, role,
+                hackathon_teams (name, team_code)
+            )
+        `)
+        .order('scanned_at', { ascending: false })
+
+    if (error) {
+        console.error('[getGateLogs] error:', error)
+        return { error: error.message, data: [] }
+    }
+
+    return {
+        data: (logs || []).map((log: any) => ({
+            'Participant Name': log.hackathon_participants?.name || '',
+            'Email': log.hackathon_participants?.email || '',
+            'Role': log.hackathon_participants?.role || '',
+            'Team Name': log.hackathon_participants?.hackathon_teams?.name || '',
+            'Team Code': log.hackathon_participants?.hackathon_teams?.team_code || '',
+            'Direction': log.direction === 'entry' ? 'ENTRY' : 'EXIT',
+            'Timestamp': log.scanned_at ? new Date(log.scanned_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '',
+            'Scanned By': log.scanned_by || '',
+        }))
+    }
+}
