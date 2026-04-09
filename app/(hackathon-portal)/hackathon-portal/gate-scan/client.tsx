@@ -11,6 +11,7 @@ export default function GateScannerClient() {
     const [message, setMessage] = useState("");
     const [participantName, setParticipantName] = useState("");
     const [teamInfo, setTeamInfo] = useState("");
+    const [timeOutside, setTimeOutside] = useState("");
     const [isScanning, setIsScanning] = useState(false);
     const [cameraActive, setCameraActive] = useState(false);
     const [cameraError, setCameraError] = useState("");
@@ -158,6 +159,7 @@ export default function GateScannerClient() {
                 setMessage(result.message || "Success!");
                 setParticipantName(result.participant?.name || "");
                 setTeamInfo(result.participant?.teamCode ? `${result.participant.teamName} (${result.participant.teamCode})` : "");
+                setTimeOutside(result.timeOutside || "");
             } else {
                 playErrorSound();
                 setScanResult('error');
@@ -175,6 +177,7 @@ export default function GateScannerClient() {
             setMessage("");
             setParticipantName("");
             setTeamInfo("");
+            setTimeOutside("");
             setIsScanning(false);
             if (scannerRef.current) {
                 try { scannerRef.current.resume(); } catch { }
@@ -201,7 +204,7 @@ export default function GateScannerClient() {
                 {/* Info Banner */}
                 <div className="bg-teal-50 border border-teal-200 rounded-xl p-3">
                     <p className="text-xs text-teal-700 font-medium text-center">
-                        Scan QR when participants <strong>enter</strong> or <strong>exit</strong> the venue. Direction is auto-detected.
+                        All participants start <strong>INSIDE</strong>. Scan when going <strong>out</strong> or coming <strong>back in</strong>. Direction auto-toggles.
                     </p>
                 </div>
 
@@ -304,6 +307,9 @@ export default function GateScannerClient() {
                             )}
                             {teamInfo && (
                                 <p className="text-sm font-medium text-white/80 mb-2">{teamInfo}</p>
+                            )}
+                            {timeOutside && (
+                                <p className="text-sm font-bold text-white bg-white/20 px-3 py-1 rounded-full mb-2">⏱ {timeOutside}</p>
                             )}
                             <p className="text-white/90 font-medium text-sm">{message}</p>
                             <p className="text-white/50 text-[10px] font-mono mt-2">

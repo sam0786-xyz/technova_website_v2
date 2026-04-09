@@ -620,10 +620,15 @@ export default function HackathonManageClient() {
             const result = await getGateLogs();
             if (result.error && result.data.length === 0) {
                 setMessage({ type: 'error', text: result.error });
-            } else {
-                downloadCSV(result.data, `gate_logs_${new Date().toISOString().split('T')[0]}.csv`);
-                setMessage(null);
+                return;
             }
+            if (!result.data || result.data.length === 0) {
+                setMessage({ type: 'error', text: 'No gate logs recorded yet. Logs will appear once scanning begins.' });
+                return;
+            }
+            downloadCSV(result.data, `gate_logs_${new Date().toISOString().split('T')[0]}.csv`);
+            setMessage({ type: 'success', text: `Downloaded ${result.data.length} gate log entries.` });
+            setTimeout(() => setMessage(null), 3000);
         } catch (err: any) {
             setMessage({ type: 'error', text: err.message || 'Failed to fetch gate logs.' });
         }

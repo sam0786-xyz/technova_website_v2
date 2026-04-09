@@ -2707,7 +2707,6 @@ export async function getHackathonTeamUpdates() {
         
     return data || [];
 }
-
 // ==========================================
 // GATE ENTRY/EXIT SCANNER
 // ==========================================
@@ -2733,14 +2732,14 @@ export async function processGateScan(participantId: string) {
     // Get the last gate log for this participant to auto-toggle direction
     const { data: lastLog } = await supabase
         .from('hackathon_gate_logs')
-        .select('direction')
+        .select('direction, scanned_at')
         .eq('participant_id', participantId)
         .order('scanned_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 
-    // Auto-toggle: first scan = entry, then alternate
-    const direction = lastLog?.direction === 'entry' ? 'exit' : 'entry'
+    // Everyone starts INSIDE. First scan = exit (going out), then toggle.
+    const direction = lastLog?.direction === 'exit' ? 'entry' : 'exit'
 
     // Insert the gate log
     const { error: insertError } = await supabase
@@ -2754,7 +2753,24 @@ export async function processGateScan(participantId: string) {
     if (insertError) return { error: insertError.message }
 
     const teamInfo = (participant as any).hackathon_teams
-    const dirLabel = direction === 'entry' ? '🟢 ENTRY' : '🟠 EXIT'
+
+    // Calculate time outside if this is an ENTRY (coming back)
+    let timeOutside = ''
+    if (direction === 'entry' && lastLog?.scanned_at) {
+        const exitTime = new Date(lastLog.scanned_at).getTime()
+        const entryTime = Date.now()
+        const diffMs = entryTime - exitTime
+        const mins = Math.floor(diffMs / 60000)
+        if (mins < 60) {
+            timeOutside = `${mins} min outside`
+        } else {
+            const hrs = Math.floor(mins / 60)
+            const remMins = mins % 60
+            timeOutside = `${hrs}h ${remMins}m outside`
+        }
+    }
+
+    const dirLabel = direction === 'exit' ? '🟠 EXIT' : '🟢 ENTRY'
 
     return {
         success: true,
@@ -2765,7 +2781,8 @@ export async function processGateScan(participantId: string) {
             teamName: teamInfo?.name || '',
             teamCode: teamInfo?.team_code || '',
         },
-        message: `${dirLabel} — ${participant.name} (${teamInfo?.team_code || 'N/A'})`
+        timeOutside,
+        message: `${dirLabel} — ${participant.name} (${teamInfo?.team_code || 'N/A'})${timeOutside ? `\n${timeOutside}` : ''}`
     }
 }
 
@@ -2785,8 +2802,7 @@ export async function getGateStats() {
         .from('hackathon_gate_logs')
         .select('id', { count: 'exact', head: true })
 
-    // Get the latest gate log per participant to determine who is inside/outside
-    // We need to fetch the latest direction for each participant
+    // Get the latest gate log per participant to determine who is currently outside
     const { data: allLogs } = await supabase
         .from('hackathon_gate_logs')
         .select('participant_id, direction, scanned_at')
@@ -2800,26 +2816,28 @@ export async function getGateStats() {
         }
     }
 
-    let insideCount = 0
+    // Everyone starts INSIDE. Only those whose last log is 'exit' are outside.
     let outsideCount = 0
     latestDirection.forEach((dir) => {
-        if (dir === 'entry') insideCount++
-        else outsideCount++
+        if (dir === 'exit') outsideCount++
     })
 
+    const total = totalParticipants || 0
+    const insideCount = total - outsideCount
+
     return {
-        totalParticipants: totalParticipants || 0,
+        totalParticipants: total,
         totalScans: totalScans || 0,
         insideCount,
         outsideCount,
-        trackedCount: latestDirection.size, // participants who have been scanned at least once
+        trackedCount: latestDirection.size,
     }
 }
 
 export async function getGateLogs() {
-    const session = await auth()
-    if (!session || !session.user || !['admin', 'super_admin', 'student_lead'].includes(session.user.role as string)) {
-        return { error: "Unauthorized", data: [] }
+    const { role } = await checkHackathonRole()
+    if (role !== 'organizer') {
+        return { error: "Unauthorized — organizer access required", data: [] }
     }
 
     const supabase = await getSupabase()
@@ -2833,23 +2851,65 @@ export async function getGateLogs() {
                 hackathon_teams (name, team_code)
             )
         `)
-        .order('scanned_at', { ascending: false })
+        .order('scanned_at', { ascending: true })
 
     if (error) {
         console.error('[getGateLogs] error:', error)
         return { error: error.message, data: [] }
     }
 
-    return {
-        data: (logs || []).map((log: any) => ({
+    // Group logs by participant to compute time-outside per exit→entry pair
+    const participantLogs = new Map<string, any[]>()
+    for (const log of (logs || [])) {
+        const pid = (log as any).hackathon_participants?.email || log.id
+        const pName = (log as any).hackathon_participants?.name || ''
+        const key = pName + '_' + pid
+        if (!participantLogs.has(key)) participantLogs.set(key, [])
+        participantLogs.get(key)!.push(log)
+    }
+
+    // Build CSV rows with time-outside calculated
+    const rows = (logs || []).map((log: any) => {
+        let timeOutside = ''
+
+        // If this is an ENTRY, find the previous EXIT for this participant to compute duration
+        if (log.direction === 'entry') {
+            const pid = log.hackathon_participants?.email || ''
+            const pName = log.hackathon_participants?.name || ''
+            const key = pName + '_' + pid
+
+            const pLogs = participantLogs.get(key) || []
+            const currentIdx = pLogs.findIndex((l: any) => l.id === log.id)
+            if (currentIdx > 0) {
+                const prevLog = pLogs[currentIdx - 1]
+                if (prevLog.direction === 'exit') {
+                    const exitTime = new Date(prevLog.scanned_at).getTime()
+                    const entryTime = new Date(log.scanned_at).getTime()
+                    const diffMs = entryTime - exitTime
+                    const mins = Math.floor(diffMs / 60000)
+                    if (mins < 60) {
+                        timeOutside = `${mins} min`
+                    } else {
+                        const hrs = Math.floor(mins / 60)
+                        const remMins = mins % 60
+                        timeOutside = `${hrs}h ${remMins}m`
+                    }
+                }
+            }
+        }
+
+        return {
             'Participant Name': log.hackathon_participants?.name || '',
             'Email': log.hackathon_participants?.email || '',
             'Role': log.hackathon_participants?.role || '',
             'Team Name': log.hackathon_participants?.hackathon_teams?.name || '',
             'Team Code': log.hackathon_participants?.hackathon_teams?.team_code || '',
             'Direction': log.direction === 'entry' ? 'ENTRY' : 'EXIT',
+            'Time Outside': timeOutside,
             'Timestamp': log.scanned_at ? new Date(log.scanned_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '',
             'Scanned By': log.scanned_by || '',
-        }))
-    }
+        }
+    })
+
+    return { data: rows }
 }
