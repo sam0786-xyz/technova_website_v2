@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Calendar, BarChart, Settings, Home, BookOpen, Rocket } from "lucide-react"
+import { Calendar, BarChart, Settings, Home, BookOpen, Rocket, FileText } from "lucide-react"
 
 export function SidebarNav() {
     const pathname = usePathname()
@@ -38,6 +38,16 @@ export function SidebarNav() {
                     }`}
             >
                 <Calendar className="w-5 h-5" /> Events
+            </Link>
+
+            <Link
+                href="/admin/forms"
+                className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isActive('/admin/forms')
+                    ? 'bg-blue-600/20 text-blue-400 font-medium border border-blue-500/30'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
+            >
+                <FileText className="w-5 h-5" /> Forms
             </Link>
 
             <Link

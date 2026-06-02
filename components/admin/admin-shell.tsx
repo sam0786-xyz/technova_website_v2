@@ -61,7 +61,7 @@ export function AdminShell({ children, userName, userRole, userImage }: {
             )}
 
             {/* Main Content */}
-            <main className={collapsed ? 'min-h-screen' : 'min-h-screen md:ml-64'}>
+            <main className={`min-h-screen transition-all duration-300 ${collapsed ? '' : 'md:ml-64'}`}>
                 {/* Open sidebar button when collapsed */}
                 {collapsed && (
                     <button
@@ -73,7 +73,9 @@ export function AdminShell({ children, userName, userRole, userImage }: {
                         <PanelLeftOpen className="w-5 h-5 pointer-events-none" />
                     </button>
                 )}
-                {children}
+                <div className={`p-6 md:p-8 max-w-[1400px] mx-auto ${collapsed ? 'pl-16 md:pl-20' : ''}`}>
+                    {children}
+                </div>
             </main>
         </div>
     )
