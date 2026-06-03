@@ -405,10 +405,8 @@ function FieldCard({
                     </div>
                     <input type="text" value={field.label} onChange={(e) => updateField(field.id, { label: e.target.value })} placeholder="Section title..."
                         className="w-full p-3 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white text-lg font-semibold placeholder:text-[#3f3f46] focus:border-[#64748b] focus:ring-1 focus:ring-[#64748b]/30 outline-none transition-all mb-3" />
-                    <textarea value={field.description || ""} onChange={(e) => updateField(field.id, { description: e.target.value })} placeholder="Section description (optional)..."
-                        rows={1}
-                        onInput={(e) => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px' }}
-                        className="w-full px-4 py-2 mt-2 rounded-lg bg-[#141416] border border-[#27272a] text-[#a1a1aa] text-sm placeholder:text-[#3f3f46] focus:border-[#a78bfa] focus:ring-1 focus:ring-[#a78bfa]/30 outline-none transition-all resize-none overflow-hidden" />
+                    <input type="text" value={field.description || ""} onChange={(e) => updateField(field.id, { description: e.target.value })} placeholder="Section description (optional)..."
+                        className="w-full p-3 rounded-xl bg-[#0a0a0b] border border-[#1e1e22] text-[#a1a1aa] text-sm placeholder:text-[#3f3f46] focus:border-[#64748b] outline-none transition-all" />
                 </div>
             </div>
         )
