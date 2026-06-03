@@ -1,5 +1,5 @@
 import { getFormById, getFormResponses, getFormReferralLeaderboard } from "@/lib/actions/forms"
-import { ArrowLeft, Users, Trophy } from "lucide-react"
+import { ArrowLeft, Users, Trophy, Award } from "lucide-react"
 import Link from "next/link"
 import { ResponsesClient } from "./responses-client"
 
@@ -23,19 +23,23 @@ export default async function FormResponsesPage({ params }: { params: Promise<{ 
     return (
         <div className="space-y-8 max-w-6xl mx-auto pb-10">
             {/* Header */}
-            <div className="flex items-center gap-4 border-b border-[#27272a] pb-6">
+            <div className="flex flex-wrap items-center gap-4 border-b border-[#27272a] pb-6">
                 <Link
                     href="/admin/forms"
                     className="p-3 bg-[#1e1e22] hover:bg-[#27272a] text-white rounded-xl transition-all border border-[#27272a] shrink-0"
                 >
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
-                <div>
+                <div className="flex-1 min-w-0">
                     <h1 className="text-3xl font-bold tracking-tight text-white">{form.title}</h1>
                     <p className="text-[#71717a] flex items-center gap-2 mt-1">
                         <Users className="w-4 h-4" /> {responses.length} Total Responses
                     </p>
                 </div>
+                <Link href={`/admin/forms/${id}/evaluate`}
+                    className="h-10 px-4 rounded-xl bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] hover:from-[#2563eb] hover:to-[#7c3aed] text-white text-sm font-medium transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.2)] shrink-0">
+                    <Award className="w-4 h-4" /> Evaluation Portal
+                </Link>
             </div>
 
             {/* Referral Leaderboard */}

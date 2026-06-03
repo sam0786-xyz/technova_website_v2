@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { motion, AnimatePresence, Reorder } from "framer-motion"
 import {
     Plus, Trash2, X, Mail, Phone, FileText, Hash,
@@ -20,6 +20,7 @@ export interface RegistrationField {
     description?: string
     required: boolean
     options?: string[]
+    allowOther?: boolean
     minLength?: number
     maxLength?: number
     minValue?: number
@@ -68,10 +69,50 @@ export function FormBuilderWrapper({ initialFields, formId }: FormBuilderProps) 
     const [fields, setFields] = useState<RegistrationField[]>(initialFields)
     const [isSaving, setIsSaving] = useState(false)
     const [showFab, setShowFab] = useState(false)
+    const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
     const router = useRouter()
+    const autoSaveTimer = useRef<NodeJS.Timeout | null>(null)
+    const isFirstRender = useRef(true)
 
     // Collect section fields for routing dropdowns
     const sectionFields = fields.filter(f => f.type === "section")
+
+    // ===== AUTO-SAVE (debounced 2s after any change) =====
+    const performAutoSave = useCallback(async (currentFields: RegistrationField[]) => {
+        // Don't auto-save if there are empty labels
+        const hasEmptyLabels = currentFields.some(f => !f.label.trim())
+        if (hasEmptyLabels || currentFields.length === 0) return
+
+        setSaveStatus("saving")
+        try {
+            await saveFormFields(formId, currentFields)
+            setSaveStatus("saved")
+            setTimeout(() => setSaveStatus("idle"), 2000)
+        } catch {
+            setSaveStatus("error")
+            setTimeout(() => setSaveStatus("idle"), 3000)
+        }
+    }, [formId])
+
+    useEffect(() => {
+        // Skip auto-save on first render (initial load)
+        if (isFirstRender.current) {
+            isFirstRender.current = false
+            return
+        }
+
+        // Clear previous timer
+        if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+
+        // Set new timer
+        autoSaveTimer.current = setTimeout(() => {
+            performAutoSave(fields)
+        }, 2000)
+
+        return () => {
+            if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+        }
+    }, [fields, performAutoSave])
 
     const addField = (type: QuestionType) => {
         const newField: RegistrationField = {
@@ -107,6 +148,28 @@ export function FormBuilderWrapper({ initialFields, formId }: FormBuilderProps) 
             const newOptions = [...field.options]
             newOptions[index] = value
             updateField(fieldId, { options: newOptions })
+        }
+    }
+
+    // ===== PASTE HANDLER: split multi-line paste into separate options =====
+    const handleOptionPaste = (fieldId: string, index: number, e: React.ClipboardEvent<HTMLInputElement>) => {
+        const pastedText = e.clipboardData.getData("text")
+        const lines = pastedText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0)
+
+        // If pasting multi-line text, split into separate options
+        if (lines.length > 1) {
+            e.preventDefault()
+            const field = fields.find(f => f.id === fieldId)
+            if (!field?.options) return
+
+            const newOptions = [...field.options]
+            // Replace current option with first line, insert rest after
+            newOptions[index] = lines[0]
+            for (let i = 1; i < lines.length; i++) {
+                newOptions.splice(index + i, 0, lines[i])
+            }
+            updateField(fieldId, { options: newOptions })
+            toast.success(`Pasted ${lines.length} options`)
         }
     }
 
@@ -157,16 +220,38 @@ export function FormBuilderWrapper({ initialFields, formId }: FormBuilderProps) 
                 animate={{ opacity: 1, y: 0 }}
                 className="flex justify-between items-center sticky top-0 z-30 bg-[#0a0a0b]/80 backdrop-blur-xl py-3 -mx-2 px-2 rounded-xl"
             >
-                <p className="text-sm text-[#71717a]">
-                    {fields.length} item{fields.length !== 1 ? "s" : ""} · Drag to reorder
-                </p>
+                <div className="flex items-center gap-3">
+                    <p className="text-sm text-[#71717a]">
+                        {fields.length} item{fields.length !== 1 ? "s" : ""} · Drag to reorder
+                    </p>
+                    {/* Auto-save status */}
+                    <AnimatePresence mode="wait">
+                        {saveStatus === "saving" && (
+                            <motion.span key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                className="flex items-center gap-1.5 text-xs text-[#fbbf24]">
+                                <Loader2 className="w-3 h-3 animate-spin" /> Saving...
+                            </motion.span>
+                        )}
+                        {saveStatus === "saved" && (
+                            <motion.span key="saved" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                                className="flex items-center gap-1.5 text-xs text-emerald-400">
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                Saved
+                            </motion.span>
+                        )}
+                        {saveStatus === "error" && (
+                            <motion.span key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                className="text-xs text-[#ef4444]">Auto-save failed</motion.span>
+                        )}
+                    </AnimatePresence>
+                </div>
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
                     className="flex items-center gap-2 h-11 px-6 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-medium transition-all shadow-[0_0_20px_rgba(59,130,246,0.35)] disabled:opacity-50 active:scale-[0.97]"
                 >
                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Save Changes
+                    Save & Exit
                 </button>
             </motion.div>
 
@@ -207,6 +292,7 @@ export function FormBuilderWrapper({ initialFields, formId }: FormBuilderProps) 
                             removeField={removeField}
                             addOption={addOption}
                             updateOption={updateOption}
+                            handleOptionPaste={handleOptionPaste}
                             removeOption={removeOption}
                             updateOptionRouting={updateOptionRouting}
                         />
@@ -270,16 +356,16 @@ export function FormBuilderWrapper({ initialFields, formId }: FormBuilderProps) 
 // ============================================================
 
 function FieldCard({
-    field, index, sectionFields, updateField, removeField,
-    addOption, updateOption, removeOption, updateOptionRouting
+    field, index, sectionFields, updateField, removeField, addOption, updateOption, handleOptionPaste, removeOption, updateOptionRouting
 }: {
     field: RegistrationField
     index: number
     sectionFields: RegistrationField[]
-    updateField: (id: string, u: Partial<RegistrationField>) => void
+    updateField: (id: string, updates: Partial<RegistrationField>) => void
     removeField: (id: string) => void
     addOption: (id: string) => void
     updateOption: (id: string, i: number, v: string) => void
+    handleOptionPaste: (id: string, i: number, e: React.ClipboardEvent<HTMLInputElement>) => void
     removeOption: (id: string, i: number) => void
     updateOptionRouting: (id: string, option: string, sectionId: string) => void
 }) {
@@ -407,7 +493,9 @@ function FieldCard({
                             <div key={idx} className="space-y-2">
                                 <div className="flex items-center gap-2">
                                     <span className="w-7 h-7 rounded bg-[#1e1e22] text-[#52525b] flex items-center justify-center text-xs font-mono shrink-0">{idx + 1}</span>
-                                    <input type="text" value={option} onChange={(e) => updateOption(field.id, idx, e.target.value)} placeholder={`Option ${idx + 1}`}
+                                    <input type="text" value={option} onChange={(e) => updateOption(field.id, idx, e.target.value)}
+                                        onPaste={(e) => handleOptionPaste(field.id, idx, e)}
+                                        placeholder={`Option ${idx + 1}`}
                                         className="flex-1 h-9 px-3 rounded-lg bg-[#141416] border border-[#27272a] text-white text-sm placeholder:text-[#3f3f46] focus:border-[#a78bfa] outline-none transition-all" />
                                     {/* Routing: Go to section */}
                                     {sectionFields.length > 0 && field.type === "select" && (
@@ -431,10 +519,28 @@ function FieldCard({
                                 </div>
                             </div>
                         ))}
-                        <button type="button" onClick={() => addOption(field.id)}
-                            className="flex items-center gap-2 h-9 px-4 rounded-lg bg-[#1e1e22] hover:bg-[#27272a] text-[#a78bfa] text-xs font-semibold transition-all mt-2">
-                            <Plus className="w-3.5 h-3.5" /> Add Option
-                        </button>
+                        <div className="flex items-center gap-3 mt-2">
+                            <button type="button" onClick={() => addOption(field.id)}
+                                className="flex items-center gap-2 h-9 px-4 rounded-lg bg-[#1e1e22] hover:bg-[#27272a] text-[#a78bfa] text-xs font-semibold transition-all">
+                                <Plus className="w-3.5 h-3.5" /> Add Option
+                            </button>
+                            {!field.allowOther && (
+                                <button type="button" onClick={() => updateField(field.id, { allowOther: true })}
+                                    className="flex items-center gap-2 h-9 px-4 rounded-lg bg-[#1e1e22] hover:bg-[#27272a] text-[#71717a] text-xs font-semibold transition-all hover:text-white">
+                                    <Plus className="w-3.5 h-3.5" /> Add &quot;Other&quot;
+                                </button>
+                            )}
+                        </div>
+                        {field.allowOther && (
+                            <div className="flex items-center gap-2 mt-2 opacity-70">
+                                <span className="w-7 h-7 rounded bg-[#1e1e22] text-[#52525b] flex items-center justify-center text-xs">⊕</span>
+                                <span className="flex-1 h-9 px-3 rounded-lg bg-[#0a0a0b] border border-dashed border-[#3f3f46] text-[#71717a] text-sm flex items-center">Other...</span>
+                                <button type="button" onClick={() => updateField(field.id, { allowOther: false })}
+                                    className="w-7 h-7 flex items-center justify-center rounded text-[#52525b] hover:text-[#ef4444] hover:bg-[#dc2626]/10 transition-all shrink-0">
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        )}
                         {sectionFields.length > 0 && field.type === "select" && (
                             <p className="text-[10px] text-[#52525b] mt-2">
                                 💡 Set "Go to section" for each option to create conditional branching.

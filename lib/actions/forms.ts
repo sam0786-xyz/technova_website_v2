@@ -263,17 +263,39 @@ export async function saveFormFields(formId: string, fields: any[]) {
     }
 
     if (fields.length > 0) {
+        // Step 1: Pre-generate new UUIDs for each field
+        const newIds = fields.map(() => crypto.randomUUID())
+
+        // Step 2: Build mapping from old section IDs → new section IDs
+        const sectionIdMap: Record<string, string> = {}
+        fields.forEach((f, i) => {
+            if (f.type === 'section' && f.id) {
+                sectionIdMap[f.id] = newIds[i]
+            }
+        })
+
+        // Step 3: Build field rows, remapping optionRouting references
         const fieldsToInsert = fields.map((f, i) => {
-            // Build validation object
             const validation: any = {}
             if (f.minLength != null) validation.minLength = f.minLength
             if (f.maxLength != null) validation.maxLength = f.maxLength
             if (f.minValue != null) validation.minValue = f.minValue
             if (f.maxValue != null) validation.maxValue = f.maxValue
+            if (f.allowOther) validation.allowOther = true
 
-            // Store conditional routing
+            // Remap conditional routing section references
             if (f.optionRouting && Object.keys(f.optionRouting).length > 0) {
-                validation.optionRouting = f.optionRouting
+                const remapped: Record<string, string> = {}
+                for (const [optionText, targetId] of Object.entries(f.optionRouting)) {
+                    const tid = targetId as string
+                    if (tid === '__submit__' || tid === '__none__') {
+                        remapped[optionText] = tid
+                    } else {
+                        // Map old section ID to new one; if not found, keep as-is (safety)
+                        remapped[optionText] = sectionIdMap[tid] || tid
+                    }
+                }
+                validation.optionRouting = remapped
             }
 
             // Enforce phone safety limits
@@ -283,6 +305,7 @@ export async function saveFormFields(formId: string, fields: any[]) {
             }
 
             return {
+                id: newIds[i],
                 form_id: formId,
                 label: f.label,
                 description: f.description || null,
@@ -299,6 +322,7 @@ export async function saveFormFields(formId: string, fields: any[]) {
             .insert(fieldsToInsert)
 
         if (insertError) {
+            console.error("Insert error:", insertError)
             throw new Error("Failed to save new fields")
         }
     }

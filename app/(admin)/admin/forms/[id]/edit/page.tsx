@@ -19,6 +19,7 @@ export default async function EditFormPage({ params }: { params: Promise<{ id: s
         description: f.description || undefined,
         required: f.required,
         options: f.options,
+        allowOther: f.validation?.allowOther || false,
         minLength: f.validation?.minLength,
         maxLength: f.validation?.maxLength,
         minValue: f.validation?.minValue,

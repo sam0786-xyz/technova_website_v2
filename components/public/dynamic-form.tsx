@@ -38,6 +38,20 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
     const totalSections = sections.length
     const questionCount = form.fields.filter((f: any) => f.type !== "section").length
 
+    // Auto-detect if user selected a PR/Public Relations role
+    const isPRCandidate = (() => {
+        const roleFields = form.fields.filter((f: any) =>
+            (f.type === 'select' || f.type === 'checkbox') &&
+            /role|position|designation/i.test(f.label)
+        )
+        for (const rf of roleFields) {
+            const val = answers[rf.id]
+            if (typeof val === 'string' && /\bpr\b|public\s*relation/i.test(val)) return true
+            if (Array.isArray(val) && val.some((v: string) => /\bpr\b|public\s*relation/i.test(v))) return true
+        }
+        return false
+    })()
+
     // Conditional routing
     const getNextSectionIndex = () => {
         const currentFields = sections[currentSection]?.fields || []
@@ -137,7 +151,7 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
     // ===== LANDING PAGE =====
     if (formState === "landing") {
         return (
-            <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+            <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
                 {/* Ambient glow */}
                 <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-500/15 blur-[150px] rounded-full pointer-events-none" />
                 <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-500/10 blur-[120px] rounded-full pointer-events-none" />
@@ -150,27 +164,27 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
                 >
                     {/* Logo badge */}
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2, stiffness: 200, damping: 15 }}
-                        className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-10 shadow-[0_0_60px_rgba(99,102,241,0.3)]">
-                        <FileText className="w-10 h-10 text-white" />
+                        className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-8 sm:mb-10 shadow-[0_0_60px_rgba(99,102,241,0.3)]">
+                        <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                     </motion.div>
 
                     {/* Title */}
                     <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
-                        className="text-5xl md:text-6xl font-extrabold tracking-tight text-white mb-6 leading-[1.1]">
+                        className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white mb-4 sm:mb-6 leading-[1.1] px-2">
                         {form.title}
                     </motion.h1>
 
                     {/* Description */}
                     {form.description && (
                         <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                            className="text-xl text-zinc-400 leading-relaxed max-w-lg mx-auto mb-12">
+                            className="text-base sm:text-xl text-zinc-400 leading-relaxed max-w-lg mx-auto mb-8 sm:mb-12 px-2">
                             {form.description}
                         </motion.p>
                     )}
 
                     {/* Meta info */}
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                        className="flex items-center justify-center gap-6 mb-12 text-sm text-zinc-500">
+                        className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mb-8 sm:mb-12 text-xs sm:text-sm text-zinc-500">
                         <span className="flex items-center gap-2">
                             <FileText className="w-4 h-4" />
                             {questionCount} question{questionCount !== 1 ? 's' : ''}
@@ -197,7 +211,7 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
                         whileHover={{ scale: 1.03, boxShadow: "0 0 40px rgba(99,102,241,0.4)" }}
                         whileTap={{ scale: 0.97 }}
                         onClick={() => setFormState("filling")}
-                        className="inline-flex items-center gap-3 bg-white text-black px-10 py-5 rounded-2xl font-bold text-lg tracking-wide shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:bg-zinc-100 transition-colors"
+                        className="inline-flex items-center gap-3 bg-white text-black px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-bold text-base sm:text-lg tracking-wide shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:bg-zinc-100 transition-colors"
                     >
                         Start Filling
                         <ArrowRight className="w-5 h-5" />
@@ -281,15 +295,15 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
                     </div>
                 </motion.div>
 
-                {/* Referral section */}
-                {form.show_referral && (
+                {/* Referral section — only for PR candidates */}
+                {form.show_referral && isPRCandidate && (
                     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
                         className="bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/20 rounded-2xl p-6 text-left mb-6">
                         <div className="flex items-center gap-2 mb-3">
                             <Sparkles className="w-4 h-4 text-indigo-400" />
-                            <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-widest">Share & Earn Perks</h3>
+                            <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-widest">PR Challenge</h3>
                         </div>
-                        <p className="text-sm text-zinc-500 mb-4">Share your unique link to climb the referral leaderboard!</p>
+                        <p className="text-sm text-zinc-500 mb-4">You selected the PR role — show us your outreach skills! Share this link and the more people register through it, the higher you climb on the leaderboard.</p>
                         <button onClick={copyReferralLink}
                             className="w-full flex items-center justify-between bg-zinc-900/80 hover:bg-zinc-800 transition-colors p-4 rounded-xl border border-zinc-700/50 active:scale-[0.98]">
                             <span className="text-zinc-300 font-mono text-xs truncate mr-4">
@@ -319,15 +333,15 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
     const currentSectionHeader = sections[currentSection]?.header
 
     return (
-        <div className="min-h-screen py-20 px-4 sm:px-6 lg:px-8 relative">
+        <div className="min-h-screen py-10 sm:py-20 px-4 sm:px-6 lg:px-8 relative">
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear_gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
 
             <div className="max-w-3xl mx-auto relative z-10">
                 {/* Form title + progress */}
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }} className="mb-12">
-                    <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-white mb-4">{form.title}</h1>
-                    {form.description && <p className="text-xl text-zinc-400 leading-relaxed max-w-2xl">{form.description}</p>}
+                    transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }} className="mb-8 sm:mb-12">
+                    <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter text-white mb-3 sm:mb-4">{form.title}</h1>
+                    {form.description && <p className="text-base sm:text-xl text-zinc-400 leading-relaxed max-w-2xl">{form.description}</p>}
 
                     {totalSections > 1 && (
                         <div className="mt-8 space-y-3">
@@ -496,22 +510,46 @@ function renderField(field: any, answers: Record<string, any>, handleChange: (id
                     )}
                 </div>
             )
-        case "select":
+        case "select": {
+            const allowOther = v.allowOther
+            const currentVal = answers[field.id] || ""
+            const isOtherSelected = allowOther && currentVal.startsWith("Other:")
             return (
-                <div className="relative">
-                    <select required={field.required} value={answers[field.id] || ""}
-                        onChange={(e) => handleChange(field.id, e.target.value)} className={`${baseInputClass} appearance-none cursor-pointer`}>
-                        <option value="" disabled className="text-zinc-500">Select an option...</option>
-                        {field.options?.map((opt: string) => <option key={opt} value={opt} className="bg-zinc-900 text-white">{opt}</option>)}
-                    </select>
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500"><ArrowRight className="w-5 h-5 rotate-90" /></div>
+                <div className="space-y-3">
+                    <div className="relative">
+                        <select required={field.required}
+                            value={isOtherSelected ? "__other__" : currentVal}
+                            onChange={(e) => {
+                                if (e.target.value === "__other__") {
+                                    handleChange(field.id, "Other: ")
+                                } else {
+                                    handleChange(field.id, e.target.value)
+                                }
+                            }}
+                            className={`${baseInputClass} appearance-none cursor-pointer`}>
+                            <option value="" disabled className="text-zinc-500">Select an option...</option>
+                            {field.options?.map((opt: string) => <option key={opt} value={opt} className="bg-zinc-900 text-white">{opt}</option>)}
+                            {allowOther && <option value="__other__" className="bg-zinc-900 text-white italic">Other...</option>}
+                        </select>
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500"><ArrowRight className="w-5 h-5 rotate-90" /></div>
+                    </div>
+                    {isOtherSelected && (
+                        <input type="text" placeholder="Please specify..."
+                            value={currentVal.replace(/^Other:\s*/, "")}
+                            onChange={(e) => handleChange(field.id, `Other: ${e.target.value}`)}
+                            className={baseInputClass} autoFocus />
+                    )}
                 </div>
             )
-        case "checkbox":
+        }
+        case "checkbox": {
+            const cbAllowOther = v.allowOther
+            const sel = Array.isArray(answers[field.id]) ? answers[field.id] : []
+            const otherEntry = sel.find((s: string) => s.startsWith("Other:"))
+            const isOtherChecked = !!otherEntry
             return (
                 <div className="space-y-3 p-4 bg-zinc-900/30 rounded-2xl border border-zinc-800/50">
                     {field.options?.map((opt: string) => {
-                        const sel = Array.isArray(answers[field.id]) ? answers[field.id] : []
                         const isChecked = sel.includes(opt)
                         return (
                             <label key={opt} className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-800/50 cursor-pointer transition-colors group/check">
@@ -524,8 +562,36 @@ function renderField(field: any, answers: Record<string, any>, handleChange: (id
                             </label>
                         )
                     })}
+                    {cbAllowOther && (
+                        <>
+                            <label className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-800/50 cursor-pointer transition-colors group/check">
+                                <div className={`w-6 h-6 rounded border flex items-center justify-center transition-all ${isOtherChecked ? 'bg-indigo-500 border-indigo-500' : 'bg-transparent border-zinc-600 group-hover/check:border-zinc-400'}`}>
+                                    {isOtherChecked && <Check className="w-4 h-4 text-white" />}
+                                </div>
+                                <input type="checkbox" className="hidden" checked={isOtherChecked}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            handleChange(field.id, [...sel, "Other: "])
+                                        } else {
+                                            handleChange(field.id, sel.filter((s: string) => !s.startsWith("Other:")))
+                                        }
+                                    }} />
+                                <span className="text-zinc-300 select-none text-lg italic">Other...</span>
+                            </label>
+                            {isOtherChecked && (
+                                <input type="text" placeholder="Please specify..."
+                                    value={otherEntry?.replace(/^Other:\s*/, "") || ""}
+                                    onChange={(e) => {
+                                        const filtered = sel.filter((s: string) => !s.startsWith("Other:"))
+                                        handleChange(field.id, [...filtered, `Other: ${e.target.value}`])
+                                    }}
+                                    className={`${baseInputClass} ml-10`} autoFocus />
+                            )}
+                        </>
+                    )}
                 </div>
             )
+        }
         default: return null
     }
 }
