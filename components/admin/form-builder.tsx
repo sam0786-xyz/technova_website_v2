@@ -5,7 +5,7 @@ import { motion, AnimatePresence, Reorder } from "framer-motion"
 import {
     Plus, Trash2, X, Mail, Phone, FileText, Hash,
     CheckSquare, Save, Loader2, List, PlusCircle,
-    AlignLeft, SeparatorHorizontal, Link2, GripVertical
+    AlignLeft, SeparatorHorizontal, Link2, GripVertical, ChevronUp, ChevronDown
 } from "lucide-react"
 import { saveFormFields } from "@/lib/actions/forms"
 import { toast } from "sonner"
@@ -180,6 +180,17 @@ export function FormBuilderWrapper({ initialFields, formId }: FormBuilderProps) 
         }
     }
 
+    const reorderOption = (fieldId: string, fromIndex: number, direction: 'up' | 'down') => {
+        const field = fields.find(f => f.id === fieldId)
+        if (!field?.options) return
+        const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1
+        if (toIndex < 0 || toIndex >= field.options.length) return
+        const newOptions = [...field.options]
+        const [moved] = newOptions.splice(fromIndex, 1)
+        newOptions.splice(toIndex, 0, moved)
+        updateField(fieldId, { options: newOptions })
+    }
+
     const updateOptionRouting = (fieldId: string, option: string, sectionId: string) => {
         const field = fields.find(f => f.id === fieldId)
         const routing = { ...(field?.optionRouting || {}) }
@@ -294,6 +305,7 @@ export function FormBuilderWrapper({ initialFields, formId }: FormBuilderProps) 
                             updateOption={updateOption}
                             handleOptionPaste={handleOptionPaste}
                             removeOption={removeOption}
+                            reorderOption={reorderOption}
                             updateOptionRouting={updateOptionRouting}
                         />
                     </Reorder.Item>
@@ -356,7 +368,7 @@ export function FormBuilderWrapper({ initialFields, formId }: FormBuilderProps) 
 // ============================================================
 
 function FieldCard({
-    field, index, sectionFields, updateField, removeField, addOption, updateOption, handleOptionPaste, removeOption, updateOptionRouting
+    field, index, sectionFields, updateField, removeField, addOption, updateOption, handleOptionPaste, removeOption, reorderOption, updateOptionRouting
 }: {
     field: RegistrationField
     index: number
@@ -367,6 +379,7 @@ function FieldCard({
     updateOption: (id: string, i: number, v: string) => void
     handleOptionPaste: (id: string, i: number, e: React.ClipboardEvent<HTMLInputElement>) => void
     removeOption: (id: string, i: number) => void
+    reorderOption: (id: string, i: number, dir: 'up' | 'down') => void
     updateOptionRouting: (id: string, option: string, sectionId: string) => void
 }) {
     const meta = getFieldMeta(field.type)
@@ -420,8 +433,10 @@ function FieldCard({
                 </div>
 
                 {/* Question input */}
-                <input type="text" value={field.label} onChange={(e) => updateField(field.id, { label: e.target.value })} placeholder="Enter your question here..."
-                    className="w-full p-4 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white text-base placeholder:text-[#3f3f46] focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/30 outline-none transition-all mb-4" />
+                <textarea value={field.label} onChange={(e) => updateField(field.id, { label: e.target.value })} placeholder="Enter your question here..."
+                    rows={1}
+                    onInput={(e) => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px' }}
+                    className="w-full p-4 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white text-base placeholder:text-[#3f3f46] focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/30 outline-none transition-all mb-4 resize-none overflow-hidden" />
 
                 {/* Required toggle */}
                 <div className="flex items-center gap-3 mb-4">
@@ -492,6 +507,16 @@ function FieldCard({
                         {field.options?.map((option, idx) => (
                             <div key={idx} className="space-y-2">
                                 <div className="flex items-center gap-2">
+                                    <div className="flex flex-col shrink-0">
+                                        <button type="button" onClick={() => reorderOption(field.id, idx, 'up')} disabled={idx === 0}
+                                            className="w-5 h-4 flex items-center justify-center text-[#52525b] hover:text-white transition-all disabled:opacity-20" title="Move up">
+                                            <ChevronUp className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button type="button" onClick={() => reorderOption(field.id, idx, 'down')} disabled={idx === (field.options?.length || 1) - 1}
+                                            className="w-5 h-4 flex items-center justify-center text-[#52525b] hover:text-white transition-all disabled:opacity-20" title="Move down">
+                                            <ChevronDown className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                     <span className="w-7 h-7 rounded bg-[#1e1e22] text-[#52525b] flex items-center justify-center text-xs font-mono shrink-0">{idx + 1}</span>
                                     <input type="text" value={option} onChange={(e) => updateOption(field.id, idx, e.target.value)}
                                         onPaste={(e) => handleOptionPaste(field.id, idx, e)}

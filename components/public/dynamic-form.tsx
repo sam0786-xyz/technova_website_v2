@@ -20,6 +20,7 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [copied, setCopied] = useState(false)
     const [currentSection, setCurrentSection] = useState(0)
+    const [sectionHistory, setSectionHistory] = useState<number[]>([])
 
     const isDeadlinePassed = form.deadline && new Date(form.deadline) < new Date()
     const hasExistingAndNoEdit = !!existingResponse && !form.allow_edit
@@ -70,12 +71,26 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
         return currentSection + 1
     }
 
+    const goToNextSection = (nextIdx: number) => {
+        setSectionHistory(prev => [...prev, currentSection])
+        setCurrentSection(nextIdx)
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    const goToPrevSection = () => {
+        if (sectionHistory.length > 0) {
+            const prevSection = sectionHistory[sectionHistory.length - 1]
+            setSectionHistory(prev => prev.slice(0, -1))
+            setCurrentSection(prevSection)
+            window.scrollTo({ top: 0, behavior: "smooth" })
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         const nextIdx = getNextSectionIndex()
         if (nextIdx < totalSections && currentSection < totalSections - 1) {
-            setCurrentSection(nextIdx)
-            window.scrollTo({ top: 0, behavior: "smooth" })
+            goToNextSection(nextIdx)
             return
         }
         setIsSubmitting(true)
@@ -341,7 +356,7 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }} className="mb-8 sm:mb-12">
                     <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter text-white mb-3 sm:mb-4">{form.title}</h1>
-                    {form.description && <p className="text-base sm:text-xl text-zinc-400 leading-relaxed max-w-2xl">{form.description}</p>}
+                    {form.description && <p className="text-base sm:text-xl text-zinc-400 leading-relaxed max-w-2xl whitespace-pre-line">{form.description}</p>}
 
                     {totalSections > 1 && (
                         <div className="mt-8 space-y-3">
@@ -365,20 +380,20 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
                             {currentSectionHeader && (
                                 <motion.div variants={itemAnim} className="mb-8 pb-6 border-b border-zinc-800/50">
                                     <h2 className="text-2xl font-bold text-white tracking-tight mb-2">{currentSectionHeader.label}</h2>
-                                    {currentSectionHeader.description && <p className="text-zinc-400">{currentSectionHeader.description}</p>}
+                                    {currentSectionHeader.description && <p className="text-zinc-400 whitespace-pre-line">{currentSectionHeader.description}</p>}
                                 </motion.div>
                             )}
                             {currentFields.map((field: any) => (
                                 <motion.div key={field.id} variants={itemAnim} className="group">
-                                    <label className="block text-sm font-medium text-zinc-300 mb-3 ml-1 uppercase tracking-widest">
+                                    <label className="block text-sm font-medium text-zinc-300 mb-3 ml-1 whitespace-pre-line">
                                         {field.label} {field.required && <span className="text-rose-500">*</span>}
                                     </label>
                                     {renderField(field, answers, handleChange)}
                                 </motion.div>
                             ))}
                             <motion.div variants={itemAnim} className="flex gap-4 pt-8">
-                                {currentSection > 0 && (
-                                    <button type="button" onClick={() => { setCurrentSection(prev => prev - 1); window.scrollTo({ top: 0, behavior: "smooth" }) }}
+                                {sectionHistory.length > 0 && (
+                                    <button type="button" onClick={goToPrevSection}
                                         className="flex-1 group relative flex justify-center items-center gap-3 bg-zinc-800 hover:bg-zinc-700 text-white px-8 py-5 rounded-2xl font-bold text-lg transition-all active:scale-[0.98]">
                                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Back
                                     </button>
