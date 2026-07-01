@@ -390,6 +390,26 @@ function FieldCard({
         return (
             <div className="relative bg-[#0f0f11] border border-dashed border-[#3f3f46] rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing">
                 <div className="h-0.5 bg-gradient-to-r from-[#94a3b8]/50 via-[#64748b]/30 to-transparent" />
+                
+                {/* After Previous Section Action */}
+                <div className="flex items-center gap-3 px-6 py-4 bg-[#141416] border-b border-dashed border-[#3f3f46]">
+                    <span className="text-sm font-medium text-[#a1a1aa]">After section:</span>
+                    <select
+                        value={field.validation?.afterSection || "__next__"}
+                        onChange={(e) => {
+                            const newValidation = { ...(field.validation || {}), afterSection: e.target.value }
+                            updateField(field.id, { validation: newValidation })
+                        }}
+                        className="h-9 px-3 rounded-lg bg-[#1e1e22] border border-[#27272a] text-white text-sm focus:border-[#64748b] outline-none w-72"
+                    >
+                        <option value="__next__">Continue to next section</option>
+                        {sectionFields.filter(s => s.id !== field.id).map(s => (
+                            <option key={s.id} value={s.id}>Go to section: {s.label || "Untitled Section"}</option>
+                        ))}
+                        <option value="__submit__">Submit form</option>
+                    </select>
+                </div>
+
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -406,26 +426,7 @@ function FieldCard({
                     <input type="text" value={field.label} onChange={(e) => updateField(field.id, { label: e.target.value })} placeholder="Section title..."
                         className="w-full p-3 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white text-lg font-semibold placeholder:text-[#3f3f46] focus:border-[#64748b] focus:ring-1 focus:ring-[#64748b]/30 outline-none transition-all mb-3" />
                     <input type="text" value={field.description || ""} onChange={(e) => updateField(field.id, { description: e.target.value })} placeholder="Section description (optional)..."
-                        className="w-full p-3 rounded-xl bg-[#0a0a0b] border border-[#1e1e22] text-[#a1a1aa] text-sm placeholder:text-[#3f3f46] focus:border-[#64748b] outline-none transition-all mb-4" />
-                    
-                    {/* After Section Action */}
-                    <div className="flex items-center gap-3 pt-4 border-t border-[#1e1e22]">
-                        <span className="text-sm font-medium text-[#71717a]">After section:</span>
-                        <select
-                            value={field.validation?.afterSection || "__next__"}
-                            onChange={(e) => {
-                                const newValidation = { ...(field.validation || {}), afterSection: e.target.value }
-                                updateField(field.id, { validation: newValidation })
-                            }}
-                            className="h-9 px-3 rounded-lg bg-[#141416] border border-[#27272a] text-[#a1a1aa] text-sm focus:border-[#64748b] outline-none w-64"
-                        >
-                            <option value="__next__">Continue to next section</option>
-                            {sectionFields.filter(s => s.id !== field.id).map(s => (
-                                <option key={s.id} value={s.id}>Go to section: {s.label || "Untitled Section"}</option>
-                            ))}
-                            <option value="__submit__">Submit form</option>
-                        </select>
-                    </div>
+                        className="w-full p-3 rounded-xl bg-[#0a0a0b] border border-[#1e1e22] text-[#a1a1aa] text-sm placeholder:text-[#3f3f46] focus:border-[#64748b] outline-none transition-all" />
                 </div>
             </div>
         )

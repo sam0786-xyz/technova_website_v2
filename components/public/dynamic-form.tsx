@@ -74,7 +74,7 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
         }
 
         // 2. Check section-level routing fallback
-        const afterSection = currentSectionObj?.header?.validation?.afterSection
+        const afterSection = currentSectionObj?.nextRouting
         if (afterSection && afterSection !== '__next__') {
             if (afterSection === '__submit__') return totalSections
             const targetIdx = sections.findIndex((s: any) => s.header?.id === afterSection)
@@ -478,16 +478,18 @@ function FullScreenCard({ children }: { children: React.ReactNode }) {
 // ============================================================
 
 function groupFieldsIntoSections(fields: any[]) {
-    const sections: { header: any | null; fields: any[] }[] = []
-    let currentSection: { header: any | null; fields: any[] } = { header: null, fields: [] }
+    const sections: { header: any | null; fields: any[]; nextRouting?: string }[] = []
+    let currentSection: { header: any | null; fields: any[]; nextRouting?: string } = { header: null, fields: [] }
     for (const field of fields) {
         if (field.type === "section") {
+            currentSection.nextRouting = field.validation?.afterSection || "__next__"
             if (currentSection.fields.length > 0 || currentSection.header) sections.push(currentSection)
             currentSection = { header: field, fields: [] }
         } else { currentSection.fields.push(field) }
     }
+    currentSection.nextRouting = "__submit__"
     if (currentSection.fields.length > 0 || currentSection.header) sections.push(currentSection)
-    if (sections.length === 0) return [{ header: null, fields }]
+    if (sections.length === 0) return [{ header: null, fields, nextRouting: "__submit__" }]
     return sections
 }
 
