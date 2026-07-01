@@ -253,29 +253,31 @@ export async function saveFormFields(formId: string, fields: any[]) {
 
     const supabase = getSupabase()
 
-    const { error: deleteError } = await supabase
+    // 1. Fetch existing fields to see what needs to be deleted
+    const { data: existingFields } = await supabase
         .from("form_fields")
-        .delete()
+        .select("id")
         .eq("form_id", formId)
-        
-    if (deleteError) {
-        throw new Error("Failed to clear old fields")
+
+    const incomingIds = fields.map(f => f.id).filter(Boolean)
+    const existingIds = (existingFields || []).map(f => f.id)
+    const idsToDelete = existingIds.filter(id => !incomingIds.includes(id))
+
+    // 2. Delete removed fields
+    if (idsToDelete.length > 0) {
+        const { error: deleteError } = await supabase
+            .from("form_fields")
+            .delete()
+            .in("id", idsToDelete)
+            
+        if (deleteError) {
+            throw new Error("Failed to clear removed fields")
+        }
     }
 
+    // 3. Upsert current fields
     if (fields.length > 0) {
-        // Step 1: Pre-generate new UUIDs for each field
-        const newIds = fields.map(() => crypto.randomUUID())
-
-        // Step 2: Build mapping from old section IDs → new section IDs
-        const sectionIdMap: Record<string, string> = {}
-        fields.forEach((f, i) => {
-            if (f.type === 'section' && f.id) {
-                sectionIdMap[f.id] = newIds[i]
-            }
-        })
-
-        // Step 3: Build field rows, remapping optionRouting references
-        const fieldsToInsert = fields.map((f, i) => {
+        const fieldsToUpsert = fields.map((f, i) => {
             const validation: any = {}
             if (f.minLength != null) validation.minLength = f.minLength
             if (f.maxLength != null) validation.maxLength = f.maxLength
@@ -284,27 +286,11 @@ export async function saveFormFields(formId: string, fields: any[]) {
             if (f.allowOther) validation.allowOther = true
             
             if (f.validation?.afterSection) {
-                const as = f.validation.afterSection
-                if (as === '__submit__' || as === '__next__') {
-                    validation.afterSection = as
-                } else {
-                    validation.afterSection = sectionIdMap[as] || as
-                }
+                validation.afterSection = f.validation.afterSection
             }
 
-            // Remap conditional routing section references
             if (f.optionRouting && Object.keys(f.optionRouting).length > 0) {
-                const remapped: Record<string, string> = {}
-                for (const [optionText, targetId] of Object.entries(f.optionRouting)) {
-                    const tid = targetId as string
-                    if (tid === '__submit__' || tid === '__none__') {
-                        remapped[optionText] = tid
-                    } else {
-                        // Map old section ID to new one; if not found, keep as-is (safety)
-                        remapped[optionText] = sectionIdMap[tid] || tid
-                    }
-                }
-                validation.optionRouting = remapped
+                validation.optionRouting = f.optionRouting
             }
 
             // Enforce phone safety limits
@@ -314,7 +300,7 @@ export async function saveFormFields(formId: string, fields: any[]) {
             }
 
             return {
-                id: newIds[i],
+                id: f.id,
                 form_id: formId,
                 label: f.label,
                 description: f.description || null,
@@ -326,19 +312,20 @@ export async function saveFormFields(formId: string, fields: any[]) {
             }
         })
 
-        const { error: insertError } = await supabase
+        const { error: upsertError } = await supabase
             .from("form_fields")
-            .insert(fieldsToInsert)
+            .upsert(fieldsToUpsert, { onConflict: "id" })
 
-        if (insertError) {
-            console.error("Insert error:", insertError)
-            throw new Error("Failed to save new fields")
+        if (upsertError) {
+            console.error("Save Fields Error:", upsertError)
+            throw new Error("Failed to save fields")
         }
     }
 
     revalidatePath(`/admin/forms/${formId}/edit`)
     revalidatePath(`/forms/${formId}`)
     return { success: true }
+}
 }
 
 // ============================================================
