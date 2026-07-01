@@ -38,7 +38,8 @@ export async function createForm(formData: FormData) {
         title,
         description,
         deadline: deadline || null,
-        created_by: session.user.id
+        created_by: session.user.id,
+        allow_edit: true
     }).select("id").single()
 
     if (error || !newForm) {
