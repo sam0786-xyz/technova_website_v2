@@ -306,15 +306,12 @@ function ResponseCharts({ fields, responses }: { fields: any[]; responses: any[]
                         <div key={field.id} className="bg-[#141416] border border-[#27272a] rounded-2xl p-6">
                             <h3 className="text-sm font-bold text-[#e4e4e7] mb-1 truncate" title={field.label}>{field.label}</h3>
                             <p className="text-xs text-[#52525b] mb-4">{answers.length} response{answers.length !== 1 ? 's' : ''}</p>
-                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                {answers.slice(0, 10).map((ans: string, i: number) => (
-                                    <div key={i} className="px-4 py-2.5 bg-[#0f0f11] border border-[#1e1e22] rounded-xl text-sm text-[#d4d4d8] truncate" title={ans}>
+                            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                                {answers.map((ans: string, i: number) => (
+                                    <div key={i} className="px-4 py-2.5 bg-[#0f0f11] border border-[#1e1e22] rounded-xl text-sm text-[#d4d4d8] break-words whitespace-pre-wrap">
                                         {ans}
                                     </div>
                                 ))}
-                                {answers.length > 10 && (
-                                    <p className="text-xs text-[#52525b] text-center pt-2">+{answers.length - 10} more</p>
-                                )}
                             </div>
                         </div>
                     )
