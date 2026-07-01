@@ -659,21 +659,24 @@ export async function sendEmailToRespondents(
                     to: user.email,
                     subject: subject,
                     html: `
-                        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #09090b; color: #e4e4e7; padding: 0;">
-                            <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed, #06b6d4); padding: 40px; text-align: center;">
-                                <h1 style="color: white; font-size: 24px; margin: 0; font-weight: 800;">${subject}</h1>
-                                <p style="color: rgba(255,255,255,0.8); margin-top: 8px; font-size: 14px;">Regarding: ${form.title}</p>
-                            </div>
-                            <div style="padding: 32px; background: #18181b; border: 1px solid #27272a; border-top: none;">
-                                <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin: 0;">
-                                    Hey <strong style="color: white;">${user.name || 'Student'}</strong>,
-                                </p>
-                                <div style="color: #d4d4d8; font-size: 15px; line-height: 1.8; margin-top: 16px; white-space: pre-wrap;">
-                                    ${personalizedBody}
+                        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px 16px; background-color: #09090b;">
+                            <div style="max-width: 600px; margin: 0 auto; background-color: #18181b; border-radius: 24px; border: 1px solid #27272a; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+                                <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899); padding: 48px 32px; text-align: center;">
+                                    <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -0.5px;">${subject}</h1>
+                                    <p style="color: rgba(255,255,255,0.85); margin: 12px 0 0 0; font-size: 15px; font-weight: 500;">Regarding: ${form.title}</p>
                                 </div>
-                            </div>
-                            <div style="padding: 24px; text-align: center; background: #09090b; border-top: 1px solid #27272a;">
-                                <p style="color: #52525b; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin: 0;">TechNova • Sharda University</p>
+                                <div style="padding: 40px 32px;">
+                                    <div style="font-size: 16px; line-height: 1.7; color: #d4d4d8; white-space: pre-wrap;">${personalizedBody}</div>
+                                </div>
+                                <div style="border-top: 1px solid #27272a; margin: 0;"></div>
+                                <div style="padding: 32px; text-align: center; background-color: #09090b;">
+                                    <p style="margin: 0; font-size: 11px; color: #52525b; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
+                                        TechNova • Sharda University
+                                    </p>
+                                    <p style="color: #3f3f46; font-size: 11px; margin: 8px 0 0 0;">
+                                        This email was sent to you because you responded to a TechNova form.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     `

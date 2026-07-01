@@ -296,20 +296,34 @@ function ResponseCharts({ fields, responses }: { fields: any[]; responses: any[]
 
                 {/* Text/number summary cards */}
                 {fields.filter(f => ['text', 'textarea', 'number', 'email', 'phone', 'url'].includes(f.type)).map((field: any) => {
-                    const answers = responses
-                        .map((r: any) => r.answers?.find((a: any) => a.field_id === field.id)?.answer_text)
-                        .filter(Boolean)
+                    const answersWithUser = responses
+                        .map((r: any) => ({
+                            user: r.user,
+                            text: r.answers?.find((a: any) => a.field_id === field.id)?.answer_text
+                        }))
+                        .filter((a: any) => Boolean(a.text))
 
-                    if (answers.length === 0) return null
+                    if (answersWithUser.length === 0) return null
 
                     return (
-                        <div key={field.id} className="bg-[#141416] border border-[#27272a] rounded-2xl p-6">
+                        <div key={field.id} className="bg-[#141416] border border-[#27272a] rounded-2xl p-6 md:col-span-2">
                             <h3 className="text-sm font-bold text-[#e4e4e7] mb-1 truncate" title={field.label}>{field.label}</h3>
-                            <p className="text-xs text-[#52525b] mb-4">{answers.length} response{answers.length !== 1 ? 's' : ''}</p>
-                            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                                {answers.map((ans: string, i: number) => (
-                                    <div key={i} className="px-4 py-2.5 bg-[#0f0f11] border border-[#1e1e22] rounded-xl text-sm text-[#d4d4d8] break-words whitespace-pre-wrap">
-                                        {ans}
+                            <p className="text-xs text-[#52525b] mb-4">{answersWithUser.length} response{answersWithUser.length !== 1 ? 's' : ''}</p>
+                            <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                                {answersWithUser.map((ans: any, i: number) => (
+                                    <div key={i} className="p-4 bg-[#0a0a0b] border border-[#1e1e22] rounded-xl">
+                                        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-[#1e1e22]">
+                                            <div className="w-6 h-6 rounded-full bg-[#3b82f6]/20 flex items-center justify-center text-[#3b82f6] font-bold text-[10px]">
+                                                {ans.user?.name?.charAt(0) || "U"}
+                                            </div>
+                                            <div>
+                                                <div className="text-xs font-semibold text-[#e4e4e7]">{ans.user?.name || "Unknown User"}</div>
+                                                <div className="text-[10px] text-[#71717a] font-mono">{ans.user?.system_id || ans.user?.email || "N/A"}</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-sm text-[#d4d4d8] break-words whitespace-pre-wrap leading-relaxed">
+                                            {ans.text}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -377,8 +391,15 @@ function SubmissionsTimeline({ responses }: { responses: any[] }) {
     for (let i = days - 1; i >= 0; i--) {
         const date = new Date(now)
         date.setDate(date.getDate() - i)
-        const dateStr = date.toISOString().slice(0, 10)
-        const count = responses.filter(r => r.created_at && r.created_at.startsWith(dateStr)).length
+        
+        const count = responses.filter(r => {
+            if (!r.created_at) return false
+            const d = new Date(r.created_at)
+            return d.getFullYear() === date.getFullYear() && 
+                   d.getMonth() === date.getMonth() && 
+                   d.getDate() === date.getDate()
+        }).length
+
         buckets.push({
             label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
             shortLabel: date.getDate().toString(),
