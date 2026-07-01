@@ -48,7 +48,7 @@ function getFieldMeta(type: QuestionType) {
 
 // Types that support configurable length limits (NOT phone/url/email — they have built-in limits)
 function supportsLengthLimits(type: QuestionType) {
-    return ["text", "textarea"].includes(type)
+    return ["text", "textarea", "number", "phone"].includes(type)
 }
 
 function supportsValueLimits(type: QuestionType) {

@@ -505,7 +505,10 @@ function renderField(field: any, answers: Record<string, any>, handleChange: (id
     const minVal = v.minValue; const maxVal = v.maxValue
 
     const charHint = (() => {
-        if (minLen && maxLen) return `${minLen}–${maxLen} characters`
+        if (minLen && maxLen) {
+            if (minLen === maxLen) return `Exactly ${minLen} characters`
+            return `${minLen}–${maxLen} characters`
+        }
         if (minLen) return `Min ${minLen} characters`
         if (maxLen) return `Max ${maxLen} characters`
         return null
@@ -536,15 +539,42 @@ function renderField(field: any, answers: Record<string, any>, handleChange: (id
                     {charHint && <p className="text-xs text-zinc-600 mt-2 ml-2">{charHint}{answers[field.id] ? ` · ${(answers[field.id] || '').length} entered` : ''}</p>}
                 </div>
             )
-        case "number":
+        case "number": {
+            const isStrictLength = minLen != null || maxLen != null;
             return (
                 <div>
-                    <input type="number" required={field.required} value={answers[field.id] || ""}
-                        onChange={(e) => handleChange(field.id, e.target.value)}
-                        min={minVal} max={maxVal} className={baseInputClass} placeholder={`Enter ${field.label.toLowerCase()}`} />
-                    {valueHint && <p className="text-xs text-zinc-600 mt-2 ml-2">{valueHint}</p>}
+                    <input 
+                        type={isStrictLength ? "text" : "number"} 
+                        inputMode={isStrictLength ? "numeric" : undefined}
+                        pattern={isStrictLength ? "\\d*" : undefined}
+                        required={field.required} 
+                        value={answers[field.id] || ""}
+                        onChange={(e) => {
+                            let val = e.target.value;
+                            if (isStrictLength) {
+                                val = val.replace(/[^\d]/g, ''); // strip non-digits if strictly length-based (like ID)
+                            }
+                            if (maxLen && val.length > maxLen) {
+                                val = val.slice(0, maxLen);
+                            }
+                            handleChange(field.id, val);
+                        }}
+                        minLength={minLen}
+                        maxLength={maxLen}
+                        min={minVal} 
+                        max={maxVal} 
+                        className={baseInputClass} 
+                        placeholder={`Enter ${field.label.toLowerCase()}`} 
+                    />
+                    {(valueHint || charHint) && (
+                        <p className="text-xs text-zinc-600 mt-2 ml-2">
+                            {[valueHint, charHint].filter(Boolean).join(" · ")}
+                            {answers[field.id] && charHint ? ` · ${(answers[field.id] || '').length} entered` : ''}
+                        </p>
+                    )}
                 </div>
             )
+        }
         case "textarea":
             return (
                 <div>
