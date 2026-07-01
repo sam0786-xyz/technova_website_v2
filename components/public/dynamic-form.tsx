@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { submitFormResponse } from "@/lib/actions/forms"
+import confetti from "canvas-confetti"
 import {
     CheckCircle2, Loader2, Copy, Check, ArrowRight, ArrowLeft,
     ExternalLink, Sparkles, Clock, FileText, Shield
@@ -55,7 +56,10 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
 
     // Conditional routing
     const getNextSectionIndex = () => {
-        const currentFields = sections[currentSection]?.fields || []
+        const currentSectionObj = sections[currentSection]
+        const currentFields = currentSectionObj?.fields || []
+        
+        // 1. Check option-based routing first
         for (const field of currentFields) {
             if (field.type === 'select' && field.validation?.optionRouting) {
                 const selectedValue = answers[field.id]
@@ -68,6 +72,16 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
                 }
             }
         }
+
+        // 2. Check section-level routing fallback
+        const afterSection = currentSectionObj?.header?.validation?.afterSection
+        if (afterSection && afterSection !== '__next__') {
+            if (afterSection === '__submit__') return totalSections
+            const targetIdx = sections.findIndex((s: any) => s.header?.id === afterSection)
+            if (targetIdx !== -1) return targetIdx
+        }
+
+        // 3. Sequential fallback
         return currentSection + 1
     }
 
@@ -106,11 +120,38 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
             })
             await submitFormResponse(form.id, formattedAnswers, referrerId)
             setFormState("submitted")
+            triggerConfetti()
         } catch (error: any) {
             alert(error.message || "Failed to submit form. Please try again.")
         } finally {
             setIsSubmitting(false)
         }
+    }
+
+    const triggerConfetti = () => {
+        const end = Date.now() + 3 * 1000
+        const colors = ['#a78bfa', '#3b82f6', '#ec4899', '#14b8a6', '#f59e0b']
+        
+        ;(function frame() {
+            confetti({
+                particleCount: 5,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: colors
+            })
+            confetti({
+                particleCount: 5,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: colors
+            })
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame)
+            }
+        }())
     }
 
     const handleChange = (fieldId: string, value: any) => {
