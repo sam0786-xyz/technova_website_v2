@@ -327,7 +327,6 @@ export async function saveFormFields(formId: string, fields: any[]) {
     revalidatePath(`/forms/${formId}`)
     return { success: true }
 }
-}
 
 // ============================================================
 // FORM RESPONSES
