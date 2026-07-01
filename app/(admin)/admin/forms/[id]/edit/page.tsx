@@ -25,6 +25,7 @@ export default async function EditFormPage({ params }: { params: Promise<{ id: s
         minValue: f.validation?.minValue,
         maxValue: f.validation?.maxValue,
         optionRouting: f.validation?.optionRouting,
+        validation: f.validation || {},
     }))
 
     return (

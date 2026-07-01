@@ -233,7 +233,7 @@ export function DynamicForm({ form, existingResponse, systemId, referrerId }: an
                     {/* Description */}
                     {form.description && (
                         <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                            className="text-base sm:text-xl text-zinc-400 leading-relaxed max-w-lg mx-auto mb-8 sm:mb-12 px-2">
+                            className="text-base sm:text-xl text-zinc-400 leading-relaxed max-w-lg mx-auto mb-8 sm:mb-12 px-2 whitespace-pre-wrap">
                             {form.description}
                         </motion.p>
                     )}

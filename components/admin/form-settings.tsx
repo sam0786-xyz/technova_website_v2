@@ -133,7 +133,8 @@ export function FormSettings({ form }: FormSettingsProps) {
                         value={settings.description}
                         onChange={(e) => setSettings(s => ({ ...s, description: e.target.value }))}
                         rows={3}
-                        className="w-full px-4 py-3 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white placeholder:text-[#3f3f46] focus:border-[#3b82f6] outline-none transition-all resize-none"
+                        onInput={(e) => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px' }}
+                        className="w-full px-4 py-3 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white placeholder:text-[#3f3f46] focus:border-[#3b82f6] outline-none transition-all resize-none overflow-hidden"
                     />
                 </div>
                 <div className="space-y-2">

@@ -282,6 +282,15 @@ export async function saveFormFields(formId: string, fields: any[]) {
             if (f.minValue != null) validation.minValue = f.minValue
             if (f.maxValue != null) validation.maxValue = f.maxValue
             if (f.allowOther) validation.allowOther = true
+            
+            if (f.validation?.afterSection) {
+                const as = f.validation.afterSection
+                if (as === '__submit__' || as === '__next__') {
+                    validation.afterSection = as
+                } else {
+                    validation.afterSection = sectionIdMap[as] || as
+                }
+            }
 
             // Remap conditional routing section references
             if (f.optionRouting && Object.keys(f.optionRouting).length > 0) {
