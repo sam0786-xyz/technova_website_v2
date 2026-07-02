@@ -165,7 +165,25 @@ export async function submitFormEvaluation(
 
     const supabase = getSupabase()
 
-    // Upsert evaluation
+    // Check if evaluations are open
+    const { data: form } = await supabase.from("forms").select("evaluations_open").eq("id", evaluator.form_id).single()
+    if (form && form.evaluations_open === false) {
+        throw new Error("Evaluations are currently closed for this form.")
+    }
+
+    // Check if evaluation is locked
+    const { data: existing } = await supabase
+        .from("form_evaluations")
+        .select("is_locked, unlock_status")
+        .eq("evaluator_id", evaluator.id)
+        .eq("response_id", responseId)
+        .maybeSingle()
+
+    if (existing?.is_locked && existing.unlock_status !== 'approved') {
+        throw new Error("This evaluation is locked and cannot be edited. Please request an unlock.")
+    }
+
+    // Upsert evaluation, locking it
     const { error } = await supabase
         .from("form_evaluations")
         .upsert({
@@ -174,6 +192,8 @@ export async function submitFormEvaluation(
             response_id: responseId,
             scores,
             remarks,
+            is_locked: true,
+            unlock_status: 'none',
             updated_at: new Date().toISOString()
         }, { onConflict: "evaluator_id,response_id" })
 
@@ -182,6 +202,79 @@ export async function submitFormEvaluation(
         throw new Error("Failed to submit evaluation")
     }
 
+    return { success: true }
+}
+
+// ============================================================
+// ADVANCED CONTROLS (Open/Close, Clear, Locks)
+// ============================================================
+
+export async function toggleEvaluationsOpen(formId: string, isOpen: boolean) {
+    const session = await auth()
+    if (!session || !['admin', 'super_admin'].includes(session.user.role)) {
+        throw new Error("Unauthorized")
+    }
+
+    const supabase = getSupabase()
+    const { error } = await supabase
+        .from("forms")
+        .update({ evaluations_open: isOpen })
+        .eq("id", formId)
+
+    if (error) throw new Error("Failed to toggle evaluation status")
+    revalidatePath(`/admin/forms/${formId}/evaluate`)
+    return { success: true }
+}
+
+export async function clearAllEvaluations(formId: string) {
+    const session = await auth()
+    if (!session || !['admin', 'super_admin'].includes(session.user.role)) {
+        throw new Error("Unauthorized")
+    }
+
+    const supabase = getSupabase()
+    const { error } = await supabase
+        .from("form_evaluations")
+        .delete()
+        .eq("form_id", formId)
+
+    if (error) throw new Error("Failed to clear evaluations")
+    revalidatePath(`/admin/forms/${formId}/evaluate`)
+    return { success: true }
+}
+
+export async function requestEvaluationUnlock(evaluatorToken: string, responseId: string) {
+    const evaluator = await getEvaluatorByToken(evaluatorToken)
+    if (!evaluator) throw new Error("Invalid evaluator token")
+
+    const supabase = getSupabase()
+    const { error } = await supabase
+        .from("form_evaluations")
+        .update({ unlock_status: 'pending' })
+        .eq("evaluator_id", evaluator.id)
+        .eq("response_id", responseId)
+
+    if (error) throw new Error("Failed to request unlock")
+    return { success: true }
+}
+
+export async function resolveUnlockRequest(formId: string, evaluationId: string, status: 'approved' | 'declined') {
+    const session = await auth()
+    if (!session || !['admin', 'super_admin'].includes(session.user.role)) {
+        throw new Error("Unauthorized")
+    }
+
+    const supabase = getSupabase()
+    const { error } = await supabase
+        .from("form_evaluations")
+        .update({ 
+            unlock_status: status,
+            is_locked: status === 'approved' ? false : true 
+        })
+        .eq("id", evaluationId)
+
+    if (error) throw new Error("Failed to resolve unlock request")
+    revalidatePath(`/admin/forms/${formId}/evaluate`)
     return { success: true }
 }
 
@@ -295,7 +388,7 @@ export async function getEvaluationsByEvaluator(evaluatorId: string) {
 
     const { data, error } = await supabase
         .from("form_evaluations")
-        .select("response_id, scores, remarks, updated_at")
+        .select("response_id, scores, remarks, updated_at, is_locked, unlock_status")
         .eq("evaluator_id", evaluatorId)
 
     if (error) throw new Error("Failed to fetch evaluations")

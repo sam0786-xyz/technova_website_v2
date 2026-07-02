@@ -4,9 +4,9 @@ import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Star, ChevronDown, ChevronUp, Check, Loader2, User,
-    Award, MessageSquare, ArrowLeft, CheckCircle2
+    Award, MessageSquare, ArrowLeft, CheckCircle2, Lock, Unlock, AlertCircle
 } from "lucide-react"
-import { submitFormEvaluation } from "@/lib/actions/form-evaluation-actions"
+import { submitFormEvaluation, requestEvaluationUnlock } from "@/lib/actions/form-evaluation-actions"
 import { toast } from "sonner"
 
 interface EvaluatorPortalClientProps {
@@ -17,13 +17,15 @@ interface EvaluatorPortalClientProps {
     existingEvaluations: any[]
     fields: any[]
     token: string
+    evaluationsOpen: boolean
 }
 
 export function EvaluatorPortalClient({
-    evaluator, formTitle, candidates, criteria, existingEvaluations, fields, token
+    evaluator, formTitle, candidates, criteria, existingEvaluations, fields, token, evaluationsOpen
 }: EvaluatorPortalClientProps) {
     const [expandedId, setExpandedId] = useState<string | null>(null)
     const [submittingId, setSubmittingId] = useState<string | null>(null)
+    const [unlockingId, setUnlockingId] = useState<string | null>(null)
 
     // Track scores and remarks per candidate
     const [allScores, setAllScores] = useState<Record<string, Record<string, number>>>(() => {
@@ -69,10 +71,43 @@ export function EvaluatorPortalClient({
         setSubmittingId(responseId)
         try {
             await submitFormEvaluation(token, responseId, scores, remarks)
-            toast.success("Evaluation submitted!")
-            evaluatedIds.add(responseId)
+            toast.success("Evaluation submitted and locked!")
+            
+            // Mark it as evaluated locally (assuming it's locked and no longer editable)
+            if (!evaluatedIds.has(responseId)) {
+                evaluatedIds.add(responseId)
+            }
+            // Update the existing evaluations list locally to reflect the locked state
+            const evIdx = existingEvaluations.findIndex(e => e.response_id === responseId)
+            if (evIdx !== -1) {
+                existingEvaluations[evIdx].is_locked = true
+                existingEvaluations[evIdx].unlock_status = 'none'
+            } else {
+                existingEvaluations.push({
+                    response_id: responseId,
+                    scores,
+                    remarks,
+                    is_locked: true,
+                    unlock_status: 'none'
+                })
+            }
         } catch (err: any) { toast.error(err.message) }
         finally { setSubmittingId(null) }
+    }
+
+    const handleRequestUnlock = async (responseId: string) => {
+        setUnlockingId(responseId)
+        try {
+            await requestEvaluationUnlock(token, responseId)
+            toast.success("Unlock request sent to admin!")
+            // Update local state
+            const ev = existingEvaluations.find(e => e.response_id === responseId)
+            if (ev) ev.unlock_status = 'pending'
+        } catch (err: any) {
+            toast.error(err.message)
+        } finally {
+            setUnlockingId(null)
+        }
     }
 
     const progress = candidates.length > 0
@@ -105,11 +140,29 @@ export function EvaluatorPortalClient({
                 </div>
             </div>
 
+            {!evaluationsOpen && (
+                <div className="mb-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                        <h3 className="font-bold text-amber-500">Evaluations are Closed</h3>
+                        <p className="text-sm text-amber-500/80 mt-1">
+                            The admin has closed evaluations for this form. You can view your past evaluations, but you cannot submit or edit any scores.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Candidates list */}
             <div className="space-y-4">
                 {candidates.map((candidate, idx) => {
                     const isExpanded = expandedId === candidate.id
                     const isEvaluated = evaluatedIds.has(candidate.id)
+                    const existingEv = existingEvaluations.find(e => e.response_id === candidate.id)
+                    const isLocked = existingEv?.is_locked && existingEv?.unlock_status !== 'approved'
+                    const unlockStatus = existingEv?.unlock_status
+                    
+                    const isReadOnly = !evaluationsOpen || isLocked
+
                     const scores = allScores[candidate.id] || {}
                     const totalScore = criteria.reduce((sum, c) => sum + (scores[c] || 0), 0)
 
@@ -173,6 +226,7 @@ export function EvaluatorPortalClient({
                                                             <div className="flex items-center gap-1 flex-wrap">
                                                                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(val => (
                                                                     <button key={val} type="button"
+                                                                        disabled={isReadOnly}
                                                                         onClick={() => setScore(candidate.id, criterion, val)}
                                                                         className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg text-sm font-bold transition-all ${
                                                                             (scores[criterion] || 0) >= val
@@ -180,7 +234,7 @@ export function EvaluatorPortalClient({
                                                                                 : val <= 6 ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                                                                                 : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                                                                                 : "bg-[#1e1e22] text-[#52525b] border border-transparent hover:border-[#3f3f46]"
-                                                                        }`}>
+                                                                        } ${isReadOnly ? 'opacity-50 cursor-not-allowed hover:border-transparent' : ''}`}>
                                                                         {val}
                                                                     </button>
                                                                 ))}
@@ -196,23 +250,47 @@ export function EvaluatorPortalClient({
                                                     <MessageSquare className="w-3.5 h-3.5" /> Remarks
                                                 </label>
                                                 <textarea value={allRemarks[candidate.id] || ""}
+                                                    disabled={isReadOnly}
                                                     onChange={e => setRemarks(candidate.id, e.target.value)}
                                                     rows={3} placeholder="Additional notes, observations, strengths/weaknesses..."
-                                                    className="w-full px-4 py-3 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white text-sm placeholder:text-[#3f3f46] focus:border-[#3b82f6] outline-none resize-none" />
+                                                    className={`w-full px-4 py-3 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white text-sm placeholder:text-[#3f3f46] outline-none resize-none ${isReadOnly ? 'opacity-50 cursor-not-allowed' : 'focus:border-[#3b82f6]'}`} />
                                             </div>
 
-                                            {/* Submit button */}
-                                            <button onClick={() => handleSubmit(candidate.id)}
-                                                disabled={submittingId === candidate.id}
-                                                className="w-full h-12 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white font-medium text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
-                                                {submittingId === candidate.id ? (
-                                                    <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
-                                                ) : isEvaluated ? (
-                                                    <><Check className="w-4 h-4" /> Update Evaluation</>
-                                                ) : (
-                                                    <><Star className="w-4 h-4" /> Submit Evaluation</>
-                                                )}
-                                            </button>
+                                            {/* Submit or Locked button */}
+                                            {isReadOnly ? (
+                                                <div className="w-full flex flex-col sm:flex-row items-center gap-3">
+                                                    <div className="flex-1 h-12 px-4 rounded-xl bg-[#1e1e22] border border-[#27272a] flex items-center justify-center gap-2 text-[#71717a] text-sm w-full">
+                                                        <Lock className="w-4 h-4" /> 
+                                                        {evaluationsOpen ? "Evaluation Locked" : "Evaluations Closed"}
+                                                    </div>
+                                                    {evaluationsOpen && unlockStatus !== 'pending' && (
+                                                        <button 
+                                                            onClick={() => handleRequestUnlock(candidate.id)}
+                                                            disabled={unlockingId === candidate.id}
+                                                            className="h-12 px-6 rounded-xl bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 font-medium text-sm flex items-center justify-center gap-2 transition-all shrink-0 w-full sm:w-auto disabled:opacity-50"
+                                                        >
+                                                            {unlockingId === candidate.id ? <><Loader2 className="w-4 h-4 animate-spin" /> Requesting...</> : <><Unlock className="w-4 h-4" /> Request Unlock</>}
+                                                        </button>
+                                                    )}
+                                                    {evaluationsOpen && unlockStatus === 'pending' && (
+                                                        <div className="h-12 px-6 rounded-xl bg-amber-500/10 text-amber-500/70 border border-amber-500/20 flex items-center justify-center gap-2 text-sm font-medium w-full sm:w-auto shrink-0">
+                                                            <Loader2 className="w-4 h-4 animate-spin" /> Unlock Pending
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <button onClick={() => handleSubmit(candidate.id)}
+                                                    disabled={submittingId === candidate.id}
+                                                    className="w-full h-12 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white font-medium text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+                                                    {submittingId === candidate.id ? (
+                                                        <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
+                                                    ) : isEvaluated ? (
+                                                        <><Check className="w-4 h-4" /> Update Evaluation</>
+                                                    ) : (
+                                                        <><Star className="w-4 h-4" /> Submit Evaluation</>
+                                                    )}
+                                                </button>
+                                            )}
                                         </div>
                                     </motion.div>
                                 )}

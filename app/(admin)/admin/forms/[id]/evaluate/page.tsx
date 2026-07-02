@@ -33,6 +33,7 @@ export default async function EvaluatePage({ params }: { params: Promise<{ id: s
                 evaluators={evaluators}
                 criteria={criteria}
                 evaluations={evaluations}
+                evaluationsOpen={form.evaluations_open ?? true}
             />
         </div>
     )

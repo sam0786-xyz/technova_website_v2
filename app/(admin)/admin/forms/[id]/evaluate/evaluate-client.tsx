@@ -4,9 +4,9 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Plus, Trash2, Copy, Check, Users, Award, Link2, X,
-    Loader2, UserPlus, BarChart3, Star, ChevronDown, ChevronUp, Settings
+    Loader2, UserPlus, BarChart3, Star, ChevronDown, ChevronUp, Settings, Unlock, Lock, AlertTriangle
 } from "lucide-react"
-import { addFormEvaluator, removeFormEvaluator, updateEvaluationCriteria } from "@/lib/actions/form-evaluation-actions"
+import { addFormEvaluator, removeFormEvaluator, updateEvaluationCriteria, toggleEvaluationsOpen, clearAllEvaluations, resolveUnlockRequest } from "@/lib/actions/form-evaluation-actions"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -16,10 +16,11 @@ interface EvaluateClientProps {
     evaluators: any[]
     criteria: string[]
     evaluations: any[]
+    evaluationsOpen: boolean
 }
 
-export function EvaluateClient({ formId, formTitle, evaluators, criteria, evaluations }: EvaluateClientProps) {
-    const [activeTab, setActiveTab] = useState<"evaluators" | "results" | "settings">("evaluators")
+export function EvaluateClient({ formId, formTitle, evaluators, criteria, evaluations, evaluationsOpen }: EvaluateClientProps) {
+    const [activeTab, setActiveTab] = useState<"evaluators" | "results" | "settings" | "requests">("evaluators")
     const router = useRouter()
 
     return (
@@ -29,11 +30,13 @@ export function EvaluateClient({ formId, formTitle, evaluators, criteria, evalua
                 {[
                     { key: "evaluators", label: "Evaluators", icon: Users },
                     { key: "results", label: "Results", icon: BarChart3 },
-                    { key: "settings", label: "Criteria", icon: Settings },
+                    { key: "requests", label: "Unlock Requests", icon: Unlock, badge: evaluations.filter(e => e.unlock_status === 'pending').length },
+                    { key: "settings", label: "Settings", icon: Settings },
                 ].map(tab => (
                     <button key={tab.key} onClick={() => setActiveTab(tab.key as any)}
                         className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === tab.key ? "bg-[#27272a] text-white" : "text-[#71717a] hover:text-white"}`}>
                         <tab.icon className="w-4 h-4" /> {tab.label}
+                        {tab.badge ? <span className="ml-1 bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{tab.badge}</span> : null}
                     </button>
                 ))}
             </div>
@@ -51,7 +54,12 @@ export function EvaluateClient({ formId, formTitle, evaluators, criteria, evalua
                 )}
                 {activeTab === "settings" && (
                     <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                        <CriteriaSettings formId={formId} initialCriteria={criteria} />
+                        <CriteriaSettings formId={formId} initialCriteria={criteria} evaluationsOpen={evaluationsOpen} />
+                    </motion.div>
+                )}
+                {activeTab === "requests" && (
+                    <motion.div key="requests" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                        <UnlockRequestsPanel formId={formId} evaluations={evaluations} />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -286,9 +294,11 @@ function ResultsPanel({ evaluators, evaluations, criteria }: { evaluators: any[]
 // Criteria Settings
 // ============================================================
 
-function CriteriaSettings({ formId, initialCriteria }: { formId: string; initialCriteria: string[] }) {
+function CriteriaSettings({ formId, initialCriteria, evaluationsOpen }: { formId: string; initialCriteria: string[]; evaluationsOpen: boolean }) {
     const [criteria, setCriteria] = useState(initialCriteria)
     const [isSaving, setIsSaving] = useState(false)
+    const [isToggling, setIsToggling] = useState(false)
+    const [isClearing, setIsClearing] = useState(false)
     const router = useRouter()
 
     const addCriterion = () => setCriteria([...criteria, ""])
@@ -341,6 +351,127 @@ function CriteriaSettings({ formId, initialCriteria }: { formId: string; initial
                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     {isSaving ? "Saving..." : "Save Criteria"}
                 </button>
+            </div>
+
+            <div className="pt-8 mt-8 border-t border-[#1e1e22] space-y-6">
+                <div>
+                    <h2 className="text-xl font-bold text-white">Advanced Controls</h2>
+                    <p className="text-sm text-[#52525b] mt-1">Manage the state of evaluations for this form.</p>
+                </div>
+                
+                <div className="p-5 border border-[#27272a] rounded-2xl bg-[#141416] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 className="font-bold text-white flex items-center gap-2">
+                            {evaluationsOpen ? <Unlock className="w-4 h-4 text-emerald-400" /> : <Lock className="w-4 h-4 text-amber-500" />}
+                            Evaluations are {evaluationsOpen ? "Open" : "Closed"}
+                        </h3>
+                        <p className="text-sm text-[#71717a] mt-1">
+                            {evaluationsOpen ? "Evaluators can submit new scores." : "Evaluators are blocked from submitting scores."}
+                        </p>
+                    </div>
+                    <button 
+                        onClick={async () => {
+                            setIsToggling(true)
+                            try {
+                                await toggleEvaluationsOpen(formId, !evaluationsOpen)
+                                toast.success(`Evaluations ${!evaluationsOpen ? 'opened' : 'closed'} successfully`)
+                                router.refresh()
+                            } catch (e: any) { toast.error(e.message) }
+                            setIsToggling(false)
+                        }} 
+                        disabled={isToggling}
+                        className={`h-10 px-6 rounded-xl text-sm font-medium transition-all ${evaluationsOpen ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}
+                    >
+                        {isToggling ? "Processing..." : evaluationsOpen ? "Close Evaluations" : "Open Evaluations"}
+                    </button>
+                </div>
+
+                <div className="p-5 border border-[#dc2626]/20 rounded-2xl bg-[#141416] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 className="font-bold text-white flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-rose-500" />
+                            Clear All Score Responses
+                        </h3>
+                        <p className="text-sm text-[#71717a] mt-1">
+                            Permanently delete all evaluation scores submitted for this form.
+                        </p>
+                    </div>
+                    <button 
+                        onClick={async () => {
+                            if (!confirm("WARNING: This will permanently delete ALL evaluations from all evaluators for this form. Are you absolutely sure?")) return;
+                            setIsClearing(true)
+                            try {
+                                await clearAllEvaluations(formId)
+                                toast.success("All evaluations have been cleared.")
+                                router.refresh()
+                            } catch (e: any) { toast.error(e.message) }
+                            setIsClearing(false)
+                        }} 
+                        disabled={isClearing}
+                        className="h-10 px-6 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 text-sm font-medium transition-all whitespace-nowrap"
+                    >
+                        {isClearing ? "Clearing..." : "Clear All Scores"}
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+// ============================================================
+// Unlock Requests Panel
+// ============================================================
+
+function UnlockRequestsPanel({ formId, evaluations }: { formId: string, evaluations: any[] }) {
+    const router = useRouter()
+    const pendingRequests = evaluations.filter(e => e.unlock_status === 'pending')
+
+    const handleResolve = async (evaluationId: string, status: 'approved' | 'declined') => {
+        try {
+            await resolveUnlockRequest(formId, evaluationId, status)
+            toast.success(`Unlock request ${status}`)
+            router.refresh()
+        } catch (e: any) {
+            toast.error(e.message)
+        }
+    }
+
+    if (pendingRequests.length === 0) {
+        return (
+            <div className="text-center py-16 text-[#52525b]">
+                <Check className="w-12 h-12 mx-auto mb-4 opacity-30 text-emerald-500" />
+                <p className="text-lg font-medium">No Pending Requests</p>
+                <p className="text-sm mt-1">All clear. Evaluators will appear here if they request to unlock a score.</p>
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-4">
+            <h2 className="text-xl font-bold text-white">Unlock Requests</h2>
+            <div className="space-y-3">
+                {pendingRequests.map(req => (
+                    <div key={req.id} className="bg-[#141416] border border-[#27272a] rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <p className="text-white font-medium">
+                                <span className="text-[#3b82f6]">{req.evaluator?.name}</span> wants to edit their evaluation for <span className="text-[#a78bfa]">{req.response?.user?.name}</span>.
+                            </p>
+                            <p className="text-xs text-[#71717a] mt-1">
+                                Submitted originally on {new Date(req.created_at).toLocaleString()}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => handleResolve(req.id, 'declined')}
+                                className="px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1e22] text-[#71717a] hover:text-white hover:bg-[#27272a] transition-all">
+                                Decline
+                            </button>
+                            <button onClick={() => handleResolve(req.id, 'approved')}
+                                className="px-4 py-2 rounded-xl text-sm font-medium bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-all">
+                                Approve Unlock
+                            </button>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     )

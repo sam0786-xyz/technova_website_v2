@@ -46,7 +46,7 @@ export const EvaluatorInviteEmail = ({
                             Hey <strong style={{ color: '#ffffff' }}>{evaluatorName}</strong>,
                         </Text>
                         <Text style={{ color: '#a1a1aa', fontSize: '16px', lineHeight: '1.7', marginTop: '16px' }}>
-                            As someone who is a deep part of TechNova, we highly value your insight and judgment. We would be humbled if you could help us evaluate the submissions for the <strong style={{ color: '#ffffff' }}>{formTitle}</strong>.
+                            As someone who is a deep part of Technova, we highly value your insight and judgment. We would be humbled if you could help us evaluate the submissions for the <strong style={{ color: '#ffffff' }}>{formTitle}</strong>.
                         </Text>
                         <Text style={{ color: '#a1a1aa', fontSize: '16px', lineHeight: '1.7', marginTop: '16px' }}>
                             You have been granted exclusive access to our evaluation portal where you can review candidate responses and provide your scores securely.
@@ -84,7 +84,7 @@ export const EvaluatorInviteEmail = ({
                     <Hr style={{ borderColor: '#27272a', margin: 0 }} />
                     <Section style={{ padding: '32px', textAlign: 'center' as const, backgroundColor: '#09090b' }}>
                         <Text style={{ color: '#52525b', fontSize: '11px', textTransform: 'uppercase' as const, letterSpacing: '2px', fontWeight: 600, margin: 0 }}>
-                            TechNova • Sharda University
+                            Technova • Sharda University
                         </Text>
                         <Text style={{ color: '#3f3f46', fontSize: '11px', marginTop: '8px' }}>
                             For any questions, please reply to this email or contact the admin team.

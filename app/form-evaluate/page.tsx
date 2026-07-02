@@ -49,6 +49,7 @@ export default async function FormEvaluatePage({ searchParams }: { searchParams:
                 existingEvaluations={existingEvaluations}
                 fields={questionFields}
                 token={token}
+                evaluationsOpen={form.evaluations_open ?? true}
             />
         </main>
     )
