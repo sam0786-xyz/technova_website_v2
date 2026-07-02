@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
 import EvaluatorInviteEmail from "@/emails/evaluator-invite"
+import { EvaluatorUpdateEmail } from "@/emails/evaluator-update"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -133,6 +134,64 @@ export async function removeFormEvaluator(evaluatorId: string, formId: string) {
     if (error) throw new Error("Failed to remove evaluator")
     revalidatePath(`/admin/forms/${formId}/evaluate`)
     return { success: true }
+}
+
+export async function sendEmailToEvaluators(formId: string, subject: string, message: string) {
+    const session = await auth()
+    if (!session || !['admin', 'super_admin'].includes(session.user.role)) {
+        throw new Error("Unauthorized")
+    }
+
+    const supabase = getSupabase()
+
+    // Get form title
+    const { data: form } = await supabase.from("forms").select("title").eq("id", formId).single()
+    if (!form) throw new Error("Form not found")
+
+    // Get all evaluators for this form
+    const { data: evaluators } = await supabase
+        .from("form_evaluators")
+        .select("name, email, magic_token")
+        .eq("form_id", formId)
+
+    if (!evaluators || evaluators.length === 0) {
+        throw new Error("No evaluators found for this form")
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+        console.warn("RESEND_API_KEY is not set. Email blast skipped.")
+        return { success: true } // Return success so UI doesn't crash in dev
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY)
+
+    const BATCH_SIZE = 50
+    for (let i = 0; i < evaluators.length; i += BATCH_SIZE) {
+        const batch = evaluators.slice(i, i + BATCH_SIZE)
+        
+        const emailPromises = batch.map(async (evaluator) => {
+            const evaluateUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://technovashardauniversity.in"}/form-evaluate?token=${evaluator.magic_token}`
+            
+            const emailHtml = await render(EvaluatorUpdateEmail({
+                evaluatorName: evaluator.name,
+                formTitle: form.title,
+                evaluateUrl,
+                subject,
+                message
+            }))
+
+            return resend.emails.send({
+                from: 'Technova <noreply@technovashardauniversity.in>',
+                to: evaluator.email,
+                subject: subject,
+                html: emailHtml
+            })
+        })
+
+        await Promise.allSettled(emailPromises)
+    }
+
+    return { success: true, count: evaluators.length }
 }
 
 // ============================================================

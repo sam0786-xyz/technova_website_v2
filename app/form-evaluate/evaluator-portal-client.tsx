@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Star, ChevronDown, ChevronUp, Check, Loader2, User,
-    Award, MessageSquare, ArrowLeft, CheckCircle2, Lock, Unlock, AlertCircle
+    Award, MessageSquare, ArrowLeft, CheckCircle2, Lock, Unlock, AlertCircle, Search, ChevronLeft, ChevronRight
 } from "lucide-react"
 import { submitFormEvaluation, requestEvaluationUnlock } from "@/lib/actions/form-evaluation-actions"
 import { toast } from "sonner"
@@ -26,6 +26,9 @@ export function EvaluatorPortalClient({
     const [expandedId, setExpandedId] = useState<string | null>(null)
     const [submittingId, setSubmittingId] = useState<string | null>(null)
     const [unlockingId, setUnlockingId] = useState<string | null>(null)
+    const [searchQuery, setSearchQuery] = useState("")
+    const [currentPage, setCurrentPage] = useState(1)
+    const ITEMS_PER_PAGE = 10
 
     // Track scores and remarks per candidate
     const [allScores, setAllScores] = useState<Record<string, Record<string, number>>>(() => {
@@ -114,6 +117,26 @@ export function EvaluatorPortalClient({
         ? Math.round((Array.from(evaluatedIds).filter(id => candidates.some(c => c.id === id)).length / candidates.length) * 100)
         : 0
 
+    // Filter and paginate candidates
+    const filteredCandidates = useMemo(() => {
+        if (!searchQuery.trim()) return candidates;
+        const q = searchQuery.toLowerCase();
+        return candidates.filter(c => 
+            c.user?.name?.toLowerCase().includes(q) || 
+            c.user?.email?.toLowerCase().includes(q)
+        );
+    }, [candidates, searchQuery]);
+
+    const totalPages = Math.ceil(filteredCandidates.length / ITEMS_PER_PAGE) || 1;
+    
+    // Reset to page 1 if search query changes
+    useMemo(() => { setCurrentPage(1) }, [searchQuery]);
+
+    const paginatedCandidates = useMemo(() => {
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredCandidates.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredCandidates, currentPage]);
+
     return (
         <div className="max-w-4xl mx-auto py-8 sm:py-12 px-4 sm:px-6">
             {/* Header */}
@@ -140,6 +163,20 @@ export function EvaluatorPortalClient({
                 </div>
             </div>
 
+            {/* Search Bar */}
+            <div className="mb-6 relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Search className="h-4 w-4 text-[#71717a]" />
+                </div>
+                <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search candidate by name or email..."
+                    className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#141416] border border-[#27272a] text-white text-sm placeholder:text-[#52525b] focus:border-[#3b82f6] outline-none transition-all"
+                />
+            </div>
+
             {!evaluationsOpen && (
                 <div className="mb-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
@@ -154,7 +191,7 @@ export function EvaluatorPortalClient({
 
             {/* Candidates list */}
             <div className="space-y-4">
-                {candidates.map((candidate, idx) => {
+                {paginatedCandidates.map((candidate, idx) => {
                     const isExpanded = expandedId === candidate.id
                     const isEvaluated = evaluatedIds.has(candidate.id)
                     const existingEv = existingEvaluations.find(e => e.response_id === candidate.id)
@@ -299,14 +336,42 @@ export function EvaluatorPortalClient({
                     )
                 })}
 
-                {candidates.length === 0 && (
+                {filteredCandidates.length === 0 && (
                     <div className="text-center py-16 text-[#52525b]">
                         <User className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                        <p className="text-lg font-medium">No candidates yet</p>
-                        <p className="text-sm mt-1">Candidates will appear once people submit the form.</p>
+                        <p className="text-lg font-medium">{candidates.length === 0 ? "No candidates yet" : "No candidates match your search"}</p>
+                        <p className="text-sm mt-1">{candidates.length === 0 ? "Candidates will appear once people submit the form." : "Try a different search term."}</p>
                     </div>
                 )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-between bg-[#141416] border border-[#27272a] rounded-xl p-4">
+                    <p className="text-sm text-[#71717a]">
+                        Showing <span className="text-white font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-white font-medium">{Math.min(currentPage * ITEMS_PER_PAGE, filteredCandidates.length)}</span> of <span className="text-white font-medium">{filteredCandidates.length}</span> candidates
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="p-2 rounded-lg bg-[#1e1e22] text-[#d4d4d8] hover:bg-[#27272a] disabled:opacity-50 transition-all flex items-center justify-center"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <span className="text-sm text-white font-medium px-2">
+                            Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="p-2 rounded-lg bg-[#1e1e22] text-[#d4d4d8] hover:bg-[#27272a] disabled:opacity-50 transition-all flex items-center justify-center"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

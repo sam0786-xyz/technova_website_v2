@@ -4,9 +4,9 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Plus, Trash2, Copy, Check, Users, Award, Link2, X,
-    Loader2, UserPlus, BarChart3, Star, ChevronDown, ChevronUp, Settings, Unlock, Lock, AlertTriangle
+    Loader2, UserPlus, BarChart3, Star, ChevronDown, ChevronUp, Settings, Unlock, Lock, AlertTriangle, Mail
 } from "lucide-react"
-import { addFormEvaluator, removeFormEvaluator, updateEvaluationCriteria, toggleEvaluationsOpen, clearAllEvaluations, resolveUnlockRequest } from "@/lib/actions/form-evaluation-actions"
+import { addFormEvaluator, removeFormEvaluator, updateEvaluationCriteria, toggleEvaluationsOpen, clearAllEvaluations, resolveUnlockRequest, sendEmailToEvaluators } from "@/lib/actions/form-evaluation-actions"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -73,9 +73,13 @@ export function EvaluateClient({ formId, formTitle, evaluators, criteria, evalua
 
 function EvaluatorsPanel({ formId, evaluators }: { formId: string; evaluators: any[] }) {
     const [showAdd, setShowAdd] = useState(false)
+    const [showEmail, setShowEmail] = useState(false)
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [isAdding, setIsAdding] = useState(false)
+    const [isEmailing, setIsEmailing] = useState(false)
+    const [emailSubject, setEmailSubject] = useState("Update on Evaluation")
+    const [emailMessage, setEmailMessage] = useState("")
     const [copiedId, setCopiedId] = useState<string | null>(null)
     const router = useRouter()
 
@@ -89,6 +93,17 @@ function EvaluatorsPanel({ formId, evaluators }: { formId: string; evaluators: a
             router.refresh()
         } catch (err: any) { toast.error(err.message) }
         finally { setIsAdding(false) }
+    }
+
+    const handleSendEmail = async () => {
+        if (!emailSubject.trim() || !emailMessage.trim()) { toast.error("Subject and message are required"); return }
+        setIsEmailing(true)
+        try {
+            await sendEmailToEvaluators(formId, emailSubject.trim(), emailMessage.trim())
+            toast.success("Email sent to all evaluators!")
+            setEmailSubject("Update on Evaluation"); setEmailMessage(""); setShowEmail(false)
+        } catch (err: any) { toast.error(err.message) }
+        finally { setIsEmailing(false) }
     }
 
     const handleRemove = async (evId: string) => {
@@ -113,15 +128,21 @@ function EvaluatorsPanel({ formId, evaluators }: { formId: string; evaluators: a
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-xl font-bold text-white">Evaluators ({evaluators.length})</h2>
                     <p className="text-sm text-[#52525b]">Add interviewers who will evaluate the candidates</p>
                 </div>
-                <button onClick={() => setShowAdd(true)}
-                    className="h-10 px-4 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-medium transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-                    <UserPlus className="w-4 h-4" /> Add Evaluator
-                </button>
+                <div className="flex items-center gap-3">
+                    <button onClick={() => setShowEmail(true)} disabled={evaluators.length === 0}
+                        className="h-10 px-4 rounded-xl bg-[#1e1e22] hover:bg-[#27272a] text-[#d4d4d8] text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-50">
+                        <Mail className="w-4 h-4" /> Email All
+                    </button>
+                    <button onClick={() => setShowAdd(true)}
+                        className="h-10 px-4 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-medium transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                        <UserPlus className="w-4 h-4" /> Add Evaluator
+                    </button>
+                </div>
             </div>
 
             {/* Add form */}
@@ -141,9 +162,38 @@ function EvaluatorsPanel({ formId, evaluators }: { formId: string; evaluators: a
                                     className="h-11 px-4 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white text-sm placeholder:text-[#3f3f46] focus:border-[#3b82f6] outline-none" />
                             </div>
                             <button onClick={handleAdd} disabled={isAdding}
-                                className="h-10 px-6 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-medium flex items-center gap-2 disabled:opacity-50">
+                                className="h-10 px-6 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-medium flex items-center gap-2 disabled:opacity-50 w-fit">
                                 {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                                 {isAdding ? "Adding..." : "Add"}
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+                
+                {showEmail && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden">
+                        <div className="bg-[#141416] border border-[#3b82f6]/30 rounded-2xl p-6 space-y-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                                <Mail className="w-32 h-32" />
+                            </div>
+                            <div className="flex items-center justify-between relative">
+                                <div>
+                                    <h3 className="text-base font-bold text-white">Blast Email</h3>
+                                    <p className="text-xs text-[#71717a] mt-1">Send an update or schedule to all {evaluators.length} evaluators.</p>
+                                </div>
+                                <button onClick={() => setShowEmail(false)} className="text-[#52525b] hover:text-white"><X className="w-4 h-4" /></button>
+                            </div>
+                            <div className="space-y-3 relative">
+                                <input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder="Email Subject"
+                                    className="w-full h-11 px-4 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white text-sm placeholder:text-[#3f3f46] focus:border-[#3b82f6] outline-none" />
+                                <textarea value={emailMessage} onChange={e => setEmailMessage(e.target.value)} placeholder="Type your message here... Include candidate allocations or general schedule information." rows={5}
+                                    className="w-full px-4 py-3 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white text-sm placeholder:text-[#3f3f46] focus:border-[#3b82f6] outline-none resize-none" />
+                            </div>
+                            <button onClick={handleSendEmail} disabled={isEmailing}
+                                className="h-10 px-6 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-medium flex items-center gap-2 disabled:opacity-50 relative">
+                                {isEmailing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                                {isEmailing ? "Sending..." : "Send to All Evaluators"}
                             </button>
                         </div>
                     </motion.div>
