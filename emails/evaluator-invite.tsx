@@ -51,6 +51,9 @@ export const EvaluatorInviteEmail = ({
                         <Text style={{ color: '#a1a1aa', fontSize: '16px', lineHeight: '1.7', marginTop: '16px' }}>
                             You have been granted exclusive access to our evaluation portal where you can review candidate responses and provide your scores securely.
                         </Text>
+                        <Text style={{ color: '#a1a1aa', fontSize: '16px', lineHeight: '1.7', marginTop: '16px' }}>
+                            The evaluation will be start from <strong>9:30 PM to 11:30 PM</strong> for day <strong>Saturday 11 July 2026 to Sunday 12 July 2026</strong>. <br/><span style={{ fontSize: '14px', color: '#71717a' }}>(based on the nominations and also a complete schedule will be shared too)</span>
+                        </Text>
                         
                         {/* CTA Box */}
                         <Section style={{ backgroundColor: '#27272a', borderRadius: '16px', padding: '32px', marginTop: '32px', border: '1px solid #3f3f46', textAlign: 'center' as const }}>
