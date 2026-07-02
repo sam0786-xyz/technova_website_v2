@@ -3,6 +3,11 @@
 import { createClient as createServerClient } from "@supabase/supabase-js"
 import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
+import { Resend } from "resend"
+import { render } from "@react-email/render"
+import EvaluatorInviteEmail from "@/emails/evaluator-invite"
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 function getSupabase() {
     return createServerClient(
@@ -86,6 +91,27 @@ export async function addFormEvaluator(formId: string, name: string, email: stri
     if (error) {
         if (error.code === '23505') throw new Error("This evaluator already exists for this form")
         throw new Error("Failed to add evaluator")
+    }
+
+    try {
+        const { data: form } = await supabase.from("forms").select("title").eq("id", formId).single()
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://technovashardauniversity.in"
+        const evaluateUrl = `${appUrl}/form-evaluate?token=${data.magic_token}`
+
+        const emailHtml = await render(EvaluatorInviteEmail({
+            evaluatorName: name,
+            formTitle: form?.title || "TechNova Form",
+            evaluateUrl
+        }))
+
+        await resend.emails.send({
+            from: 'Technova <noreply@technovashardauniversity.in>',
+            to: email,
+            subject: `You have been invited to evaluate: ${form?.title || "TechNova Form"}`,
+            html: emailHtml
+        })
+    } catch (e) {
+        console.error("Failed to send evaluator invite email:", e)
     }
 
     revalidatePath(`/admin/forms/${formId}/evaluate`)
