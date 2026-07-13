@@ -214,7 +214,7 @@ export function EvaluatorPortalClient({
                             <button onClick={() => setExpandedId(isExpanded ? null : candidate.id)}
                                 className="w-full p-4 sm:p-5 flex items-center gap-3 sm:gap-4 text-left">
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xs font-bold ${isEvaluated ? "bg-emerald-500/10 text-emerald-400" : "bg-[#1e1e22] text-[#71717a]"}`}>
-                                    {isEvaluated ? <Check className="w-5 h-5" /> : idx + 1}
+                                    {isEvaluated ? <Check className="w-5 h-5" /> : (currentPage - 1) * ITEMS_PER_PAGE + idx + 1}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-white font-medium text-sm truncate">{candidate.user?.name || "Anonymous"}</p>
