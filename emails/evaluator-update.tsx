@@ -25,7 +25,7 @@ export const EvaluatorUpdateEmail = ({
     formTitle = 'Form',
     evaluateUrl = 'https://technovashardauniversity.in',
     subject = 'Update on Evaluation',
-    message = 'We have an update regarding your evaluation process.',
+    message = 'We have an update regarding the evaluation process of Technova Nominations.',
 }: EvaluatorUpdateEmailProps) => {
     return (
         <Html>
