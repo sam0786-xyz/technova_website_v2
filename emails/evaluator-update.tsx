@@ -25,7 +25,7 @@ export const EvaluatorUpdateEmail = ({
     formTitle = 'Form',
     evaluateUrl = 'https://technovashardauniversity.in',
     subject = 'Update on Evaluation',
-    message = 'We have an update regarding your evaluation assignments.',
+    message = 'We have an update regarding your evaluation process.',
 }: EvaluatorUpdateEmailProps) => {
     return (
         <Html>
@@ -47,7 +47,7 @@ export const EvaluatorUpdateEmail = ({
                     {/* Content Section */}
                     <Section style={{ padding: '40px 32px' }}>
                         <Text style={{ color: '#d4d4d8', fontSize: '17px', lineHeight: '1.6', marginTop: 0 }}>
-                            Hey <strong style={{ color: '#ffffff' }}>{evaluatorName}</strong>,
+                            Dear <strong style={{ color: '#ffffff' }}>{evaluatorName}</strong>,
                         </Text>
                         
                         {/* Custom Message Container */}
@@ -86,7 +86,7 @@ export const EvaluatorUpdateEmail = ({
                             © {new Date().getFullYear()} Technova Sharda University. All rights reserved.
                         </Text>
                         <Text style={{ color: '#52525b', fontSize: '13px', marginTop: '8px' }}>
-                            This is a secure, unique link. Please do not share it with anyone.
+                            This is a secure, unique link. Please do not share it with anyone. Reach out to <Link href="mailto:technova@sharda.ac.in">technova@sharda.ac.in</Link> for any queries.
                         </Text>
                     </Section>
                 </Container>
