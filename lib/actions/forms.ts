@@ -671,10 +671,10 @@ export async function sendEmailToRespondents(
                                 <div style="border-top: 1px solid #27272a; margin: 0;"></div>
                                 <div style="padding: 32px; text-align: center; background-color: #09090b;">
                                     <p style="margin: 0; font-size: 11px; color: #52525b; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
-                                        TechNova • Sharda University
+                                        Technova • Sharda University
                                     </p>
                                     <p style="color: #3f3f46; font-size: 11px; margin: 8px 0 0 0;">
-                                        This email was sent to you because you responded to a TechNova form.
+                                        This email was sent to you because you responded to a Technova form.
                                     </p>
                                 </div>
                             </div>
