@@ -136,7 +136,7 @@ export async function removeFormEvaluator(evaluatorId: string, formId: string) {
     return { success: true }
 }
 
-export async function sendEmailToEvaluators(formId: string, subject: string, message: string) {
+export async function sendEmailToEvaluators(formId: string, subject: string, message: string, evaluatorIds: string[] = []) {
     const session = await auth()
     if (!session || !['admin', 'super_admin'].includes(session.user.role)) {
         throw new Error("Unauthorized")
@@ -148,11 +148,17 @@ export async function sendEmailToEvaluators(formId: string, subject: string, mes
     const { data: form } = await supabase.from("forms").select("title").eq("id", formId).single()
     if (!form) throw new Error("Form not found")
 
-    // Get all evaluators for this form
-    const { data: evaluators } = await supabase
+    // Get evaluators for this form
+    let query = supabase
         .from("form_evaluators")
-        .select("name, email, magic_token")
+        .select("id, name, email, magic_token")
         .eq("form_id", formId)
+        
+    if (evaluatorIds && evaluatorIds.length > 0) {
+        query = query.in("id", evaluatorIds)
+    }
+
+    const { data: evaluators } = await query
 
     if (!evaluators || evaluators.length === 0) {
         throw new Error("No evaluators found for this form")
@@ -165,7 +171,8 @@ export async function sendEmailToEvaluators(formId: string, subject: string, mes
 
     const resend = new Resend(process.env.RESEND_API_KEY)
 
-    const BATCH_SIZE = 50
+    // Rate limit: 2 emails per second for Resend free tier
+    const BATCH_SIZE = 2
     for (let i = 0; i < evaluators.length; i += BATCH_SIZE) {
         const batch = evaluators.slice(i, i + BATCH_SIZE)
         
@@ -189,6 +196,11 @@ export async function sendEmailToEvaluators(formId: string, subject: string, mes
         })
 
         await Promise.allSettled(emailPromises)
+        
+        // Wait 1.1s between batches if there are more evaluators to avoid rate limit
+        if (i + BATCH_SIZE < evaluators.length) {
+            await new Promise(resolve => setTimeout(resolve, 1100))
+        }
     }
 
     return { success: true, count: evaluators.length }

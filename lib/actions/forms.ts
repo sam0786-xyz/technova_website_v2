@@ -639,8 +639,8 @@ export async function sendEmailToRespondents(
         throw new Error("No valid email addresses found")
     }
 
-    // Send emails in batches of 50
-    const batchSize = 50
+    // Rate limit: 2 emails per second for Resend free tier
+    const batchSize = 2
     let sentCount = 0
     let failedCount = 0
 
@@ -688,7 +688,12 @@ export async function sendEmailToRespondents(
             }
         })
 
-        await Promise.all(promises)
+        await Promise.allSettled(promises)
+        
+        // Wait 1.1s between batches if there are more respondents to avoid rate limit
+        if (i + batchSize < users.length) {
+            await new Promise(resolve => setTimeout(resolve, 1100))
+        }
     }
 
     return { success: true, sentCount, failedCount, totalRecipients: users.length }

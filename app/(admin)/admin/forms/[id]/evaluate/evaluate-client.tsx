@@ -81,7 +81,14 @@ function EvaluatorsPanel({ formId, evaluators }: { formId: string; evaluators: a
     const [emailSubject, setEmailSubject] = useState("Update on Evaluation")
     const [emailMessage, setEmailMessage] = useState("")
     const [copiedId, setCopiedId] = useState<string | null>(null)
+    const [selectedEvaluators, setSelectedEvaluators] = useState<string[]>([])
     const router = useRouter()
+
+    // Initialize selected evaluators when opening the panel
+    const openEmailPanel = () => {
+        setSelectedEvaluators(evaluators.map(e => e.id))
+        setShowEmail(true)
+    }
 
     const handleAdd = async () => {
         if (!name.trim() || !email.trim()) { toast.error("Name and email are required"); return }
@@ -97,10 +104,11 @@ function EvaluatorsPanel({ formId, evaluators }: { formId: string; evaluators: a
 
     const handleSendEmail = async () => {
         if (!emailSubject.trim() || !emailMessage.trim()) { toast.error("Subject and message are required"); return }
+        if (selectedEvaluators.length === 0) { toast.error("Select at least one evaluator"); return }
         setIsEmailing(true)
         try {
-            await sendEmailToEvaluators(formId, emailSubject.trim(), emailMessage.trim())
-            toast.success("Email sent to all evaluators!")
+            await sendEmailToEvaluators(formId, emailSubject.trim(), emailMessage.trim(), selectedEvaluators)
+            toast.success(`Email sent to ${selectedEvaluators.length} evaluator(s)!`)
             setEmailSubject("Update on Evaluation"); setEmailMessage(""); setShowEmail(false)
         } catch (err: any) { toast.error(err.message) }
         finally { setIsEmailing(false) }
@@ -134,9 +142,9 @@ function EvaluatorsPanel({ formId, evaluators }: { formId: string; evaluators: a
                     <p className="text-sm text-[#52525b]">Add interviewers who will evaluate the candidates</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setShowEmail(true)} disabled={evaluators.length === 0}
+                    <button onClick={openEmailPanel} disabled={evaluators.length === 0}
                         className="h-10 px-4 rounded-xl bg-[#1e1e22] hover:bg-[#27272a] text-[#d4d4d8] text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-50">
-                        <Mail className="w-4 h-4" /> Email All
+                        <Mail className="w-4 h-4" /> Email Blast
                     </button>
                     <button onClick={() => setShowAdd(true)}
                         className="h-10 px-4 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-medium transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
@@ -180,20 +188,45 @@ function EvaluatorsPanel({ formId, evaluators }: { formId: string; evaluators: a
                             <div className="flex items-center justify-between relative">
                                 <div>
                                     <h3 className="text-base font-bold text-white">Blast Email</h3>
-                                    <p className="text-xs text-[#71717a] mt-1">Send an update or schedule to all {evaluators.length} evaluators.</p>
+                                    <p className="text-xs text-[#71717a] mt-1">Send an update or schedule to evaluators.</p>
                                 </div>
                                 <button onClick={() => setShowEmail(false)} className="text-[#52525b] hover:text-white"><X className="w-4 h-4" /></button>
                             </div>
+                            
+                            <div className="space-y-3 relative z-10 max-h-48 overflow-y-auto bg-[#0a0a0b] p-3 rounded-xl border border-[#27272a]">
+                                <div className="flex items-center gap-2 pb-2 border-b border-[#27272a] mb-2">
+                                    <input type="checkbox" id="selectAll"
+                                        checked={selectedEvaluators.length === evaluators.length && evaluators.length > 0}
+                                        onChange={(e) => setSelectedEvaluators(e.target.checked ? evaluators.map(ev => ev.id) : [])}
+                                        className="w-4 h-4 rounded border-[#3f3f46] text-[#3b82f6] focus:ring-[#3b82f6] bg-[#141416]"
+                                    />
+                                    <label htmlFor="selectAll" className="text-sm font-medium text-white cursor-pointer">Select All Evaluators</label>
+                                </div>
+                                {evaluators.map(ev => (
+                                    <div key={ev.id} className="flex items-center gap-2">
+                                        <input type="checkbox" id={`chk-${ev.id}`}
+                                            checked={selectedEvaluators.includes(ev.id)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) setSelectedEvaluators([...selectedEvaluators, ev.id])
+                                                else setSelectedEvaluators(selectedEvaluators.filter(id => id !== ev.id))
+                                            }}
+                                            className="w-4 h-4 rounded border-[#3f3f46] text-[#3b82f6] focus:ring-[#3b82f6] bg-[#141416]"
+                                        />
+                                        <label htmlFor={`chk-${ev.id}`} className="text-sm text-[#d4d4d8] cursor-pointer truncate flex-1">{ev.name} <span className="text-xs text-[#71717a]">({ev.email})</span></label>
+                                    </div>
+                                ))}
+                            </div>
+                            
                             <div className="space-y-3 relative">
                                 <input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder="Email Subject"
                                     className="w-full h-11 px-4 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white text-sm placeholder:text-[#3f3f46] focus:border-[#3b82f6] outline-none" />
                                 <textarea value={emailMessage} onChange={e => setEmailMessage(e.target.value)} placeholder="Type your message here... Include candidate allocations or general schedule information." rows={5}
                                     className="w-full px-4 py-3 rounded-xl bg-[#0a0a0b] border border-[#27272a] text-white text-sm placeholder:text-[#3f3f46] focus:border-[#3b82f6] outline-none resize-none" />
                             </div>
-                            <button onClick={handleSendEmail} disabled={isEmailing}
+                            <button onClick={handleSendEmail} disabled={isEmailing || selectedEvaluators.length === 0}
                                 className="h-10 px-6 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-medium flex items-center gap-2 disabled:opacity-50 relative">
                                 {isEmailing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                                {isEmailing ? "Sending..." : "Send to All Evaluators"}
+                                {isEmailing ? "Sending..." : `Send to ${selectedEvaluators.length} Evaluators`}
                             </button>
                         </div>
                     </motion.div>
