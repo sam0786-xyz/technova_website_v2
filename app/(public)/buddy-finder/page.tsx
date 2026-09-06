@@ -109,6 +109,11 @@ function BuddyFinderContent() {
     const [lookingForTeam, setLookingForTeam] = useState(false);
     const [showPopup, setShowPopup] = useState(false);
 
+    // Pagination and Filtering states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [isFiltering, setIsFiltering] = useState(false);
+    const ITEMS_PER_PAGE = 15;
+
     useEffect(() => {
         // Show popup once per session
         const dismissed = sessionStorage.getItem('buddy-popup-dismissed');
@@ -129,10 +134,20 @@ function BuddyFinderContent() {
             setLoading(true);
             const results = await searchBuddies(query, skill);
             setBuddies(results);
+            setCurrentPage(1);
             setLoading(false);
         }
         fetchBuddies();
     }, [query, skill]);
+
+    const handleToggleLookingForTeam = () => {
+        setIsFiltering(true);
+        setTimeout(() => {
+            setLookingForTeam(prev => !prev);
+            setCurrentPage(1);
+            setIsFiltering(false);
+        }, 500);
+    };
 
     // Filter results client-side for "Looking for Team"
     const filteredBuddies = lookingForTeam
@@ -140,6 +155,12 @@ function BuddyFinderContent() {
         : buddies;
 
     const lookingForTeamCount = buddies.filter(b => b.skills?.includes("Looking for Team")).length;
+
+    const totalPages = Math.ceil(filteredBuddies.length / ITEMS_PER_PAGE);
+    const paginatedBuddies = filteredBuddies.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -226,7 +247,7 @@ function BuddyFinderContent() {
                             </div>
                             <div className="flex gap-3 w-full sm:w-auto">
                                 <button
-                                    onClick={() => setLookingForTeam(!lookingForTeam)}
+                                    onClick={handleToggleLookingForTeam}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap ${lookingForTeam
                                             ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:bg-emerald-400'
                                             : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25'
@@ -285,7 +306,14 @@ function BuddyFinderContent() {
                         >
                             <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Active Filter:</span>
                             <button
-                                onClick={() => setLookingForTeam(false)}
+                                onClick={() => {
+                                    setIsFiltering(true);
+                                    setTimeout(() => {
+                                        setLookingForTeam(false);
+                                        setCurrentPage(1);
+                                        setIsFiltering(false);
+                                    }, 500);
+                                }}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-sm font-medium hover:bg-emerald-500/30 transition-colors"
                             >
                                 🤝 Looking for Team
@@ -295,10 +323,10 @@ function BuddyFinderContent() {
                     )}
 
                     {/* Results */}
-                    {loading ? (
+                    {loading || isFiltering ? (
                         <div className="text-center py-20">
                             <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                            <p className="text-gray-400">Finding buddies...</p>
+                            <p className="text-gray-400">{isFiltering ? "Updating..." : "Finding buddies..."}</p>
                         </div>
                     ) : filteredBuddies.length === 0 ? (
                         <motion.div
@@ -341,7 +369,7 @@ function BuddyFinderContent() {
                         <>
                             {/* Results count */}
                             <div className="mb-4 text-sm text-gray-500">
-                                Showing {filteredBuddies.length} {filteredBuddies.length === 1 ? 'buddy' : 'buddies'}
+                                Showing {filteredBuddies.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredBuddies.length)} of {filteredBuddies.length} {filteredBuddies.length === 1 ? 'buddy' : 'buddies'}
                                 {lookingForTeam && ' looking for a team'}
                             </div>
                             <motion.div
@@ -350,7 +378,7 @@ function BuddyFinderContent() {
                                 transition={{ delay: 0.2 }}
                                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                             >
-                                {filteredBuddies.map((buddy: any, idx: number) => (
+                                {paginatedBuddies.map((buddy: any, idx: number) => (
                                     <motion.div
                                         key={buddy.id}
                                         initial={{ opacity: 0, y: 20 }}
@@ -361,6 +389,81 @@ function BuddyFinderContent() {
                                     </motion.div>
                                 ))}
                             </motion.div>
+
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="mt-12 flex items-center justify-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={currentPage === 1}
+                                        onClick={() => {
+                                            setIsFiltering(true);
+                                            setTimeout(() => {
+                                                setCurrentPage(prev => Math.max(1, prev - 1));
+                                                setIsFiltering(false);
+                                                window.scrollTo({ top: 400, behavior: 'smooth' });
+                                            }, 400);
+                                        }}
+                                        className="border-white/10 text-gray-300 hover:text-white bg-white/5"
+                                    >
+                                        Previous
+                                    </Button>
+                                    
+                                    <div className="flex items-center gap-1 mx-2 hidden sm:flex">
+                                        {Array.from({ length: totalPages }).map((_, i) => {
+                                            if (totalPages > 7) {
+                                                if (i !== 0 && i !== totalPages - 1 && Math.abs(i + 1 - currentPage) > 1) {
+                                                    if (i === 1 && currentPage > 3) return <span key={`ellipsis-start-${i}`} className="text-gray-500 mx-1">...</span>;
+                                                    if (i === totalPages - 2 && currentPage < totalPages - 2) return <span key={`ellipsis-end-${i}`} className="text-gray-500 mx-1">...</span>;
+                                                    return null;
+                                                }
+                                            }
+                                            return (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => {
+                                                        if (currentPage === i + 1) return;
+                                                        setIsFiltering(true);
+                                                        setTimeout(() => {
+                                                            setCurrentPage(i + 1);
+                                                            setIsFiltering(false);
+                                                            window.scrollTo({ top: 400, behavior: 'smooth' });
+                                                        }, 400);
+                                                    }}
+                                                    className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                                                        currentPage === i + 1 
+                                                        ? 'bg-purple-600 text-white' 
+                                                        : 'text-gray-400 hover:bg-white/10 hover:text-white'
+                                                    }`}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="sm:hidden text-gray-400 text-sm mx-4">
+                                        Page {currentPage} of {totalPages}
+                                    </div>
+
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={currentPage === totalPages}
+                                        onClick={() => {
+                                            setIsFiltering(true);
+                                            setTimeout(() => {
+                                                setCurrentPage(prev => Math.min(totalPages, prev + 1));
+                                                setIsFiltering(false);
+                                                window.scrollTo({ top: 400, behavior: 'smooth' });
+                                            }, 400);
+                                        }}
+                                        className="border-white/10 text-gray-300 hover:text-white bg-white/5"
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
