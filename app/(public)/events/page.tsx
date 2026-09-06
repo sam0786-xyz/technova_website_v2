@@ -7,7 +7,7 @@ import { Calendar, MapPin, Clock, ArrowRight, Home, ChevronRight, Sparkles, Hist
 import { formatDateShort, formatDateRange } from "@/lib/utils"
 import { AnimatedBackground } from "@/components/ui/animated-background"
 import { RevealOnScroll, StaggerContainer, StaggerItem } from "@/components/ui/reveal-on-scroll"
-import { FeaturedEvents } from "@/components/home/featured-events"
+
 import { useEffect, useState } from "react"
 
 export default function PublicEventsPage() {
@@ -82,10 +82,7 @@ export default function PublicEventsPage() {
             </section>
 
             <div className="container mx-auto px-4 relative z-10 pb-24">
-                {/* FLAGSHIP EVENTS */}
-                <div className="mb-12 -mx-4 sm:mx-0">
-                    <FeaturedEvents />
-                </div>
+
 
                 {loading ? (
                     <div className="text-center py-20">
