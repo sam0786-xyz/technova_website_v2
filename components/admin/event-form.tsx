@@ -83,9 +83,33 @@ export function EventForm({ clubs, event }: EventFormProps) {
     })
 
     const handleSubmit = async (formData: FormData) => {
+        const normalizedQuestions = questions
+            .map((question) => ({
+                ...question,
+                label: question.label.trim(),
+                description: question.description?.trim() || undefined,
+                options: question.type === 'select' || question.type === 'checkbox'
+                    ? (question.options || []).map((option) => option.trim()).filter(Boolean)
+                    : undefined,
+            }))
+
+        const unfinishedQuestion = normalizedQuestions.find((question) => !question.label)
+        if (unfinishedQuestion) {
+            showToast("Please add a question title for every custom field.", "error")
+            return
+        }
+
+        const choiceWithoutOptions = normalizedQuestions.find(
+            (question) => (question.type === 'select' || question.type === 'checkbox') && !question.options?.length
+        )
+        if (choiceWithoutOptions) {
+            showToast(`Add at least one option for “${choiceWithoutOptions.label}”.`, "error")
+            return
+        }
+
         setLoading(true)
         try {
-            formData.set('registration_fields', JSON.stringify(questions))
+            formData.set('registration_fields', JSON.stringify(normalizedQuestions))
             let result
             if (event) {
                 formData.set('id', event.id)
@@ -101,6 +125,9 @@ export function EventForm({ clubs, event }: EventFormProps) {
                 setTimeout(() => {
                     window.location.href = "/admin/events"
                 }, 1500)
+            } else {
+                showToast(result?.message || "Unable to save the event. Please try again.", "error")
+                setLoading(false)
             }
         } catch (error: any) {
             console.error("Event form error:", error)

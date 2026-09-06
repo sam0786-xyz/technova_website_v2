@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { registerForEvent, cancelRegistration } from "@/lib/actions/registrations"
 import { useRouter } from "next/navigation"
 import { Download, XCircle, Loader2 } from "lucide-react"
@@ -66,14 +66,21 @@ export function EventRegistrationCard({
     const [canceling, setCanceling] = useState(false)
     const [showModal, setShowModal] = useState(false)
     const [showCancelConfirm, setShowCancelConfirm] = useState(false)
-    const [mounted, setMounted] = useState(false)
     const router = useRouter()
     const { toast, showToast, hideToast } = useToast()
 
 
-    const registrationFields: RegistrationField[] = typeof event.registration_fields === 'string'
-        ? JSON.parse(event.registration_fields)
-        : (event.registration_fields || [])
+    const registrationFields: RegistrationField[] = (() => {
+        if (Array.isArray(event.registration_fields)) return event.registration_fields
+        if (typeof event.registration_fields !== 'string') return []
+
+        try {
+            const parsed = JSON.parse(event.registration_fields)
+            return Array.isArray(parsed) ? parsed : []
+        } catch {
+            return []
+        }
+    })()
 
     const handleRegisterClick = () => {
         if (!user) {
@@ -268,7 +275,7 @@ export function EventRegistrationCard({
     const isFull = registeredCount >= event.capacity
 
     return (
-        <div className="w-full md:w-80 bg-white p-6 rounded-xl shadow-lg border">
+        <div className="w-full md:w-80 bg-white p-6 rounded-xl shadow-lg border border-slate-200 text-slate-900">
             {/* Capacity Bar */}
             <div className="mb-6">
                 <div className="flex justify-between text-sm text-gray-500 mb-2">

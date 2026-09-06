@@ -78,7 +78,7 @@ export default async function EventPage({
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-24">
+        <div className="min-h-screen bg-slate-50 pb-24 text-slate-900">
             <div className="h-64 md:h-96 w-full bg-gray-900 relative">
                 <div className="absolute inset-0 flex items-center justify-center text-gray-700">
                     {event.banner ? (
@@ -101,7 +101,7 @@ export default async function EventPage({
                 </Link>
 
                 {/* Card 1: Heading & Meta */}
-                <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                <div className="bg-white rounded-xl shadow-xl overflow-hidden text-slate-900">
                     <div className="p-8">
                         <div className="flex flex-col gap-4">
                             <div className="flex flex-wrap gap-2">
@@ -131,7 +131,7 @@ export default async function EventPage({
                                 </div>
                             )}
 
-                            <h1 className="text-4xl font-bold">{event.title}</h1>
+                            <h1 className="text-4xl font-bold text-slate-950">{event.title}</h1>
 
                             <div className="flex flex-wrap gap-6 text-gray-600">
                                 {event.is_multi_day ? (
@@ -180,8 +180,8 @@ export default async function EventPage({
                 <div className="mt-8">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="md:col-span-2">
-                            <div className="bg-white rounded-xl shadow-xl p-8">
-                                <h2 className="text-2xl font-bold mb-4">About this Event</h2>
+                            <div className="bg-white rounded-xl shadow-xl p-8 text-slate-900">
+                                <h2 className="text-2xl font-bold mb-4 text-slate-950">About this Event</h2>
                                 <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{event.description}</p>
                             </div>
 
@@ -194,7 +194,7 @@ export default async function EventPage({
                             />
                         </div>
                         <div className="md:sticky md:top-24">
-                            <div className="bg-white rounded-xl shadow-xl p-6">
+                            <div className="bg-white rounded-xl shadow-xl p-6 text-slate-900">
                                 <EventRegistrationCard
                                     event={event}
                                     user={user}
