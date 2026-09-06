@@ -25,6 +25,11 @@ export interface RegistrationField {
     maxLength?: number
     minValue?: number
     maxValue?: number
+    validation?: {
+        rule?: "email" | "phone" | "min_length" | "max_length" | "min_digits" | "max_digits" | "exact_digits"
+        value?: number
+        afterSection?: string
+    }
     // Conditional branching
     goToSection?: string // section field.id to jump to based on selected answer
     optionRouting?: Record<string, string> // { "Option A": sectionId, "Option B": sectionId }
@@ -663,6 +668,17 @@ export function FormBuilder({ fields, onChange }: LegacyFormBuilderProps) {
     const addOption = (fId: string) => { const f = fields.find(x => x.id === fId); if (f?.options) updateField(fId, { options: [...f.options, `Option ${f.options.length + 1}`] }) }
     const updateOption = (fId: string, i: number, v: string) => { const f = fields.find(x => x.id === fId); if (f?.options) { const o = [...f.options]; o[i] = v; updateField(fId, { options: o }) } }
     const removeOption = (fId: string, i: number) => { const f = fields.find(x => x.id === fId); if (f?.options && f.options.length > 1) updateField(fId, { options: f.options.filter((_, j) => j !== i) }) }
+    const handleOptionPaste = (fId: string, index: number, event: React.ClipboardEvent<HTMLInputElement>) => {
+        const options = event.clipboardData.getData("text").split(/\r?\n/).map(option => option.trim()).filter(Boolean)
+        if (options.length < 2) return
+
+        event.preventDefault()
+        const field = fields.find(item => item.id === fId)
+        if (!field?.options) return
+        const updatedOptions = [...field.options]
+        updatedOptions.splice(index, 1, ...options)
+        updateField(fId, { options: updatedOptions })
+    }
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -689,7 +705,43 @@ export function FormBuilder({ fields, onChange }: LegacyFormBuilderProps) {
                                     <span className="w-6 h-6 rounded bg-[#1e1e22] text-[#a1a1aa] flex items-center justify-center text-xs font-bold">{index + 1}</span>
                                     <div className="flex items-center gap-1.5 px-2 py-1 rounded text-xs font-semibold capitalize" style={{ backgroundColor: meta.bg, color: meta.color }}><Icon className="w-3 h-3" />{meta.label}</div>
                                 </div>
-                                <input type="text" value={field.label} onChange={e => updateField(field.id, { label: e.target.value })} placeholder="Enter question..." className="w-full p-3 rounded-lg bg-[#0a0a0b] border border-[#27272a] text-white placeholder:text-[#3f3f46] focus:border-[#3b82f6] outline-none transition-all text-sm" />
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-semibold uppercase tracking-wide text-[#a1a1aa]">Question</label>
+                                    <input type="text" value={field.label} onChange={e => updateField(field.id, { label: e.target.value })} placeholder="For example: Which department are you from?" className="w-full p-3 rounded-lg bg-[#0a0a0b] border border-[#27272a] text-white placeholder:text-[#71717a] focus:border-[#3b82f6] outline-none transition-all text-sm" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-semibold uppercase tracking-wide text-[#a1a1aa]">Help text <span className="normal-case font-normal text-[#71717a]">(optional)</span></label>
+                                    <input type="text" value={field.description || ""} onChange={e => updateField(field.id, { description: e.target.value })} placeholder="Explain what the participant should enter" className="w-full p-3 rounded-lg bg-[#0a0a0b] border border-[#27272a] text-white placeholder:text-[#71717a] focus:border-[#3b82f6] outline-none transition-all text-sm" />
+                                </div>
+
+                                {(field.type === "select" || field.type === "checkbox") && (
+                                    <div className="rounded-xl border border-[#27272a] bg-[#0f0f11] p-4 space-y-3">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p className="text-sm font-semibold text-white">Choices participants can select</p>
+                                                <p className="text-xs text-[#a1a1aa] mt-1">Add each option separately, or paste a line-separated list.</p>
+                                            </div>
+                                            <button type="button" onClick={() => addOption(field.id)} className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-blue-500/15 px-2.5 py-1.5 text-xs font-semibold text-blue-300 hover:bg-blue-500/25 transition-colors">
+                                                <Plus className="w-3.5 h-3.5" /> Add option
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {(field.options || []).map((option, optionIndex) => (
+                                                <div key={`${field.id}-${optionIndex}`} className="flex items-center gap-2">
+                                                    <span className="w-6 text-center text-xs font-bold text-[#71717a]">{optionIndex + 1}</span>
+                                                    <input type="text" value={option} onPaste={(event) => handleOptionPaste(field.id, optionIndex, event)} onChange={event => updateOption(field.id, optionIndex, event.target.value)} placeholder={`Option ${optionIndex + 1}`} className="min-w-0 flex-1 p-2.5 rounded-lg bg-[#0a0a0b] border border-[#27272a] text-white placeholder:text-[#71717a] focus:border-[#3b82f6] outline-none transition-all text-sm" />
+                                                    <button type="button" onClick={() => removeOption(field.id, optionIndex)} disabled={(field.options || []).length <= 1} aria-label={`Remove option ${optionIndex + 1}`} className="p-2 text-[#71717a] hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-30 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {field.type === "select" && (
+                                            <label className="flex items-center gap-2 text-xs text-[#d4d4d8] cursor-pointer">
+                                                <input type="checkbox" checked={Boolean(field.allowOther)} onChange={event => updateField(field.id, { allowOther: event.target.checked })} className="h-4 w-4 rounded border-[#52525b] accent-blue-500" />
+                                                Let participants enter an option that is not listed
+                                            </label>
+                                        )}
+                                    </div>
+                                )}
                                 <div className="flex items-center gap-3">
                                     <span className="text-xs font-semibold text-[#71717a] uppercase">Required</span>
                                     <button type="button" onClick={() => updateField(field.id, { required: !field.required })} className={`relative w-10 h-5 rounded-full transition-colors ${field.required ? "bg-[#3b82f6]" : "bg-[#27272a]"}`}>

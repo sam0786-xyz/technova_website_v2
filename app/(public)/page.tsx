@@ -4,7 +4,6 @@ import Link from "next/link"
 import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate, AnimatePresence } from "framer-motion"
 import { ArrowRight, Terminal, Globe, Users, Target, Zap, ChevronRight, Mail, MapPin, Instagram, Linkedin, Code2, Database, Cpu, Rocket, Trophy, BookOpen, ExternalLink } from "lucide-react"
 import { useRef, useState, useEffect, useCallback } from "react"
-import { FeaturedEvents } from "@/components/home/featured-events"
 import { ClubsCarousel } from "@/components/ui/clubs-carousel"
 import { AnimatedBackground } from "@/components/ui/animated-background"
 import { Footer } from "@/components/layout/footer"
@@ -426,11 +425,6 @@ export default function LandingPage() {
       <div className="h-16 lg:h-24" />
 
       {/* ============================================
-          HACKATHON LIVE BANNER
-          ============================================ */}
-      <FeaturedEvents />
-
-      {/* ============================================
           ABOUT / VISION & MISSION
           ============================================ */}
       <section className="py-28 lg:py-36 relative">
@@ -527,24 +521,7 @@ export default function LandingPage() {
           </motion.div>
 
           {/* Bento Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.5, ease: EASE_OUT }}
-              className="lg:col-span-2"
-            >
-              <BentoCard
-                icon={Trophy}
-                title="Hackathons & Competitions"
-                description="From 24-hour buildathons to national-level coding contests. Test your limits, build real products, and compete for serious prizes alongside India's best student engineers."
-                tags={['Innovate Bharat', '₹2L+ Prizes', 'National Level']}
-                href="/hackathon"
-                className="min-h-[280px]"
-              />
-            </motion.div>
-
+          <div className="grid md:grid-cols-2 gap-4">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}

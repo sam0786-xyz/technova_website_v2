@@ -46,7 +46,6 @@ export function Footer() {
                 { label: 'Events', href: '/events' },
                 { label: 'Clubs', href: '/clubs' },
                 { label: 'Leadership', href: '/leadership' },
-                { label: 'Hackathon', href: '/hackathon' },
                 { label: 'Login', href: '/login' },
               ].map(link => (
                 <li key={link.label}>
