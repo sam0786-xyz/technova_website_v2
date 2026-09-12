@@ -122,13 +122,28 @@ export async function POST(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const isResend = searchParams.get('resend') === 'true'
 
-    // Get ALL teams with their participants — no status filter
-    const { data: teams, error: teamsError } = await supabase
+    let bodyTeamIds: string[] = []
+    try {
+        const body = await request.json()
+        if (body && Array.isArray(body.teamIds)) {
+            bodyTeamIds = body.teamIds
+        }
+    } catch (e) {
+        // no body or invalid json, ignore
+    }
+
+    let query = supabase
         .from('hackathon_teams')
         .select(`
             id, name, status, qr_emailed,
             hackathon_participants (id, name, email, role)
         `)
+
+    if (bodyTeamIds.length > 0) {
+        query = query.in('id', bodyTeamIds)
+    }
+
+    const { data: teams, error: teamsError } = await query
 
     if (teamsError || !teams) {
         console.error('[QR Email] Failed to fetch teams:', teamsError?.message)
