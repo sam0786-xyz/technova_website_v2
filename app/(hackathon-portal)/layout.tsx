@@ -82,7 +82,7 @@ export default async function HackathonPortalLayout({
                             </div>
                             <div>
                                 <h1 className="font-bold text-sm text-gray-900 leading-tight">Admin & Evaluation</h1>
-                                <p className="text-[10px] text-gray-500 leading-tight hidden sm:block font-medium uppercase tracking-wider">Innovate Bharat 2026</p>
+                                <p className="text-[10px] text-gray-500 leading-tight hidden sm:block font-medium uppercase tracking-wider">CodeMania 2026</p>
                             </div>
                         </div>
                     </div>

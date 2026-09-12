@@ -691,17 +691,17 @@ export async function sendEvaluatorInvite(id?: string) {
             await resend.emails.send({
                 from: "Technova Society <no-reply@technovashardauniversity.in>",
                 to: ev.email,
-                subject: "Invitation: Official Evaluator - Innovate Bharat Hackathon",
+                subject: "Invitation: Official Evaluator - CodeMania Hackathon",
                 html: `
                     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
                         <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 30px; text-align: center;">
-                            <h1 style="margin: 0; color: #000; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">Innovate Bharat Hackathon</h1>
+                            <h1 style="margin: 0; color: #000; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">CodeMania Hackathon</h1>
                             <p style="margin: 5px 0 0; color: #000; font-weight: bold; opacity: 0.8;">Official Evaluator Invitation</p>
                         </div>
                         <div style="padding: 40px 30px; line-height: 1.6;">
                             <h2 style="color: #f59e0b; margin-top: 0;">Welcome, ${ev.name}!</h2>
                             <p style="color: #ccc; font-size: 16px;">
-                                You have been selected as an official evaluator for the Innovate Bharat Hackathon. Your expertise will be invaluable in identifying the most innovative projects.
+                                You have been selected as an official evaluator for the CodeMania Hackathon. Your expertise will be invaluable in identifying the most innovative projects.
                             </p>
                             
                             <div style="background-color: #111; border: 1px solid #222; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
@@ -1294,17 +1294,17 @@ export async function emailShortlistedTeams() {
                 await resend.emails.send({
                     from: "Technova Society <no-reply@technovashardauniversity.in>",
                     to: participant.email,
-                    subject: "🎉 Congratulations! Your Team has been Shortlisted - Innovate Bharat Hackathon",
+                    subject: "🎉 Congratulations! Your Team has been Shortlisted - CodeMania Hackathon",
                     html: `
                         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
                             <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center;">
                                 <h1 style="margin: 0; color: #fff; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">🎉 Congratulations!</h1>
-                                <p style="margin: 5px 0 0; color: rgba(255,255,255,0.9); font-weight: bold;">Innovate Bharat Hackathon</p>
+                                <p style="margin: 5px 0 0; color: rgba(255,255,255,0.9); font-weight: bold;">CodeMania Hackathon</p>
                             </div>
                             <div style="padding: 40px 30px; line-height: 1.6;">
                                 <h2 style="color: #10b981; margin-top: 0;">Dear ${participant.name},</h2>
                                 <p style="color: #ccc; font-size: 16px;">
-                                    We are thrilled to inform you that your team <strong style="color: #f59e0b;">${team.name}</strong> has been <strong style="color: #10b981;">shortlisted</strong> for the Grand Finale of the Innovate Bharat Hackathon!
+                                    We are thrilled to inform you that your team <strong style="color: #f59e0b;">${team.name}</strong> has been <strong style="color: #10b981;">shortlisted</strong> for the Grand Finale of the CodeMania Hackathon!
                                 </p>
 
                                 <div style="background-color: #111; border: 1px solid #222; border-radius: 8px; padding: 20px; margin: 25px 0;">
@@ -1386,17 +1386,17 @@ export async function emailSingleTeam(teamId: string) {
             await resend.emails.send({
                 from: "Technova Society <no-reply@technovashardauniversity.in>",
                 to: participant.email,
-                subject: "🎉 Congratulations! Your Team has been Shortlisted - Innovate Bharat Hackathon",
+                subject: "🎉 Congratulations! Your Team has been Shortlisted - CodeMania Hackathon",
                 html: `
                     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
                         <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center;">
                             <h1 style="margin: 0; color: #fff; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">🎉 Congratulations!</h1>
-                            <p style="margin: 5px 0 0; color: rgba(255,255,255,0.9); font-weight: bold;">Innovate Bharat Hackathon</p>
+                            <p style="margin: 5px 0 0; color: rgba(255,255,255,0.9); font-weight: bold;">CodeMania Hackathon</p>
                         </div>
                         <div style="padding: 40px 30px; line-height: 1.6;">
                             <h2 style="color: #10b981; margin-top: 0;">Dear ${participant.name},</h2>
                             <p style="color: #ccc; font-size: 16px;">
-                                We are thrilled to inform you that your team <strong style="color: #f59e0b;">${team.name}</strong> has been <strong style="color: #10b981;">shortlisted</strong> for the Grand Finale of the Innovate Bharat Hackathon!
+                                We are thrilled to inform you that your team <strong style="color: #f59e0b;">${team.name}</strong> has been <strong style="color: #10b981;">shortlisted</strong> for the Grand Finale of the CodeMania Hackathon!
                             </p>
                             <div style="background-color: #111; border: 1px solid #222; border-radius: 8px; padding: 20px; margin: 25px 0;">
                                 <p style="margin: 0 0 10px; color: #888; font-size: 14px;">Team Details:</p>
@@ -1531,7 +1531,7 @@ export async function blastCustomEmail(subject: string, htmlBody: string, target
                                     <tr>
                                         <td style="background: linear-gradient(135deg, #f97316, #10b981); padding:32px 40px; text-align:center;">
                                             <h1 style="margin:0; color:#fff; font-size:26px; font-weight:800; letter-spacing:-0.5px; text-transform: uppercase;">
-                                                🚀 Innovate Bharat Hackathon
+                                                🚀 CodeMania Hackathon
                                             </h1>
                                             <p style="margin:8px 0 0; color:rgba(255,255,255,0.9); font-size:14px; font-weight:600; font-family: monospace; letter-spacing: 2px;">
                                                 BY TECHNOVA SOCIETY
