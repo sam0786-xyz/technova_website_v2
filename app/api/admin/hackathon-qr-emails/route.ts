@@ -48,7 +48,7 @@ function buildTeamQrEmailHtml(teamName: string, leaderName: string, members: { n
                         <tr>
                             <td style="background: linear-gradient(135deg, #059669, #0d9488); padding:32px 40px; text-align:center;">
                                 <h1 style="margin:0; color:#fff; font-size:24px; font-weight:800; letter-spacing:-0.5px;">
-                                    🚀 Innovate Bharat Hackathon
+                                    🚀 CodeMania Hackathon
                                 </h1>
                                 <p style="margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px;">
                                     By Technova Society • Team QR Codes
@@ -63,7 +63,7 @@ function buildTeamQrEmailHtml(teamName: string, leaderName: string, members: { n
                                     Hi <strong style="color:#fff;">${leaderName}</strong>,
                                 </p>
                                 <p style="color:#9ca3af; font-size:14px; margin:0 0 32px; line-height:1.6;">
-                                    Welcome to the Innovate Bharat Hackathon! Below are the personal QR codes for everyone in <strong style="color:#fff;">Team ${teamName}</strong>. 
+                                    Welcome to the CodeMania Hackathon! Below are the personal QR codes for everyone in <strong style="color:#fff;">Team ${teamName}</strong>. 
                                     As the team lead, please ensure your members have their respective QR codes ready during:
                                 </p>
                                 

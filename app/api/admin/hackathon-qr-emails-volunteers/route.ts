@@ -33,7 +33,7 @@ function buildVolunteerQrEmailHtml(name: string, id: string, shift: string | nul
                         <tr>
                             <td style="background: linear-gradient(135deg, #7c3aed, #4f46e5); padding:32px 40px; text-align:center;">
                                 <h1 style="margin:0; color:#fff; font-size:24px; font-weight:800; letter-spacing:-0.5px;">
-                                    🚀 Innovate Bharat Hackathon
+                                    🚀 CodeMania Hackathon
                                 </h1>
                                 <p style="margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px;">
                                     By Technova Society • Volunteer QR Pass
@@ -48,7 +48,7 @@ function buildVolunteerQrEmailHtml(name: string, id: string, shift: string | nul
                                     Hi <strong style="color:#fff;">${name}</strong>, Wecome aboard! 🎉
                                 </p>
                                 <p style="color:#9ca3af; font-size:14px; margin:0 0 24px; line-height:1.6;">
-                                    We are absolutely thrilled to welcome you as a volunteer for the <strong>Innovate Bharat Hackathon</strong>. Events like this are truly powered by the dedication, energy, and hard work of people like you.
+                                    We are absolutely thrilled to welcome you as a volunteer for the <strong>CodeMania Hackathon</strong>. Events like this are truly powered by the dedication, energy, and hard work of people like you.
                                 </p>
                                 <p style="color:#9ca3af; font-size:14px; margin:0 0 24px; line-height:1.6;">
                                     We wish you the very best as we work together to create an unforgettable experience for all the participants. Below is your personal <strong>Volunteer QR pass</strong>. Please keep this code ready during:
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
                 const result = await resend.emails.send({
                     from: 'Technova <noreply@technovashardauniversity.in>',
                     to: recipientEmail,
-                    subject: `🎟️ Your Volunteer QR Pass — Innovate Bharat Hackathon`,
+                    subject: `🎟️ Your Volunteer QR Pass — CodeMania Hackathon`,
                     html
                 })
 
