@@ -930,6 +930,30 @@ export default function HackathonManageClient() {
                                                     <td className="px-4 py-3.5 text-center">
                                                         <div className="flex items-center justify-center gap-1">
                                                             <button onClick={() => { setEditingTeam(team); setEditFormData({ teamName: team.name || '', ideaTitle: team.idea_title || '', teamCode: team.team_code || '', theme: team.theme || '', projectObjective: team.project_objective || '', leader: { id: (members.find((p: any) => p.role === 'leader') || members[0] || {}).id || '', name: (members.find((p: any) => p.role === 'leader') || members[0] || {}).name || '', email: (members.find((p: any) => p.role === 'leader') || members[0] || {}).email || '', phone: (members.find((p: any) => p.role === 'leader') || members[0] || {}).phone || '', course: '', section: '', system_id: '', year: '', college: '' }, members: members.filter((p: any) => p.role !== 'leader').map((m: any) => ({ id: m.id || '', name: m.name || '', email: m.email || '', phone: m.phone || '', course: '', section: '', system_id: '', year: '', college: '' })) }); }} className="p-1.5 hover:bg-gray-100 rounded-xl text-gray-400 font-mono hover:text-gray-700 transition-colors" title="Edit"><Edit className="w-3.5 h-3.5" /></button>
+                                                            <button 
+                                                                onClick={async () => {
+                                                                    if (!confirm(`Send QR Code to team ${team.name}?`)) return;
+                                                                    setMessage({ type: 'success', text: `📧 Sending QR to ${team.name}...` });
+                                                                    try {
+                                                                        // Pass resend=true so we can resend to failed/single teams even if marked emailed
+                                                                        const res = await fetch('/api/admin/hackathon-qr-emails?resend=true', {
+                                                                            method: 'POST',
+                                                                            headers: { 'Content-Type': 'application/json' },
+                                                                            body: JSON.stringify({ teamIds: [team.id] })
+                                                                        });
+                                                                        const data = await res.json();
+                                                                        if (data.error) setMessage({ type: 'error', text: data.error });
+                                                                        else setMessage({ type: data.failed > 0 ? 'error' : 'success', text: data.message || `QR sent! ${data.sent} sent, ${data.failed} failed.` });
+                                                                        loadData();
+                                                                    } catch (err: any) {
+                                                                        setMessage({ type: 'error', text: err.message || 'Failed to send QR.' });
+                                                                    }
+                                                                }}
+                                                                className={`p-1.5 hover:bg-gray-100 rounded-xl transition-colors ${team.qr_emailed ? 'text-green-500 hover:text-green-600' : 'text-blue-500 hover:text-blue-600'}`} 
+                                                                title={team.qr_emailed ? "Resend QR Code" : "Send QR Code"}
+                                                            >
+                                                                <Mail className="w-3.5 h-3.5" />
+                                                            </button>
                                                         </div>
                                                     </td>
                                                 </tr>
